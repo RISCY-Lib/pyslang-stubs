@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "pyslang-stubs"
-version = "9.0.0.20250902-b2"
+version = "9.0.0.20250902"
 description = "Typing stubs for the excellent pyslang library"
 readme = "README.md"
 authors = [

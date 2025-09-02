@@ -230,7 +230,7 @@ wheels = [
 
 [[package]]
 name = "pyslang-stubs"
-version = "9.0.0.20250901b0"
+version = "9.0.0.20250902b2"
 source = { editable = "." }
 dependencies = [
     { name = "typing-extensions" },

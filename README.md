@@ -12,3 +12,10 @@ This version of `stubs-pyslang` aims to provide accurate annotations for `pyslan
 
 This package was tested with the following type checkers:
 * [mypy](https://github.com/python/mypy/)
+
+
+## Contributing
+
+This project is very much partially complete as it is a pretty manual process.
+Please feel free to create PRs to help improve the stubs!
+The repo can be found [here](https://github.com/RISCY-Lib/pyslang-stubs)

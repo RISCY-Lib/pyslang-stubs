@@ -7,7 +7,7 @@ on:
 
 jobs:
   tests:
-    uses: allrisc/stubs-pyslang/.github/workflows/ci.yml@main
+    uses: RISCY-Lib/pyslang-stubs/.github/workflows/ci.yml@main
 
   build:
     name: Build Distro
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/stubs-pyslang
+      url: https://pypi.org/p/pyslang-stubs
     permissions:
       id-token: write
 

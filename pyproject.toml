@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "pyslang-stubs"
-version = "9.0.0"
+version = "9.0.0.20250901-b0"
 description = "Typing stubs for the excellent pyslang library"
 readme = "README.md"
 authors = [
@@ -16,7 +16,7 @@ classifiers = [
     "Classifier: Typing :: Stubs Only"
 ]
 
-requires-python = ">=3.13"
+requires-python = ">=3.9"
 dependencies = [
     "typing-extensions>=4.15.0",
 ]
@@ -57,7 +57,7 @@ typeCheckingMode = "basic"
 line-length = 100
 indent-width = 4
 
-target-version = "py38"
+target-version = "py39"
 show-fixes = true
 
 src = ["src"]
@@ -84,10 +84,10 @@ ignore = [
 
 [tool.tox]
 env_list = [
-    "py3.13", "py3.12", "py3.11", "py3.10", "py3.9", "py3.8",
+    "py3.13", "py3.12", "py3.11", "py3.10", "py3.9",
     "style",
     "typing",
-    # "docs",
+    "stubs",
 ]
 
 [tool.tox.env_run_base]
@@ -97,7 +97,7 @@ package = "wheel"
 wheel_build_env = ".pkg"
 constrain_package_deps = true
 use_frozen_constraints = true
-dependency_groups = ["tests"]
+dependency_groups = ["dev"]
 
 commands = [[
     "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
@@ -115,4 +115,12 @@ description = "run static type checkers"
 dependency_groups = ["dev"]
 commands = [
     ["mypy"],
+]
+
+[tool.tox.env.stubs]
+description = "run stub checking"
+dependency_groups = ["dev"]
+set_env = {MYPYPATH = "./stubs/"}
+commands = [
+    ["stubtest", "pyslang", "--allowlist", "allowlist.txt"]
 ]

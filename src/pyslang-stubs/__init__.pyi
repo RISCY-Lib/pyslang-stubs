@@ -11,11 +11,9 @@ from typing import Any, ClassVar, Final
 from typing_extensions import Self
 
 try:
-    from pybind11_builtins import (  # pyright: ignore[reportMissingImports]
-        pybind11_type as _metaclass,
-    )
+    from pybind11_builtins import pybind11_type as _metaclass  # type: ignore
 except ImportError:
-    _metaclass = type
+    _metaclass = type  # type: ignore
 
 class ASTFlags(metaclass=_metaclass):
     AllowClockingBlock: ClassVar[ASTFlags]
@@ -6766,7 +6764,7 @@ class ScopedNameSyntax(NameSyntax):
 
 class ScriptSession(metaclass=_metaclass):
     def __init__(self) -> None: ...
-    def eval(self, text: str) -> Any: ...
+    def eval(self, text: str) -> ConstantValue: ...
     def evalExpression(self, expr: Any) -> Any: ...
     def evalStatement(self, expr: Any) -> None: ...
     def getDiagnostics(self) -> Any: ...

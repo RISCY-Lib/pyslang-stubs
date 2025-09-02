@@ -1,37 +1,162 @@
 """
 Python bindings for slang, the SystemVerilog compiler library
 """
+
 from __future__ import annotations
+
 import os
-import pybind11_stubgen.typing_ext
 import typing
-import enum
+from typing import Any, ClassVar, Final
 
-from typing import Optional, Union, Self, Any, List
+from typing_extensions import Self
 
-class ASTContext:
+try:
+    from pybind11_builtins import (  # pyright: ignore[reportMissingImports]
+        pybind11_type as _metaclass,
+    )
+except ImportError:
+    _metaclass = type
+
+class ASTFlags(metaclass=_metaclass):
+    AllowClockingBlock: ClassVar[ASTFlags]
+    """Value = 131072"""
+    AllowCoverageSampleFormal: ClassVar[ASTFlags]
+    """Value = 33554432"""
+    AllowCoverpoint: ClassVar[ASTFlags]
+    """Value = 67108864"""
+    AllowDataType: ClassVar[ASTFlags]
+    """Value = 4"""
+    AllowInterconnect: ClassVar[ASTFlags]
+    """Value = 536870912"""
+    AllowNetType: ClassVar[ASTFlags]
+    """Value = 134217728"""
+    AllowTypeReferences: ClassVar[ASTFlags]
+    """Value = 32768"""
+    AllowUnboundedLiteral: ClassVar[ASTFlags]
+    """Value = 512"""
+    AllowUnboundedLiteralArithmetic: ClassVar[ASTFlags]
+    """Value = 1024"""
+    AssertionDefaultArg: ClassVar[ASTFlags]
+    """Value = 17179869184"""
+    AssertionDelayOrRepetition: ClassVar[ASTFlags]
+    """Value = 524288"""
+    AssertionExpr: ClassVar[ASTFlags]
+    """Value = 65536"""
+    AssertionInstanceArgCheck: ClassVar[ASTFlags]
+    """Value = 262144"""
+    AssignmentAllowed: ClassVar[ASTFlags]
+    """Value = 8"""
+    AssignmentDisallowed: ClassVar[ASTFlags]
+    """Value = 16"""
+    BindInstantiation: ClassVar[ASTFlags]
+    """Value = 2199023255552"""
+    ConcurrentAssertActionBlock: ClassVar[ASTFlags]
+    """Value = 16777216"""
+    ConfigParam: ClassVar[ASTFlags]
+    """Value = 137438953472"""
+    DPIArg: ClassVar[ASTFlags]
+    """Value = 8589934592"""
+    DisallowUDNT: ClassVar[ASTFlags]
+    """Value = 1099511627776"""
+    EventExpression: ClassVar[ASTFlags]
+    """Value = 16384"""
+    Final: ClassVar[ASTFlags]
+    """Value = 4096"""
+    ForkJoinAnyNone: ClassVar[ASTFlags]
+    """Value = 549755813888"""
+    Function: ClassVar[ASTFlags]
+    """Value = 2048"""
+    InsideConcatenation: ClassVar[ASTFlags]
+    """Value = 1"""
+    LAndRValue: ClassVar[ASTFlags]
+    """Value = 34359738368"""
+    LValue: ClassVar[ASTFlags]
+    """Value = 1048576"""
+    NoReference: ClassVar[ASTFlags]
+    """Value = 68719476736"""
+    NonBlockingTimingControl: ClassVar[ASTFlags]
+    """Value = 8192"""
+    NonProcedural: ClassVar[ASTFlags]
+    """Value = 32"""
+    None_: ClassVar[ASTFlags]
+    """Value = 0"""
+    OutputArg: ClassVar[ASTFlags]
+    """Value = 268435456"""
+    PropertyNegation: ClassVar[ASTFlags]
+    """Value = 2097152"""
+    PropertyTimeAdvance: ClassVar[ASTFlags]
+    """Value = 4194304"""
+    RecursivePropertyArg: ClassVar[ASTFlags]
+    """Value = 8388608"""
+    SpecifyBlock: ClassVar[ASTFlags]
+    """Value = 2147483648"""
+    SpecparamInitializer: ClassVar[ASTFlags]
+    """Value = 4294967296"""
+    StaticInitializer: ClassVar[ASTFlags]
+    """Value = 64"""
+    StreamingAllowed: ClassVar[ASTFlags]
+    """Value = 128"""
+    StreamingWithRange: ClassVar[ASTFlags]
+    """Value = 1073741824"""
+    TopLevelStatement: ClassVar[ASTFlags]
+    """Value = 256"""
+    TypeOperator: ClassVar[ASTFlags]
+    """Value = 274877906944"""
+    UnevaluatedBranch: ClassVar[ASTFlags]
+    """Value = 2"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
+class EvalFlags(metaclass=_metaclass):
+    None_: ClassVar[EvalFlags]
+    """Value = 0"""
+    IsScript: ClassVar[EvalFlags]
+    """Value = 1"""
+    CacheResults: ClassVar[EvalFlags]
+    """Value = 2"""
+    SpecparamsAllowed: ClassVar[EvalFlags]
+    """Value = 4"""
+    CovergroupExpr: ClassVar[EvalFlags]
+    """Value = 8"""
+    AllowUnboundedPlaceholder: ClassVar[EvalFlags]
+    """Value = 16"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
+class ASTContext(metaclass=_metaclass):
     """Contains required context for binding syntax nodes with symbols to form an AST."""
 
     def __init__(
-        self,
-        scope: Scope,
-        lookupLocation: LookupLocation,
-        flags: ASTFlags = ASTFlags.None_
-    ) -> None:
-        ...
-
+        self, scope: Scope, lookupLocation: LookupLocation, flags: ASTFlags = ASTFlags.None_
+    ) -> None: ...
     def addAssertionBacktrace(self, diag: Diagnostic) -> None:
         """If this context is within an assertion instance, report a backtrace of how that
         instance was expanded to the given diagnostic; otherwise, do nothing.
         """
 
-    def addDiag(self, code: DiagCode, location: Union[SourceLocation, SourceRange]) -> Diagnostic:
+    def addDiag(self, code: DiagCode, location: SourceLocation | SourceRange) -> Diagnostic:
         """Issues a new diagnostic."""
 
     def eval(self, expr: Expression, extraFlags: EvalFlags = EvalFlags.None_) -> ConstantValue:
         """Evaluates the provided expression as a constant expression."""
 
-    def evalDimension(self, syntax: VariableDimensionSyntax, requireRange: bool, isPacked: bool) -> EvaluatedDimension:
+    def evalDimension(
+        self, syntax: VariableDimensionSyntax, requireRange: bool, isPacked: bool
+    ) -> EvaluatedDimension:
         """Evaluates the given dimension syntax to determine its compile-time bounds and
         other properties.
 
@@ -45,587 +170,282 @@ class ASTContext:
             EvaluatedDimension: Details about the evaluated dimension
         """
     @typing.overload
-    def evalInteger(self, syntax: Any, extraFlags: ASTFlags = ...) -> int | None:
-        ...
+    def evalInteger(self, syntax: Any, extraFlags: ASTFlags = ...) -> int | None: ...
     @typing.overload
-    def evalInteger(self, expr: Any, extraFlags: EvalFlags = ...) -> int | None:
-        ...
-    def evalPackedDimension(self, syntax: Any) -> EvaluatedDimension:
-        ...
-    def evalUnpackedDimension(self, syntax: Any) -> EvaluatedDimension:
-        ...
-    def getRandMode(self, symbol: Any) -> Any:
-        ...
-    def requireBooleanConvertible(self, expr: Any) -> bool:
-        ...
-    def requireGtZero(self, value: int | None, range: Any) -> bool:
-        ...
+    def evalInteger(self, expr: Any, extraFlags: EvalFlags = ...) -> int | None: ...
+    def evalPackedDimension(self, syntax: Any) -> EvaluatedDimension: ...
+    def evalUnpackedDimension(self, syntax: Any) -> EvaluatedDimension: ...
+    def getRandMode(self, symbol: Any) -> Any: ...
+    def requireBooleanConvertible(self, expr: Any) -> bool: ...
+    def requireGtZero(self, value: int | None, range: Any) -> bool: ...
     @typing.overload
-    def requireIntegral(self, expr: Any) -> bool:
-        ...
+    def requireIntegral(self, expr: Any) -> bool: ...
     @typing.overload
-    def requireIntegral(self, cv: Any, range: Any) -> bool:
-        ...
-    def requireNoUnknowns(self, value: Any, range: Any) -> bool:
-        ...
-    def requirePositive(self, value: Any, range: Any) -> bool:
-        ...
+    def requireIntegral(self, cv: Any, range: Any) -> bool: ...
+    def requireNoUnknowns(self, value: Any, range: Any) -> bool: ...
+    def requirePositive(self, value: Any, range: Any) -> bool: ...
     @typing.overload
-    def requireSimpleExpr(self, expr: Any) -> Any:
-        ...
+    def requireSimpleExpr(self, expr: Any) -> Any: ...
     @typing.overload
-    def requireSimpleExpr(self, expr: Any, code: Any) -> Any:
-        ...
+    def requireSimpleExpr(self, expr: Any, code: Any) -> Any: ...
     @typing.overload
-    def requireValidBitWidth(self, width: int, range: Any) -> bool:
-        ...
+    def requireValidBitWidth(self, width: int, range: Any) -> bool: ...
     @typing.overload
-    def requireValidBitWidth(self, value: Any, range: Any) -> int | None:
-        ...
-    def resetFlags(self, addedFlags: ASTFlags) -> ASTContext:
-        ...
-    def tryEval(self, expr: Any) -> Any:
-        ...
+    def requireValidBitWidth(self, value: Any, range: Any) -> int | None: ...
+    def resetFlags(self, addedFlags: ASTFlags) -> ASTContext: ...
+    def tryEval(self, expr: Any) -> Any: ...
     @property
-    def flags(self) -> ASTFlags:
-        ...
+    def flags(self) -> ASTFlags: ...
     @property
-    def getCompilation(self) -> Any:
-        ...
+    def getCompilation(self) -> Any: ...
     @property
-    def getInstance(self) -> Any:
-        ...
+    def getInstance(self) -> Any: ...
     @property
-    def getLocation(self) -> Any:
-        ...
+    def getLocation(self) -> Any: ...
     @property
-    def getProceduralBlock(self) -> Any:
-        ...
+    def getProceduralBlock(self) -> Any: ...
     @property
-    def inAlwaysCombLatch(self) -> bool:
-        ...
+    def inAlwaysCombLatch(self) -> bool: ...
     @property
-    def inUnevaluatedBranch(self) -> bool:
-        ...
+    def inUnevaluatedBranch(self) -> bool: ...
     @property
-    def lookupIndex(self) -> Any:
-        ...
+    def lookupIndex(self) -> Any: ...
     @property
-    def scope(self) -> Any:
-        ...
-class ASTFlags:
-    """
-    Members:
+    def scope(self) -> Any: ...
 
-      None_
-
-      InsideConcatenation
-
-      UnevaluatedBranch
-
-      AllowDataType
-
-      AssignmentAllowed
-
-      AssignmentDisallowed
-
-      NonProcedural
-
-      StaticInitializer
-
-      StreamingAllowed
-
-      TopLevelStatement
-
-      AllowUnboundedLiteral
-
-      AllowUnboundedLiteralArithmetic
-
-      Function
-
-      Final
-
-      NonBlockingTimingControl
-
-      EventExpression
-
-      AllowTypeReferences
-
-      AssertionExpr
-
-      AllowClockingBlock
-
-      AssertionInstanceArgCheck
-
-      AssertionDelayOrRepetition
-
-      LValue
-
-      PropertyNegation
-
-      PropertyTimeAdvance
-
-      RecursivePropertyArg
-
-      ConcurrentAssertActionBlock
-
-      AllowCoverageSampleFormal
-
-      AllowCoverpoint
-
-      AllowNetType
-
-      OutputArg
-
-      AllowInterconnect
-
-      StreamingWithRange
-
-      SpecifyBlock
-
-      SpecparamInitializer
-
-      DPIArg
-
-      AssertionDefaultArg
-
-      LAndRValue
-
-      NoReference
-
-      ConfigParam
-
-      TypeOperator
-
-      ForkJoinAnyNone
-
-      DisallowUDNT
-
-      BindInstantiation
-    """
-    AllowClockingBlock: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowClockingBlock: 131072>
-    AllowCoverageSampleFormal: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowCoverageSampleFormal: 33554432>
-    AllowCoverpoint: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowCoverpoint: 67108864>
-    AllowDataType: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowDataType: 4>
-    AllowInterconnect: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowInterconnect: 536870912>
-    AllowNetType: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowNetType: 134217728>
-    AllowTypeReferences: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowTypeReferences: 32768>
-    AllowUnboundedLiteral: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowUnboundedLiteral: 512>
-    AllowUnboundedLiteralArithmetic: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AllowUnboundedLiteralArithmetic: 1024>
-    AssertionDefaultArg: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssertionDefaultArg: 17179869184>
-    AssertionDelayOrRepetition: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssertionDelayOrRepetition: 524288>
-    AssertionExpr: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssertionExpr: 65536>
-    AssertionInstanceArgCheck: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssertionInstanceArgCheck: 262144>
-    AssignmentAllowed: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssignmentAllowed: 8>
-    AssignmentDisallowed: typing.ClassVar[ASTFlags]  # value = <ASTFlags.AssignmentDisallowed: 16>
-    BindInstantiation: typing.ClassVar[ASTFlags]  # value = <ASTFlags.BindInstantiation: 2199023255552>
-    ConcurrentAssertActionBlock: typing.ClassVar[ASTFlags]  # value = <ASTFlags.ConcurrentAssertActionBlock: 16777216>
-    ConfigParam: typing.ClassVar[ASTFlags]  # value = <ASTFlags.ConfigParam: 137438953472>
-    DPIArg: typing.ClassVar[ASTFlags]  # value = <ASTFlags.DPIArg: 8589934592>
-    DisallowUDNT: typing.ClassVar[ASTFlags]  # value = <ASTFlags.DisallowUDNT: 1099511627776>
-    EventExpression: typing.ClassVar[ASTFlags]  # value = <ASTFlags.EventExpression: 16384>
-    Final: typing.ClassVar[ASTFlags]  # value = <ASTFlags.Final: 4096>
-    ForkJoinAnyNone: typing.ClassVar[ASTFlags]  # value = <ASTFlags.ForkJoinAnyNone: 549755813888>
-    Function: typing.ClassVar[ASTFlags]  # value = <ASTFlags.Function: 2048>
-    InsideConcatenation: typing.ClassVar[ASTFlags]  # value = <ASTFlags.InsideConcatenation: 1>
-    LAndRValue: typing.ClassVar[ASTFlags]  # value = <ASTFlags.LAndRValue: 34359738368>
-    LValue: typing.ClassVar[ASTFlags]  # value = <ASTFlags.LValue: 1048576>
-    NoReference: typing.ClassVar[ASTFlags]  # value = <ASTFlags.NoReference: 68719476736>
-    NonBlockingTimingControl: typing.ClassVar[ASTFlags]  # value = <ASTFlags.NonBlockingTimingControl: 8192>
-    NonProcedural: typing.ClassVar[ASTFlags]  # value = <ASTFlags.NonProcedural: 32>
-    None_: typing.ClassVar[ASTFlags]  # value = <ASTFlags.None_: 0>
-    OutputArg: typing.ClassVar[ASTFlags]  # value = <ASTFlags.OutputArg: 268435456>
-    PropertyNegation: typing.ClassVar[ASTFlags]  # value = <ASTFlags.PropertyNegation: 2097152>
-    PropertyTimeAdvance: typing.ClassVar[ASTFlags]  # value = <ASTFlags.PropertyTimeAdvance: 4194304>
-    RecursivePropertyArg: typing.ClassVar[ASTFlags]  # value = <ASTFlags.RecursivePropertyArg: 8388608>
-    SpecifyBlock: typing.ClassVar[ASTFlags]  # value = <ASTFlags.SpecifyBlock: 2147483648>
-    SpecparamInitializer: typing.ClassVar[ASTFlags]  # value = <ASTFlags.SpecparamInitializer: 4294967296>
-    StaticInitializer: typing.ClassVar[ASTFlags]  # value = <ASTFlags.StaticInitializer: 64>
-    StreamingAllowed: typing.ClassVar[ASTFlags]  # value = <ASTFlags.StreamingAllowed: 128>
-    StreamingWithRange: typing.ClassVar[ASTFlags]  # value = <ASTFlags.StreamingWithRange: 1073741824>
-    TopLevelStatement: typing.ClassVar[ASTFlags]  # value = <ASTFlags.TopLevelStatement: 256>
-    TypeOperator: typing.ClassVar[ASTFlags]  # value = <ASTFlags.TypeOperator: 274877906944>
-    UnevaluatedBranch: typing.ClassVar[ASTFlags]  # value = <ASTFlags.UnevaluatedBranch: 2>
-    __members__: typing.ClassVar[dict[str, ASTFlags]]  # value = {'None_': <ASTFlags.None_: 0>, 'InsideConcatenation': <ASTFlags.InsideConcatenation: 1>, 'UnevaluatedBranch': <ASTFlags.UnevaluatedBranch: 2>, 'AllowDataType': <ASTFlags.AllowDataType: 4>, 'AssignmentAllowed': <ASTFlags.AssignmentAllowed: 8>, 'AssignmentDisallowed': <ASTFlags.AssignmentDisallowed: 16>, 'NonProcedural': <ASTFlags.NonProcedural: 32>, 'StaticInitializer': <ASTFlags.StaticInitializer: 64>, 'StreamingAllowed': <ASTFlags.StreamingAllowed: 128>, 'TopLevelStatement': <ASTFlags.TopLevelStatement: 256>, 'AllowUnboundedLiteral': <ASTFlags.AllowUnboundedLiteral: 512>, 'AllowUnboundedLiteralArithmetic': <ASTFlags.AllowUnboundedLiteralArithmetic: 1024>, 'Function': <ASTFlags.Function: 2048>, 'Final': <ASTFlags.Final: 4096>, 'NonBlockingTimingControl': <ASTFlags.NonBlockingTimingControl: 8192>, 'EventExpression': <ASTFlags.EventExpression: 16384>, 'AllowTypeReferences': <ASTFlags.AllowTypeReferences: 32768>, 'AssertionExpr': <ASTFlags.AssertionExpr: 65536>, 'AllowClockingBlock': <ASTFlags.AllowClockingBlock: 131072>, 'AssertionInstanceArgCheck': <ASTFlags.AssertionInstanceArgCheck: 262144>, 'AssertionDelayOrRepetition': <ASTFlags.AssertionDelayOrRepetition: 524288>, 'LValue': <ASTFlags.LValue: 1048576>, 'PropertyNegation': <ASTFlags.PropertyNegation: 2097152>, 'PropertyTimeAdvance': <ASTFlags.PropertyTimeAdvance: 4194304>, 'RecursivePropertyArg': <ASTFlags.RecursivePropertyArg: 8388608>, 'ConcurrentAssertActionBlock': <ASTFlags.ConcurrentAssertActionBlock: 16777216>, 'AllowCoverageSampleFormal': <ASTFlags.AllowCoverageSampleFormal: 33554432>, 'AllowCoverpoint': <ASTFlags.AllowCoverpoint: 67108864>, 'AllowNetType': <ASTFlags.AllowNetType: 134217728>, 'OutputArg': <ASTFlags.OutputArg: 268435456>, 'AllowInterconnect': <ASTFlags.AllowInterconnect: 536870912>, 'StreamingWithRange': <ASTFlags.StreamingWithRange: 1073741824>, 'SpecifyBlock': <ASTFlags.SpecifyBlock: 2147483648>, 'SpecparamInitializer': <ASTFlags.SpecparamInitializer: 4294967296>, 'DPIArg': <ASTFlags.DPIArg: 8589934592>, 'AssertionDefaultArg': <ASTFlags.AssertionDefaultArg: 17179869184>, 'LAndRValue': <ASTFlags.LAndRValue: 34359738368>, 'NoReference': <ASTFlags.NoReference: 68719476736>, 'ConfigParam': <ASTFlags.ConfigParam: 137438953472>, 'TypeOperator': <ASTFlags.TypeOperator: 274877906944>, 'ForkJoinAnyNone': <ASTFlags.ForkJoinAnyNone: 549755813888>, 'DisallowUDNT': <ASTFlags.DisallowUDNT: 1099511627776>, 'BindInstantiation': <ASTFlags.BindInstantiation: 2199023255552>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
-    @property
-    def name(self) -> str:
-        ...
-    @property
-    def value(self) -> int:
-        ...
 class AbortAssertionExpr(AssertionExpr):
-    class Action:
-        """
-        Members:
+    class Action(metaclass=_metaclass):
+        Accept: ClassVar[Self]
+        """Value: 0"""
+        Reject: ClassVar[Self]
+        """Value: 1"""
 
-          Accept
+        __members__: dict[str, Self]
 
-          Reject
-        """
-        Accept: typing.ClassVar[AbortAssertionExpr.Action]  # value = <Action.Accept: 0>
-        Reject: typing.ClassVar[AbortAssertionExpr.Action]  # value = <Action.Reject: 1>
-        __members__: typing.ClassVar[dict[str, AbortAssertionExpr.Action]]  # value = {'Accept': <Action.Accept: 0>, 'Reject': <Action.Reject: 1>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Accept: typing.ClassVar[AbortAssertionExpr.Action]  # value = <Action.Accept: 0>
-    Reject: typing.ClassVar[AbortAssertionExpr.Action]  # value = <Action.Reject: 1>
+        def value(self) -> int: ...
+
+    Accept: Final = Action.Accept
+    Reject: Final = Action.Reject
+
     @property
-    def action(self) -> Any:
-        ...
+    def action(self) -> Any: ...
     @property
-    def condition(self) -> Any:
-        ...
+    def condition(self) -> Any: ...
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
     @property
-    def isSync(self) -> bool:
-        ...
+    def isSync(self) -> bool: ...
+
 class AcceptOnPropertyExprSyntax(PropertyExprSyntax):
     closeParen: Token
     condition: ExpressionSyntax
     expr: PropertyExprSyntax
     keyword: Token
     openParen: Token
+
 class ActionBlockSyntax(SyntaxNode):
     elseClause: ElseClauseSyntax
     statement: StatementSyntax
-class AnalysisFlags:
-    """
-    Members:
 
-      None
+class AnalysisFlags(metaclass=_metaclass):
+    AllowDupInitialDrivers: ClassVar[AnalysisFlags]
+    """Value = 16"""
+    AllowMultiDrivenLocals: ClassVar[AnalysisFlags]
+    """Value = 8"""
+    CheckUnused: ClassVar[AnalysisFlags]
+    """Value = 1"""
+    FullCaseFourState: ClassVar[AnalysisFlags]
+    """Value = 4"""
+    FullCaseUniquePriority: ClassVar[AnalysisFlags]
+    """Value = 2"""
+    # TODO: File issue on slang repo about 'None' namming
+    # None: ClassVar[AnalysisFlags]
+    # Value = 0
 
-      CheckUnused
+    __members__: dict[str, Self]
 
-      FullCaseUniquePriority
-
-      FullCaseFourState
-
-      AllowMultiDrivenLocals
-
-      AllowDupInitialDrivers
-    """
-    AllowDupInitialDrivers: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.AllowDupInitialDrivers: 16>
-    AllowMultiDrivenLocals: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.AllowMultiDrivenLocals: 8>
-    CheckUnused: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.CheckUnused: 1>
-    FullCaseFourState: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.FullCaseFourState: 4>
-    FullCaseUniquePriority: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.FullCaseUniquePriority: 2>
-    # None: typing.ClassVar[AnalysisFlags]  # value = <AnalysisFlags.None: 0>
-    __members__: typing.ClassVar[dict[str, AnalysisFlags]]  # value = {'None': <AnalysisFlags.None: 0>, 'CheckUnused': <AnalysisFlags.CheckUnused: 1>, 'FullCaseUniquePriority': <AnalysisFlags.FullCaseUniquePriority: 2>, 'FullCaseFourState': <AnalysisFlags.FullCaseFourState: 4>, 'AllowMultiDrivenLocals': <AnalysisFlags.AllowMultiDrivenLocals: 8>, 'AllowDupInitialDrivers': <AnalysisFlags.AllowDupInitialDrivers: 16>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class AnalysisManager:
-    def __init__(self, options: AnalysisOptions = ...) -> None:
-        ...
-    def analyze(self, compilation: Any) -> AnalyzedDesign:
-        ...
-    def analyzeScopeBlocking(self, scope: Any, parentProcedure: Any = None) -> AnalyzedScope:
-        ...
-    def getAnalyzedScope(self, scope: Any) -> AnalyzedScope:
-        ...
-    def getAnalyzedSubroutine(self, symbol: Any) -> Any:
-        ...
-    def getDiagnostics(self, sourceManager: Any) -> Any:
-        ...
-    def getDrivers(self, symbol: Any) -> list[tuple[ValueDriver, tuple[int, int]]]:
-        ...
+    def value(self) -> int: ...
+
+class AnalysisManager(metaclass=_metaclass):
+    def __init__(self, options: AnalysisOptions = ...) -> None: ...
+    def analyze(self, compilation: Any) -> AnalyzedDesign: ...
+    def analyzeScopeBlocking(self, scope: Any, parentProcedure: Any = None) -> AnalyzedScope: ...
+    def getAnalyzedScope(self, scope: Any) -> AnalyzedScope: ...
+    def getAnalyzedSubroutine(self, symbol: Any) -> Any: ...
+    def getDiagnostics(self, sourceManager: Any) -> Any: ...
+    def getDrivers(self, symbol: Any) -> list[tuple[ValueDriver, tuple[int, int]]]: ...
     @property
-    def options(self) -> AnalysisOptions:
-        ...
-class AnalysisOptions:
+    def options(self) -> AnalysisOptions: ...
+
+class AnalysisOptions(metaclass=_metaclass):
     flags: AnalysisFlags
     maxCaseAnalysisSteps: int
     maxLoopAnalysisSteps: int
     numThreads: int
-    def __init__(self) -> None:
-        ...
-class AnalyzedDesign:
+    def __init__(self) -> None: ...
+
+class AnalyzedDesign(metaclass=_metaclass):
     @property
-    def compilation(self) -> Any:
-        ...
+    def compilation(self) -> Any: ...
     @property
-    def compilationUnits(self) -> list[AnalyzedScope]:
-        ...
+    def compilationUnits(self) -> list[AnalyzedScope]: ...
     @property
-    def packages(self) -> list[AnalyzedScope]:
-        ...
+    def packages(self) -> list[AnalyzedScope]: ...
     @property
-    def topInstances(self) -> list[PendingAnalysis]:
-        ...
-class AnalyzedProcedure:
+    def topInstances(self) -> list[PendingAnalysis]: ...
+
+class AnalyzedProcedure(metaclass=_metaclass):
     @property
-    def analyzedSymbol(self) -> Any:
-        ...
+    def analyzedSymbol(self) -> Any: ...
     @property
-    def assertions(self) -> List[Any]:
-        ...
+    def assertions(self) -> list[Any]: ...
     @property
-    def callExpressions(self) -> List[Any]:
-        ...
+    def callExpressions(self) -> list[Any]: ...
     @property
-    def drivers(self) -> List[tuple[Any, list[tuple[ValueDriver, tuple[int, int]]]]]:
-        ...
+    def drivers(self) -> list[tuple[Any, list[tuple[ValueDriver, tuple[int, int]]]]]: ...
     @property
-    def inferredClock(self) -> Any:
-        ...
+    def inferredClock(self) -> Any: ...
     @property
-    def parentProcedure(self) -> AnalyzedProcedure:
-        ...
-class AnalyzedScope:
+    def parentProcedure(self) -> AnalyzedProcedure: ...
+
+class AnalyzedScope(metaclass=_metaclass):
     @property
-    def childScopes(self) -> list[Any]:
-        ...
+    def childScopes(self) -> list[Any]: ...
     @property
-    def procedures(self) -> list[Any]:
-        ...
+    def procedures(self) -> list[Any]: ...
     @property
-    def scope(self) -> Any:
-        ...
+    def scope(self) -> Any: ...
+
 class AnonymousProgramSymbol(Symbol, Scope):
     pass
+
 class AnonymousProgramSyntax(MemberSyntax):
     endkeyword: Token
     keyword: Token
     members: Any
     semi: Token
+
 class AnsiPortListSyntax(PortListSyntax):
     closeParen: Token
     openParen: Token
     ports: Any
+
 class AnsiUdpPortListSyntax(UdpPortListSyntax):
     closeParen: Token
     openParen: Token
     ports: Any
     semi: Token
+
 class ArbitrarySymbolExpression(Expression):
     @property
-    def symbol(self) -> Any:
-        ...
-class ArgumentDirection:
-    """
-    Members:
+    def symbol(self) -> Any: ...
 
-      In
+class ArgumentDirection(metaclass=_metaclass):
+    In: ClassVar[ArgumentDirection]
+    """Value = 0"""
+    InOut: ClassVar[ArgumentDirection]
+    """Value = 2"""
+    Out: ClassVar[ArgumentDirection]
+    """Value = 1"""
+    Ref: ClassVar[ArgumentDirection]
+    """Value = 3"""
 
-      Out
+    __members__: dict[str, Self]
 
-      InOut
-
-      Ref
-    """
-    In: typing.ClassVar[ArgumentDirection]  # value = <ArgumentDirection.In: 0>
-    InOut: typing.ClassVar[ArgumentDirection]  # value = <ArgumentDirection.InOut: 2>
-    Out: typing.ClassVar[ArgumentDirection]  # value = <ArgumentDirection.Out: 1>
-    Ref: typing.ClassVar[ArgumentDirection]  # value = <ArgumentDirection.Ref: 3>
-    __members__: typing.ClassVar[dict[str, ArgumentDirection]]  # value = {'In': <ArgumentDirection.In: 0>, 'Out': <ArgumentDirection.Out: 1>, 'InOut': <ArgumentDirection.InOut: 2>, 'Ref': <ArgumentDirection.Ref: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ArgumentListSyntax(SyntaxNode):
     closeParen: Token
     openParen: Token
     parameters: Any
+
 class ArgumentSyntax(SyntaxNode):
     pass
+
 class ArrayOrRandomizeMethodExpressionSyntax(ExpressionSyntax):
     args: ParenExpressionListSyntax
     constraints: ConstraintBlockSyntax
     method: ExpressionSyntax
     with_: Token
-class AssertionExpr:
-    def __repr__(self) -> str:
-        ...
+
+class AssertionExpr(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
     @property
-    def bad(self) -> bool:
-        ...
+    def bad(self) -> bool: ...
     @property
-    def kind(self) -> AssertionExprKind:
-        ...
+    def kind(self) -> AssertionExprKind: ...
     @property
-    def syntax(self) -> Any:
-        ...
-class AssertionExprKind:
-    """
-    Members:
+    def syntax(self) -> Any: ...
 
-      Invalid
+class AssertionExprKind(metaclass=_metaclass):
+    Abort: ClassVar[AssertionExprKind]
+    """Value = 9"""
+    Binary: ClassVar[AssertionExprKind]
+    """Value = 5"""
+    Case: ClassVar[AssertionExprKind]
+    """Value = 11"""
+    Clocking: ClassVar[AssertionExprKind]
+    """Value = 7"""
+    Conditional: ClassVar[AssertionExprKind]
+    """Value = 10"""
+    DisableIff: ClassVar[AssertionExprKind]
+    """Value = 12"""
+    FirstMatch: ClassVar[AssertionExprKind]
+    """Value = 6"""
+    Invalid: ClassVar[AssertionExprKind]
+    """Value = 0"""
+    SequenceConcat: ClassVar[AssertionExprKind]
+    """Value = 2"""
+    SequenceWithMatch: ClassVar[AssertionExprKind]
+    """Value = 3"""
+    Simple: ClassVar[AssertionExprKind]
+    """Value = 1"""
+    StrongWeak: ClassVar[AssertionExprKind]
+    """Value = 8"""
+    Unary: ClassVar[AssertionExprKind]
+    """Value = 4"""
 
-      Simple
+    __members__: dict[str, Self]
 
-      SequenceConcat
-
-      SequenceWithMatch
-
-      Unary
-
-      Binary
-
-      FirstMatch
-
-      Clocking
-
-      StrongWeak
-
-      Abort
-
-      Conditional
-
-      Case
-
-      DisableIff
-    """
-    Abort: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Abort: 9>
-    Binary: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Binary: 5>
-    Case: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Case: 11>
-    Clocking: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Clocking: 7>
-    Conditional: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Conditional: 10>
-    DisableIff: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.DisableIff: 12>
-    FirstMatch: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.FirstMatch: 6>
-    Invalid: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Invalid: 0>
-    SequenceConcat: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.SequenceConcat: 2>
-    SequenceWithMatch: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.SequenceWithMatch: 3>
-    Simple: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Simple: 1>
-    StrongWeak: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.StrongWeak: 8>
-    Unary: typing.ClassVar[AssertionExprKind]  # value = <AssertionExprKind.Unary: 4>
-    __members__: typing.ClassVar[dict[str, AssertionExprKind]]  # value = {'Invalid': <AssertionExprKind.Invalid: 0>, 'Simple': <AssertionExprKind.Simple: 1>, 'SequenceConcat': <AssertionExprKind.SequenceConcat: 2>, 'SequenceWithMatch': <AssertionExprKind.SequenceWithMatch: 3>, 'Unary': <AssertionExprKind.Unary: 4>, 'Binary': <AssertionExprKind.Binary: 5>, 'FirstMatch': <AssertionExprKind.FirstMatch: 6>, 'Clocking': <AssertionExprKind.Clocking: 7>, 'StrongWeak': <AssertionExprKind.StrongWeak: 8>, 'Abort': <AssertionExprKind.Abort: 9>, 'Conditional': <AssertionExprKind.Conditional: 10>, 'Case': <AssertionExprKind.Case: 11>, 'DisableIff': <AssertionExprKind.DisableIff: 12>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class AssertionInstanceExpression(Expression):
     @property
-    def arguments(self) -> List[tuple[Any, Expression | AssertionExpr | TimingControl]]:
-        ...
+    def arguments(self) -> list[tuple[Any, Expression | AssertionExpr | TimingControl]]: ...
     @property
-    def body(self) -> AssertionExpr:
-        ...
+    def body(self) -> AssertionExpr: ...
     @property
-    def isRecursiveProperty(self) -> bool:
-        ...
+    def isRecursiveProperty(self) -> bool: ...
     @property
-    def localVars(self) -> List[Any]:
-        ...
+    def localVars(self) -> list[Any]: ...
     @property
-    def symbol(self) -> Any:
-        ...
+    def symbol(self) -> Any: ...
+
 class AssertionItemPortListSyntax(SyntaxNode):
     closeParen: Token
     openParen: Token
     ports: Any
+
 class AssertionItemPortSyntax(SyntaxNode):
     attributes: Any
     defaultValue: EqualsAssertionArgClauseSyntax
@@ -634,145 +454,115 @@ class AssertionItemPortSyntax(SyntaxNode):
     local: Token
     name: Token
     type: DataTypeSyntax
-class AssertionKind:
-    """
-    Members:
 
-      Assert
+class AssertionKind(metaclass=_metaclass):
+    Assert: ClassVar[AssertionKind]
+    """Value = 0"""
+    Assume: ClassVar[AssertionKind]
+    """Value = 1"""
+    CoverProperty: ClassVar[AssertionKind]
+    """Value = 2"""
+    CoverSequence: ClassVar[AssertionKind]
+    """Value = 3"""
+    Expect: ClassVar[AssertionKind]
+    """Value = 5"""
+    Restrict: ClassVar[AssertionKind]
+    """Value = 4"""
 
-      Assume
+    __members__: dict[str, Self]
 
-      CoverProperty
-
-      CoverSequence
-
-      Restrict
-
-      Expect
-    """
-    Assert: typing.ClassVar[AssertionKind]  # value = <AssertionKind.Assert: 0>
-    Assume: typing.ClassVar[AssertionKind]  # value = <AssertionKind.Assume: 1>
-    CoverProperty: typing.ClassVar[AssertionKind]  # value = <AssertionKind.CoverProperty: 2>
-    CoverSequence: typing.ClassVar[AssertionKind]  # value = <AssertionKind.CoverSequence: 3>
-    Expect: typing.ClassVar[AssertionKind]  # value = <AssertionKind.Expect: 5>
-    Restrict: typing.ClassVar[AssertionKind]  # value = <AssertionKind.Restrict: 4>
-    __members__: typing.ClassVar[dict[str, AssertionKind]]  # value = {'Assert': <AssertionKind.Assert: 0>, 'Assume': <AssertionKind.Assume: 1>, 'CoverProperty': <AssertionKind.CoverProperty: 2>, 'CoverSequence': <AssertionKind.CoverSequence: 3>, 'Restrict': <AssertionKind.Restrict: 4>, 'Expect': <AssertionKind.Expect: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class AssertionPortSymbol(Symbol):
     @property
-    def direction(self) -> ArgumentDirection | None:
-        ...
+    def direction(self) -> ArgumentDirection | None: ...
     @property
-    def isLocalVar(self) -> bool:
-        ...
+    def isLocalVar(self) -> bool: ...
     @property
-    def type(self) -> Any:
-        ...
+    def type(self) -> Any: ...
+
 class AssignmentExpression(Expression):
     @property
-    def isCompound(self) -> bool:
-        ...
+    def isCompound(self) -> bool: ...
     @property
-    def isLValueArg(self) -> bool:
-        ...
+    def isLValueArg(self) -> bool: ...
     @property
-    def isNonBlocking(self) -> bool:
-        ...
+    def isNonBlocking(self) -> bool: ...
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def op(self) -> BinaryOperator | None:
-        ...
+    def op(self) -> BinaryOperator | None: ...
     @property
-    def right(self) -> Expression:
-        ...
+    def right(self) -> Expression: ...
     @property
-    def timingControl(self) -> TimingControl:
-        ...
+    def timingControl(self) -> TimingControl: ...
+
 class AssignmentPatternExpressionBase(Expression):
     @property
-    def elements(self) -> List[Expression]:
-        ...
+    def elements(self) -> list[Expression]: ...
+
 class AssignmentPatternExpressionSyntax(PrimaryExpressionSyntax):
     pattern: AssignmentPatternSyntax
     type: DataTypeSyntax
+
 class AssignmentPatternItemSyntax(SyntaxNode):
     colon: Token
     expr: ExpressionSyntax
     key: ExpressionSyntax
+
 class AssignmentPatternSyntax(SyntaxNode):
     pass
+
 class AssociativeArrayType(Type):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
     @property
-    def indexType(self) -> Type:
-        ...
+    def indexType(self) -> Type: ...
+
 class AttributeInstanceSyntax(SyntaxNode):
     closeParen: Token
     closeStar: Token
     openParen: Token
     openStar: Token
     specs: Any
+
 class AttributeSpecSyntax(SyntaxNode):
     name: Token
     value: EqualsValueClauseSyntax
+
 class AttributeSymbol(Symbol):
     @property
-    def value(self) -> ConstantValue:
-        ...
+    def value(self) -> ConstantValue: ...
+
 class BadExpressionSyntax(ExpressionSyntax):
     expr: ExpressionSyntax
-class Bag:
+
+class Bag(metaclass=_metaclass):
     compilationOptions: CompilationOptions
     lexerOptions: Any
     parserOptions: Any
     preprocessorOptions: Any
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, list: list) -> None:
-        ...
+    def __init__(self, list: list) -> None: ...
+
 class BeginKeywordsDirectiveSyntax(DirectiveSyntax):
     versionSpecifier: Token
+
 class BinSelectWithFilterExpr(BinsSelectExpr):
     @property
-    def expr(self) -> BinsSelectExpr:
-        ...
+    def expr(self) -> BinsSelectExpr: ...
     @property
-    def filter(self) -> Any:
-        ...
+    def filter(self) -> Any: ...
     @property
-    def matchesExpr(self) -> Any:
-        ...
+    def matchesExpr(self) -> Any: ...
+
 class BinSelectWithFilterExprSyntax(BinsSelectExpressionSyntax):
     closeParen: Token
     expr: BinsSelectExpressionSyntax
@@ -780,375 +570,247 @@ class BinSelectWithFilterExprSyntax(BinsSelectExpressionSyntax):
     matchesClause: MatchesClauseSyntax
     openParen: Token
     with_: Token
+
 class BinaryAssertionExpr(AssertionExpr):
     @property
-    def left(self) -> AssertionExpr:
-        ...
+    def left(self) -> AssertionExpr: ...
     @property
-    def op(self) -> BinaryAssertionOperator:
-        ...
+    def op(self) -> BinaryAssertionOperator: ...
     @property
-    def right(self) -> AssertionExpr:
-        ...
-class BinaryAssertionOperator:
-    """
-    Members:
+    def right(self) -> AssertionExpr: ...
 
-      And
+class BinaryAssertionOperator(metaclass=_metaclass):
+    And: ClassVar[BinaryAssertionOperator]
+    """Value = 0"""
+    Iff: ClassVar[BinaryAssertionOperator]
+    """Value = 5"""
+    Implies: ClassVar[BinaryAssertionOperator]
+    """Value = 10"""
+    Intersect: ClassVar[BinaryAssertionOperator]
+    """Value = 2"""
+    NonOverlappedFollowedBy: ClassVar[BinaryAssertionOperator]
+    """Value = 14"""
+    NonOverlappedImplication: ClassVar[BinaryAssertionOperator]
+    """Value = 12"""
+    Or: ClassVar[BinaryAssertionOperator]
+    """Value = 1"""
+    OverlappedFollowedBy: ClassVar[BinaryAssertionOperator]
+    """Value = 13"""
+    OverlappedImplication: ClassVar[BinaryAssertionOperator]
+    """Value = 11"""
+    SUntil: ClassVar[BinaryAssertionOperator]
+    """Value = 7"""
+    SUntilWith: ClassVar[BinaryAssertionOperator]
+    """Value = 9"""
+    Throughout: ClassVar[BinaryAssertionOperator]
+    """Value = 3"""
+    Until: ClassVar[BinaryAssertionOperator]
+    """Value = 6"""
+    UntilWith: ClassVar[BinaryAssertionOperator]
+    """Value = 8"""
+    Within: ClassVar[BinaryAssertionOperator]
+    """Value = 4"""
 
-      Or
+    __members__: dict[str, Self]
 
-      Intersect
-
-      Throughout
-
-      Within
-
-      Iff
-
-      Until
-
-      SUntil
-
-      UntilWith
-
-      SUntilWith
-
-      Implies
-
-      OverlappedImplication
-
-      NonOverlappedImplication
-
-      OverlappedFollowedBy
-
-      NonOverlappedFollowedBy
-    """
-    And: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.And: 0>
-    Iff: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Iff: 5>
-    Implies: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Implies: 10>
-    Intersect: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Intersect: 2>
-    NonOverlappedFollowedBy: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.NonOverlappedFollowedBy: 14>
-    NonOverlappedImplication: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.NonOverlappedImplication: 12>
-    Or: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Or: 1>
-    OverlappedFollowedBy: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.OverlappedFollowedBy: 13>
-    OverlappedImplication: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.OverlappedImplication: 11>
-    SUntil: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.SUntil: 7>
-    SUntilWith: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.SUntilWith: 9>
-    Throughout: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Throughout: 3>
-    Until: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Until: 6>
-    UntilWith: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.UntilWith: 8>
-    Within: typing.ClassVar[BinaryAssertionOperator]  # value = <BinaryAssertionOperator.Within: 4>
-    __members__: typing.ClassVar[dict[str, BinaryAssertionOperator]]  # value = {'And': <BinaryAssertionOperator.And: 0>, 'Or': <BinaryAssertionOperator.Or: 1>, 'Intersect': <BinaryAssertionOperator.Intersect: 2>, 'Throughout': <BinaryAssertionOperator.Throughout: 3>, 'Within': <BinaryAssertionOperator.Within: 4>, 'Iff': <BinaryAssertionOperator.Iff: 5>, 'Until': <BinaryAssertionOperator.Until: 6>, 'SUntil': <BinaryAssertionOperator.SUntil: 7>, 'UntilWith': <BinaryAssertionOperator.UntilWith: 8>, 'SUntilWith': <BinaryAssertionOperator.SUntilWith: 9>, 'Implies': <BinaryAssertionOperator.Implies: 10>, 'OverlappedImplication': <BinaryAssertionOperator.OverlappedImplication: 11>, 'NonOverlappedImplication': <BinaryAssertionOperator.NonOverlappedImplication: 12>, 'OverlappedFollowedBy': <BinaryAssertionOperator.OverlappedFollowedBy: 13>, 'NonOverlappedFollowedBy': <BinaryAssertionOperator.NonOverlappedFollowedBy: 14>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class BinaryBinsSelectExpr(BinsSelectExpr):
-    class Op:
-        """
-        Members:
+    class Op(metaclass=_metaclass):
+        And: ClassVar[Self]
+        """Value = 0"""
+        Or: ClassVar[Self]
+        """Value = 1"""
 
-          And
+        __members__: dict[str, Self]
 
-          Or
-        """
-        And: typing.ClassVar[BinaryBinsSelectExpr.Op]  # value = <Op.And: 0>
-        Or: typing.ClassVar[BinaryBinsSelectExpr.Op]  # value = <Op.Or: 1>
-        __members__: typing.ClassVar[dict[str, BinaryBinsSelectExpr.Op]]  # value = {'And': <Op.And: 0>, 'Or': <Op.Or: 1>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    And: typing.ClassVar[BinaryBinsSelectExpr.Op]  # value = <Op.And: 0>
-    Or: typing.ClassVar[BinaryBinsSelectExpr.Op]  # value = <Op.Or: 1>
+        def value(self) -> int: ...
+
+    And: Final = Op.And
+    Or: Final = Op.Or
+
     @property
-    def left(self) -> BinsSelectExpr:
-        ...
+    def left(self) -> BinsSelectExpr: ...
     @property
-    def op(self) -> Any:
-        ...
+    def op(self) -> Any: ...
     @property
-    def right(self) -> BinsSelectExpr:
-        ...
+    def right(self) -> BinsSelectExpr: ...
+
 class BinaryBinsSelectExprSyntax(BinsSelectExpressionSyntax):
     left: BinsSelectExpressionSyntax
     op: Token
     right: BinsSelectExpressionSyntax
+
 class BinaryBlockEventExpressionSyntax(BlockEventExpressionSyntax):
     left: BlockEventExpressionSyntax
     orKeyword: Token
     right: BlockEventExpressionSyntax
+
 class BinaryConditionalDirectiveExpressionSyntax(ConditionalDirectiveExpressionSyntax):
     left: ConditionalDirectiveExpressionSyntax
     op: Token
     right: ConditionalDirectiveExpressionSyntax
+
 class BinaryEventExpressionSyntax(EventExpressionSyntax):
     left: EventExpressionSyntax
     operatorToken: Token
     right: EventExpressionSyntax
+
 class BinaryExpression(Expression):
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def op(self) -> BinaryOperator:
-        ...
+    def op(self) -> BinaryOperator: ...
     @property
-    def right(self) -> Expression:
-        ...
+    def right(self) -> Expression: ...
+
 class BinaryExpressionSyntax(ExpressionSyntax):
     attributes: Any
     left: ExpressionSyntax
     operatorToken: Token
     right: ExpressionSyntax
-class BinaryOperator:
-    """
-    Members:
 
-      Add
+class BinaryOperator(metaclass=_metaclass):
+    Add: ClassVar[BinaryOperator]
+    """Value = 0"""
+    ArithmeticShiftLeft: ClassVar[BinaryOperator]
+    """Value = 25"""
+    ArithmeticShiftRight: ClassVar[BinaryOperator]
+    """Value = 26"""
+    BinaryAnd: ClassVar[BinaryOperator]
+    """Value = 5"""
+    BinaryOr: ClassVar[BinaryOperator]
+    """Value = 6"""
+    BinaryXnor: ClassVar[BinaryOperator]
+    """Value = 8"""
+    BinaryXor: ClassVar[BinaryOperator]
+    """Value = 7"""
+    CaseEquality: ClassVar[BinaryOperator]
+    """Value = 11"""
+    CaseInequality: ClassVar[BinaryOperator]
+    """Value = 12"""
+    Divide: ClassVar[BinaryOperator]
+    """Value = 3"""
+    Equality: ClassVar[BinaryOperator]
+    """Value = 9"""
+    GreaterThan: ClassVar[BinaryOperator]
+    """Value = 14"""
+    GreaterThanEqual: ClassVar[BinaryOperator]
+    """Value = 13"""
+    Inequality: ClassVar[BinaryOperator]
+    """Value = 10"""
+    LessThan: ClassVar[BinaryOperator]
+    """Value = 16"""
+    LessThanEqual: ClassVar[BinaryOperator]
+    """Value = 15"""
+    LogicalAnd: ClassVar[BinaryOperator]
+    """Value = 19"""
+    LogicalEquivalence: ClassVar[BinaryOperator]
+    """Value = 22"""
+    LogicalImplication: ClassVar[BinaryOperator]
+    """Value = 21"""
+    LogicalOr: ClassVar[BinaryOperator]
+    """Value = 20"""
+    LogicalShiftLeft: ClassVar[BinaryOperator]
+    """Value = 23"""
+    LogicalShiftRight: ClassVar[BinaryOperator]
+    """Value = 24"""
+    Mod: ClassVar[BinaryOperator]
+    """Value = 4"""
+    Multiply: ClassVar[BinaryOperator]
+    """Value = 2"""
+    Power: ClassVar[BinaryOperator]
+    """Value = 27"""
+    Subtract: ClassVar[BinaryOperator]
+    """Value = 1"""
+    WildcardEquality: ClassVar[BinaryOperator]
+    """Value = 17"""
+    WildcardInequality: ClassVar[BinaryOperator]
+    """Value = 18"""
 
-      Subtract
+    __members__: dict[str, Self]
 
-      Multiply
-
-      Divide
-
-      Mod
-
-      BinaryAnd
-
-      BinaryOr
-
-      BinaryXor
-
-      BinaryXnor
-
-      Equality
-
-      Inequality
-
-      CaseEquality
-
-      CaseInequality
-
-      GreaterThanEqual
-
-      GreaterThan
-
-      LessThanEqual
-
-      LessThan
-
-      WildcardEquality
-
-      WildcardInequality
-
-      LogicalAnd
-
-      LogicalOr
-
-      LogicalImplication
-
-      LogicalEquivalence
-
-      LogicalShiftLeft
-
-      LogicalShiftRight
-
-      ArithmeticShiftLeft
-
-      ArithmeticShiftRight
-
-      Power
-    """
-    Add: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Add: 0>
-    ArithmeticShiftLeft: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.ArithmeticShiftLeft: 25>
-    ArithmeticShiftRight: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.ArithmeticShiftRight: 26>
-    BinaryAnd: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.BinaryAnd: 5>
-    BinaryOr: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.BinaryOr: 6>
-    BinaryXnor: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.BinaryXnor: 8>
-    BinaryXor: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.BinaryXor: 7>
-    CaseEquality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.CaseEquality: 11>
-    CaseInequality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.CaseInequality: 12>
-    Divide: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Divide: 3>
-    Equality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Equality: 9>
-    GreaterThan: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.GreaterThan: 14>
-    GreaterThanEqual: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.GreaterThanEqual: 13>
-    Inequality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Inequality: 10>
-    LessThan: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LessThan: 16>
-    LessThanEqual: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LessThanEqual: 15>
-    LogicalAnd: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalAnd: 19>
-    LogicalEquivalence: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalEquivalence: 22>
-    LogicalImplication: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalImplication: 21>
-    LogicalOr: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalOr: 20>
-    LogicalShiftLeft: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalShiftLeft: 23>
-    LogicalShiftRight: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.LogicalShiftRight: 24>
-    Mod: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Mod: 4>
-    Multiply: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Multiply: 2>
-    Power: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Power: 27>
-    Subtract: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.Subtract: 1>
-    WildcardEquality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.WildcardEquality: 17>
-    WildcardInequality: typing.ClassVar[BinaryOperator]  # value = <BinaryOperator.WildcardInequality: 18>
-    __members__: typing.ClassVar[dict[str, BinaryOperator]]  # value = {'Add': <BinaryOperator.Add: 0>, 'Subtract': <BinaryOperator.Subtract: 1>, 'Multiply': <BinaryOperator.Multiply: 2>, 'Divide': <BinaryOperator.Divide: 3>, 'Mod': <BinaryOperator.Mod: 4>, 'BinaryAnd': <BinaryOperator.BinaryAnd: 5>, 'BinaryOr': <BinaryOperator.BinaryOr: 6>, 'BinaryXor': <BinaryOperator.BinaryXor: 7>, 'BinaryXnor': <BinaryOperator.BinaryXnor: 8>, 'Equality': <BinaryOperator.Equality: 9>, 'Inequality': <BinaryOperator.Inequality: 10>, 'CaseEquality': <BinaryOperator.CaseEquality: 11>, 'CaseInequality': <BinaryOperator.CaseInequality: 12>, 'GreaterThanEqual': <BinaryOperator.GreaterThanEqual: 13>, 'GreaterThan': <BinaryOperator.GreaterThan: 14>, 'LessThanEqual': <BinaryOperator.LessThanEqual: 15>, 'LessThan': <BinaryOperator.LessThan: 16>, 'WildcardEquality': <BinaryOperator.WildcardEquality: 17>, 'WildcardInequality': <BinaryOperator.WildcardInequality: 18>, 'LogicalAnd': <BinaryOperator.LogicalAnd: 19>, 'LogicalOr': <BinaryOperator.LogicalOr: 20>, 'LogicalImplication': <BinaryOperator.LogicalImplication: 21>, 'LogicalEquivalence': <BinaryOperator.LogicalEquivalence: 22>, 'LogicalShiftLeft': <BinaryOperator.LogicalShiftLeft: 23>, 'LogicalShiftRight': <BinaryOperator.LogicalShiftRight: 24>, 'ArithmeticShiftLeft': <BinaryOperator.ArithmeticShiftLeft: 25>, 'ArithmeticShiftRight': <BinaryOperator.ArithmeticShiftRight: 26>, 'Power': <BinaryOperator.Power: 27>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class BinaryPropertyExprSyntax(PropertyExprSyntax):
     left: PropertyExprSyntax
     op: Token
     right: PropertyExprSyntax
+
 class BinarySequenceExprSyntax(SequenceExprSyntax):
     left: SequenceExprSyntax
     op: Token
     right: SequenceExprSyntax
+
 class BindDirectiveSyntax(MemberSyntax):
     bind: Token
     instantiation: MemberSyntax
     target: NameSyntax
     targetInstances: BindTargetListSyntax
+
 class BindTargetListSyntax(SyntaxNode):
     colon: Token
     targets: Any
+
 class BinsSelectConditionExprSyntax(BinsSelectExpressionSyntax):
     binsof: Token
     closeParen: Token
     intersects: IntersectClauseSyntax
     name: NameSyntax
     openParen: Token
-class BinsSelectExpr:
-    def __repr__(self) -> str:
-        ...
+
+class BinsSelectExpr(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
     @property
-    def bad(self) -> bool:
-        ...
+    def bad(self) -> bool: ...
     @property
-    def kind(self) -> BinsSelectExprKind:
-        ...
+    def kind(self) -> BinsSelectExprKind: ...
     @property
-    def syntax(self) -> Any:
-        ...
-class BinsSelectExprKind:
-    """
-    Members:
+    def syntax(self) -> Any: ...
 
-      Invalid
+class BinsSelectExprKind(metaclass=_metaclass):
+    Binary: ClassVar[BinsSelectExprKind]
+    """Value = 3"""
+    Condition: ClassVar[BinsSelectExprKind]
+    """Value = 1"""
+    CrossId: ClassVar[BinsSelectExprKind]
+    """Value = 6"""
+    Invalid: ClassVar[BinsSelectExprKind]
+    """Value = 0"""
+    SetExpr: ClassVar[BinsSelectExprKind]
+    """Value = 4"""
+    Unary: ClassVar[BinsSelectExprKind]
+    """Value = 2"""
+    WithFilter: ClassVar[BinsSelectExprKind]
+    """Value = 5"""
 
-      Condition
+    __members__: dict[str, Self]
 
-      Unary
-
-      Binary
-
-      SetExpr
-
-      WithFilter
-
-      CrossId
-    """
-    Binary: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.Binary: 3>
-    Condition: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.Condition: 1>
-    CrossId: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.CrossId: 6>
-    Invalid: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.Invalid: 0>
-    SetExpr: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.SetExpr: 4>
-    Unary: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.Unary: 2>
-    WithFilter: typing.ClassVar[BinsSelectExprKind]  # value = <BinsSelectExprKind.WithFilter: 5>
-    __members__: typing.ClassVar[dict[str, BinsSelectExprKind]]  # value = {'Invalid': <BinsSelectExprKind.Invalid: 0>, 'Condition': <BinsSelectExprKind.Condition: 1>, 'Unary': <BinsSelectExprKind.Unary: 2>, 'Binary': <BinsSelectExprKind.Binary: 3>, 'SetExpr': <BinsSelectExprKind.SetExpr: 4>, 'WithFilter': <BinsSelectExprKind.WithFilter: 5>, 'CrossId': <BinsSelectExprKind.CrossId: 6>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class BinsSelectExpressionSyntax(SyntaxNode):
     pass
+
 class BinsSelectionSyntax(MemberSyntax):
     equals: Token
     expr: BinsSelectExpressionSyntax
@@ -1156,137 +818,120 @@ class BinsSelectionSyntax(MemberSyntax):
     keyword: Token
     name: Token
     semi: Token
+
 class BitSelectSyntax(SelectorSyntax):
     expr: ExpressionSyntax
+
 class BlockCoverageEventSyntax(SyntaxNode):
     atat: Token
     closeParen: Token
     expr: BlockEventExpressionSyntax
     openParen: Token
+
 class BlockEventExpressionSyntax(SyntaxNode):
     pass
+
 class BlockEventListControl(TimingControl):
-    class Event:
+    class Event(metaclass=_metaclass):
         @property
-        def isBegin(self) -> bool:
-            ...
+        def isBegin(self) -> bool: ...
         @property
-        def target(self) -> Any:
-            ...
+        def target(self) -> Any: ...
+
     @property
-    def events(self) -> List[Any]:
-        ...
+    def events(self) -> list[Any]: ...
+
 class BlockStatement(Statement):
     @property
-    def blockKind(self) -> StatementBlockKind:
-        ...
+    def blockKind(self) -> StatementBlockKind: ...
     @property
-    def blockSymbol(self) -> Any:
-        ...
+    def blockSymbol(self) -> Any: ...
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
+
 class BlockStatementSyntax(StatementSyntax):
     begin: Token
     blockName: NamedBlockClauseSyntax
     end: Token
     endBlockName: NamedBlockClauseSyntax
     items: Any
+
 class BreakStatement(Statement):
     pass
-class BufferID:
+
+class BufferID(metaclass=_metaclass):
     placeholder: typing.ClassVar[BufferID]  # value = BufferID(4294967295)
     @staticmethod
-    def getPlaceholder() -> BufferID:
-        ...
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
-    def __ge__(self, arg0: BufferID) -> bool:
-        ...
-    def __gt__(self, arg0: BufferID) -> bool:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __init__(self) -> None:
-        ...
-    def __le__(self, arg0: BufferID) -> bool:
-        ...
-    def __lt__(self, arg0: BufferID) -> bool:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
+    def getPlaceholder() -> BufferID: ...
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: object) -> bool: ...
+    def __ge__(self, arg0: BufferID) -> bool: ...
+    def __gt__(self, arg0: BufferID) -> bool: ...
+    def __hash__(self) -> int: ...
+    def __init__(self) -> None: ...
+    def __le__(self, arg0: BufferID) -> bool: ...
+    def __lt__(self, arg0: BufferID) -> bool: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
-    def id(self) -> int:
-        ...
-class BumpAllocator:
-    def __init__(self) -> None:
-        ...
+    def id(self) -> int: ...
+
+class BumpAllocator(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+
 class CHandleType(Type):
     pass
+
 class CallExpression(Expression):
-    class IteratorCallInfo:
+    class IteratorCallInfo(metaclass=_metaclass):
         @property
-        def iterExpr(self) -> Expression:
-            ...
+        def iterExpr(self) -> Expression: ...
         @property
-        def iterVar(self) -> Any:
-            ...
-    class RandomizeCallInfo:
+        def iterVar(self) -> Any: ...
+
+    class RandomizeCallInfo(metaclass=_metaclass):
         @property
-        def constraintRestrictions(self) -> List[str]:
-            ...
+        def constraintRestrictions(self) -> list[str]: ...
         @property
-        def inlineConstraints(self) -> Constraint:
-            ...
-    class SystemCallInfo:
+        def inlineConstraints(self) -> Constraint: ...
+
+    class SystemCallInfo(metaclass=_metaclass):
         @property
-        def extraInfo(self) -> None | CallExpression.IteratorCallInfo | CallExpression.RandomizeCallInfo:
-            ...
+        def extraInfo(
+            self,
+        ) -> None | CallExpression.IteratorCallInfo | CallExpression.RandomizeCallInfo: ...
         @property
-        def scope(self) -> Any:
-            ...
+        def scope(self) -> Any: ...
         @property
-        def subroutine(self) -> SystemSubroutine:
-            ...
+        def subroutine(self) -> SystemSubroutine: ...
+
     @property
-    def arguments(self) -> List[Expression]:
-        ...
+    def arguments(self) -> list[Expression]: ...
     @property
-    def isSystemCall(self) -> bool:
-        ...
+    def isSystemCall(self) -> bool: ...
     @property
-    def subroutine(self) -> Any:
-        ...
+    def subroutine(self) -> Any: ...
     @property
-    def subroutineKind(self) -> SubroutineKind:
-        ...
+    def subroutineKind(self) -> SubroutineKind: ...
     @property
-    def subroutineName(self) -> str:
-        ...
+    def subroutineName(self) -> str: ...
     @property
-    def thisClass(self) -> Expression:
-        ...
+    def thisClass(self) -> Expression: ...
+
 class CaseAssertionExpr(AssertionExpr):
-    class ItemGroup:
+    class ItemGroup(metaclass=_metaclass):
         @property
-        def body(self) -> AssertionExpr:
-            ...
+        def body(self) -> AssertionExpr: ...
         @property
-        def expressions(self) -> List[Any]:
-            ...
+        def expressions(self) -> list[Any]: ...
+
     @property
-    def defaultCase(self) -> AssertionExpr:
-        ...
+    def defaultCase(self) -> AssertionExpr: ...
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
     @property
-    def items(self) -> List[Any]:
-        ...
+    def items(self) -> list[Any]: ...
+
 class CaseGenerateSyntax(MemberSyntax):
     closeParen: Token
     condition: ExpressionSyntax
@@ -1294,8 +939,10 @@ class CaseGenerateSyntax(MemberSyntax):
     items: Any
     keyword: Token
     openParen: Token
+
 class CaseItemSyntax(SyntaxNode):
     pass
+
 class CasePropertyExprSyntax(PropertyExprSyntax):
     caseKeyword: Token
     closeParen: Token
@@ -1303,72 +950,44 @@ class CasePropertyExprSyntax(PropertyExprSyntax):
     expr: ExpressionSyntax
     items: Any
     openParen: Token
+
 class CaseStatement(Statement):
-    class ItemGroup:
+    class ItemGroup(metaclass=_metaclass):
         @property
-        def expressions(self) -> List[Expression]:
-            ...
+        def expressions(self) -> list[Expression]: ...
         @property
-        def stmt(self) -> Statement:
-            ...
-    @property
-    def check(self) -> UniquePriorityCheck:
-        ...
-    @property
-    def condition(self) -> CaseStatementCondition:
-        ...
-    @property
-    def defaultCase(self) -> Statement:
-        ...
-    @property
-    def expr(self) -> Expression:
-        ...
-    @property
-    def items(self) -> List[Any]:
-        ...
-class CaseStatementCondition:
-    """
-    Members:
+        def stmt(self) -> Statement: ...
 
-      Normal
-
-      WildcardXOrZ
-
-      WildcardJustZ
-
-      Inside
-    """
-    Inside: typing.ClassVar[CaseStatementCondition]  # value = <CaseStatementCondition.Inside: 3>
-    Normal: typing.ClassVar[CaseStatementCondition]  # value = <CaseStatementCondition.Normal: 0>
-    WildcardJustZ: typing.ClassVar[CaseStatementCondition]  # value = <CaseStatementCondition.WildcardJustZ: 2>
-    WildcardXOrZ: typing.ClassVar[CaseStatementCondition]  # value = <CaseStatementCondition.WildcardXOrZ: 1>
-    __members__: typing.ClassVar[dict[str, CaseStatementCondition]]  # value = {'Normal': <CaseStatementCondition.Normal: 0>, 'WildcardXOrZ': <CaseStatementCondition.WildcardXOrZ: 1>, 'WildcardJustZ': <CaseStatementCondition.WildcardJustZ: 2>, 'Inside': <CaseStatementCondition.Inside: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
     @property
-    def name(self) -> str:
-        ...
+    def check(self) -> UniquePriorityCheck: ...
     @property
-    def value(self) -> int:
-        ...
+    def condition(self) -> CaseStatementCondition: ...
+    @property
+    def defaultCase(self) -> Statement: ...
+    @property
+    def expr(self) -> Expression: ...
+    @property
+    def items(self) -> list[Any]: ...
+
+class CaseStatementCondition(metaclass=_metaclass):
+    Inside: ClassVar[CaseStatementCondition]
+    """Value = 3"""
+    Normal: ClassVar[CaseStatementCondition]
+    """Value = 0"""
+    WildcardJustZ: ClassVar[CaseStatementCondition]
+    """Value = 2"""
+    WildcardXOrZ: ClassVar[CaseStatementCondition]
+    """Value = 1"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class CaseStatementSyntax(StatementSyntax):
     caseKeyword: Token
     closeParen: Token
@@ -1378,22 +997,27 @@ class CaseStatementSyntax(StatementSyntax):
     matchesOrInside: Token
     openParen: Token
     uniqueOrPriority: Token
+
 class CastExpressionSyntax(ExpressionSyntax):
     apostrophe: Token
     left: ExpressionSyntax
     right: ParenthesizedExpressionSyntax
+
 class CellConfigRuleSyntax(ConfigRuleSyntax):
     cell: Token
     name: ConfigCellIdentifierSyntax
     ruleClause: ConfigRuleClauseSyntax
     semi: Token
+
 class ChargeStrengthSyntax(NetStrengthSyntax):
     closeParen: Token
     openParen: Token
     strength: Token
+
 class CheckerDataDeclarationSyntax(MemberSyntax):
     data: DataDeclarationSyntax
     rand: Token
+
 class CheckerDeclarationSyntax(MemberSyntax):
     end: Token
     endBlockName: NamedBlockClauseSyntax
@@ -1402,44 +1026,42 @@ class CheckerDeclarationSyntax(MemberSyntax):
     name: Token
     portList: AssertionItemPortListSyntax
     semi: Token
+
 class CheckerInstanceBodySymbol(Symbol, Scope):
     @property
-    def checker(self) -> Any:
-        ...
+    def checker(self) -> Any: ...
     @property
-    def parentInstance(self) -> CheckerInstanceSymbol:
-        ...
+    def parentInstance(self) -> CheckerInstanceSymbol: ...
+
 class CheckerInstanceStatementSyntax(StatementSyntax):
     instance: CheckerInstantiationSyntax
+
 class CheckerInstanceSymbol(InstanceSymbolBase):
-    class Connection:
+    class Connection(metaclass=_metaclass):
         @property
-        def actual(self) -> Expression | AssertionExpr | TimingControl:
-            ...
+        def actual(self) -> Expression | AssertionExpr | TimingControl: ...
         @property
-        def attributes(self) -> List[AttributeSymbol]:
-            ...
+        def attributes(self) -> list[AttributeSymbol]: ...
         @property
-        def formal(self) -> Symbol:
-            ...
+        def formal(self) -> Symbol: ...
         @property
-        def outputInitialExpr(self) -> Expression:
-            ...
+        def outputInitialExpr(self) -> Expression: ...
+
     @property
-    def body(self) -> Any:
-        ...
+    def body(self) -> Any: ...
     @property
-    def portConnections(self) -> List[Any]:
-        ...
+    def portConnections(self) -> list[Any]: ...
+
 class CheckerInstantiationSyntax(MemberSyntax):
     instances: Any
     parameters: ParameterValueAssignmentSyntax
     semi: Token
     type: NameSyntax
+
 class CheckerSymbol(Symbol, Scope):
     @property
-    def ports(self) -> List[AssertionPortSymbol]:
-        ...
+    def ports(self) -> list[AssertionPortSymbol]: ...
+
 class ClassDeclarationSyntax(MemberSyntax):
     classKeyword: Token
     endBlockName: NamedBlockClauseSyntax
@@ -1452,84 +1074,76 @@ class ClassDeclarationSyntax(MemberSyntax):
     parameters: ParameterPortListSyntax
     semi: Token
     virtualOrInterface: Token
+
 class ClassMethodDeclarationSyntax(MemberSyntax):
     declaration: FunctionDeclarationSyntax
     qualifiers: Any
+
 class ClassMethodPrototypeSyntax(MemberSyntax):
     prototype: FunctionPrototypeSyntax
     qualifiers: Any
     semi: Token
+
 class ClassNameSyntax(NameSyntax):
     identifier: Token
     parameters: ParameterValueAssignmentSyntax
+
 class ClassPropertyDeclarationSyntax(MemberSyntax):
     declaration: MemberSyntax
     qualifiers: Any
+
 class ClassPropertySymbol(VariableSymbol):
     @property
-    def randMode(self) -> RandMode:
-        ...
+    def randMode(self) -> RandMode: ...
     @property
-    def visibility(self) -> Visibility:
-        ...
+    def visibility(self) -> Visibility: ...
+
 class ClassSpecifierSyntax(SyntaxNode):
     colon: Token
     keyword: Token
+
 class ClassType(Type, Scope):
     @property
-    def baseClass(self) -> Type:
-        ...
+    def baseClass(self) -> Type: ...
     @property
-    def baseConstructorCall(self) -> Expression:
-        ...
+    def baseConstructorCall(self) -> Expression: ...
     @property
-    def constructor(self) -> SubroutineSymbol:
-        ...
+    def constructor(self) -> SubroutineSymbol: ...
     @property
-    def firstForwardDecl(self) -> ForwardingTypedefSymbol:
-        ...
+    def firstForwardDecl(self) -> ForwardingTypedefSymbol: ...
     @property
-    def genericClass(self) -> Any:
-        ...
+    def genericClass(self) -> Any: ...
     @property
-    def implementedInterfaces(self) -> List[Type]:
-        ...
+    def implementedInterfaces(self) -> list[Type]: ...
     @property
-    def isAbstract(self) -> bool:
-        ...
+    def isAbstract(self) -> bool: ...
     @property
-    def isFinal(self) -> bool:
-        ...
+    def isFinal(self) -> bool: ...
     @property
-    def isInterface(self) -> bool:
-        ...
+    def isInterface(self) -> bool: ...
+
 class ClockVarSymbol(VariableSymbol):
     @property
-    def direction(self) -> ArgumentDirection:
-        ...
+    def direction(self) -> ArgumentDirection: ...
     @property
-    def inputSkew(self) -> ClockingSkew:
-        ...
+    def inputSkew(self) -> ClockingSkew: ...
     @property
-    def outputSkew(self) -> ClockingSkew:
-        ...
+    def outputSkew(self) -> ClockingSkew: ...
+
 class ClockingAssertionExpr(AssertionExpr):
     @property
-    def clocking(self) -> TimingControl:
-        ...
+    def clocking(self) -> TimingControl: ...
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
+
 class ClockingBlockSymbol(Symbol, Scope):
     @property
-    def defaultInputSkew(self) -> ClockingSkew:
-        ...
+    def defaultInputSkew(self) -> ClockingSkew: ...
     @property
-    def defaultOutputSkew(self) -> ClockingSkew:
-        ...
+    def defaultOutputSkew(self) -> ClockingSkew: ...
     @property
-    def event(self) -> TimingControl:
-        ...
+    def event(self) -> TimingControl: ...
+
 class ClockingDeclarationSyntax(MemberSyntax):
     at: Token
     blockName: Token
@@ -1540,266 +1154,184 @@ class ClockingDeclarationSyntax(MemberSyntax):
     globalOrDefault: Token
     items: Any
     semi: Token
+
 class ClockingDirectionSyntax(SyntaxNode):
     input: Token
     inputSkew: ClockingSkewSyntax
     output: Token
     outputSkew: ClockingSkewSyntax
+
 class ClockingEventExpression(Expression):
     @property
-    def timingControl(self) -> TimingControl:
-        ...
+    def timingControl(self) -> TimingControl: ...
+
 class ClockingItemSyntax(MemberSyntax):
     decls: Any
     direction: ClockingDirectionSyntax
     semi: Token
+
 class ClockingPropertyExprSyntax(PropertyExprSyntax):
     event: TimingControlSyntax
     expr: PropertyExprSyntax
+
 class ClockingSequenceExprSyntax(SequenceExprSyntax):
     event: TimingControlSyntax
     expr: SequenceExprSyntax
-class ClockingSkew:
+
+class ClockingSkew(metaclass=_metaclass):
     @property
-    def delay(self) -> TimingControl:
-        ...
+    def delay(self) -> TimingControl: ...
     @property
-    def edge(self) -> EdgeKind:
-        ...
+    def edge(self) -> EdgeKind: ...
     @property
-    def hasValue(self) -> bool:
-        ...
+    def hasValue(self) -> bool: ...
+
 class ClockingSkewSyntax(SyntaxNode):
     delay: TimingControlSyntax
     edge: Token
+
 class ColonExpressionClauseSyntax(SyntaxNode):
     colon: Token
     expr: ExpressionSyntax
-class CommandLineOptions:
+
+class CommandLineOptions(metaclass=_metaclass):
     expandEnvVars: bool
     ignoreDuplicates: bool
     ignoreProgramName: bool
     supportsComments: bool
-    def __init__(self) -> None:
-        ...
-class Compilation:
-    class DefinitionLookupResult:
+    def __init__(self) -> None: ...
+
+class Compilation(metaclass=_metaclass):
+    class DefinitionLookupResult(metaclass=_metaclass):
         configRoot: Any
         configRule: Any
         definition: Any
-        def __init__(self) -> None:
-            ...
+        def __init__(self) -> None: ...
+
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, options: Any) -> None:
-        ...
-    def addDiagnostics(self, diagnostics: Any) -> None:
-        ...
-    def addSyntaxTree(self, tree: Any) -> None:
-        ...
-    def addSystemMethod(self, typeKind: Any, method: Any) -> None:
-        ...
-    def addSystemSubroutine(self, subroutine: Any) -> None:
-        ...
-    def createScriptScope(self) -> Any:
-        ...
-    def getAllDiagnostics(self) -> Any:
-        ...
+    def __init__(self, options: Any) -> None: ...
+    def addDiagnostics(self, diagnostics: Any) -> None: ...
+    def addSyntaxTree(self, tree: Any) -> None: ...
+    def addSystemMethod(self, typeKind: Any, method: Any) -> None: ...
+    def addSystemSubroutine(self, subroutine: Any) -> None: ...
+    def createScriptScope(self) -> Any: ...
+    def getAllDiagnostics(self) -> Any: ...
     @typing.overload
-    def getAttributes(self, symbol: Any) -> List[Any]:
-        ...
+    def getAttributes(self, symbol: Any) -> list[Any]: ...
     @typing.overload
-    def getAttributes(self, stmt: Any) -> List[Any]:
-        ...
+    def getAttributes(self, stmt: Any) -> list[Any]: ...
     @typing.overload
-    def getAttributes(self, expr: Any) -> List[Any]:
-        ...
+    def getAttributes(self, expr: Any) -> list[Any]: ...
     @typing.overload
-    def getAttributes(self, conn: Any) -> List[Any]:
-        ...
-    def getCompilationUnit(self, syntax: Any) -> Any:
-        ...
-    def getCompilationUnits(self) -> List[Any]:
-        ...
-    def getDefinitions(self) -> list[Any]:
-        ...
-    def getGateType(self, name: str) -> Any:
-        ...
-    def getNetType(self, kind: Any) -> Any:
-        ...
-    def getPackage(self, name: str) -> Any:
-        ...
-    def getPackages(self) -> list[Any]:
-        ...
-    def getParseDiagnostics(self) -> Any:
-        ...
-    def getRoot(self) -> Any:
-        ...
-    def getSemanticDiagnostics(self) -> Any:
-        ...
-    def getSourceLibrary(self, name: str) -> Any:
-        ...
-    def getStdPackage(self) -> Any:
-        ...
-    def getSyntaxTrees(self) -> List[Any]:
-        ...
-    def getSystemMethod(self, typeKind: Any, name: str) -> Any:
-        ...
-    def getSystemSubroutine(self, name: str) -> Any:
-        ...
-    def getType(self, kind: Any) -> Any:
-        ...
-    def parseName(self, name: str) -> Any:
-        ...
-    def tryGetDefinition(self, name: str, scope: Any) -> Any:
-        ...
-    def tryParseName(self, name: str, diags: Any) -> Any:
-        ...
+    def getAttributes(self, conn: Any) -> list[Any]: ...
+    def getCompilationUnit(self, syntax: Any) -> Any: ...
+    def getCompilationUnits(self) -> list[Any]: ...
+    def getDefinitions(self) -> list[Any]: ...
+    def getGateType(self, name: str) -> Any: ...
+    def getNetType(self, kind: Any) -> Any: ...
+    def getPackage(self, name: str) -> Any: ...
+    def getPackages(self) -> list[Any]: ...
+    def getParseDiagnostics(self) -> Any: ...
+    def getRoot(self) -> Any: ...
+    def getSemanticDiagnostics(self) -> Any: ...
+    def getSourceLibrary(self, name: str) -> Any: ...
+    def getStdPackage(self) -> Any: ...
+    def getSyntaxTrees(self) -> list[Any]: ...
+    def getSystemMethod(self, typeKind: Any, name: str) -> Any: ...
+    def getSystemSubroutine(self, name: str) -> Any: ...
+    def getType(self, kind: Any) -> Any: ...
+    def parseName(self, name: str) -> Any: ...
+    def tryGetDefinition(self, name: str, scope: Any) -> Any: ...
+    def tryParseName(self, name: str, diags: Any) -> Any: ...
     @property
-    def bitType(self) -> Any:
-        ...
+    def bitType(self) -> Any: ...
     @property
-    def byteType(self) -> Any:
-        ...
+    def byteType(self) -> Any: ...
     @property
-    def defaultLibrary(self) -> Any:
-        ...
+    def defaultLibrary(self) -> Any: ...
     @property
-    def defaultTimeScale(self) -> Any | None:
-        ...
+    def defaultTimeScale(self) -> Any | None: ...
     @property
-    def errorType(self) -> Any:
-        ...
+    def errorType(self) -> Any: ...
     @property
-    def hasFatalErrors(self) -> bool:
-        ...
+    def hasFatalErrors(self) -> bool: ...
     @property
-    def hasIssuedErrors(self) -> bool:
-        ...
+    def hasIssuedErrors(self) -> bool: ...
     @property
-    def intType(self) -> Any:
-        ...
+    def intType(self) -> Any: ...
     @property
-    def integerType(self) -> Any:
-        ...
+    def integerType(self) -> Any: ...
     @property
-    def isElaborated(self) -> bool:
-        ...
+    def isElaborated(self) -> bool: ...
     @property
-    def isFinalized(self) -> bool:
-        ...
+    def isFinalized(self) -> bool: ...
     @property
-    def logicType(self) -> Any:
-        ...
+    def logicType(self) -> Any: ...
     @property
-    def nullType(self) -> Any:
-        ...
+    def nullType(self) -> Any: ...
     @property
-    def options(self) -> CompilationOptions:
-        ...
+    def options(self) -> CompilationOptions: ...
     @property
-    def realType(self) -> Any:
-        ...
+    def realType(self) -> Any: ...
     @property
-    def shortRealType(self) -> Any:
-        ...
+    def shortRealType(self) -> Any: ...
     @property
-    def sourceManager(self) -> Any:
-        ...
+    def sourceManager(self) -> Any: ...
     @property
-    def stringType(self) -> Any:
-        ...
+    def stringType(self) -> Any: ...
     @property
-    def typeRefType(self) -> Any:
-        ...
+    def typeRefType(self) -> Any: ...
     @property
-    def unboundedType(self) -> Any:
-        ...
+    def unboundedType(self) -> Any: ...
     @property
-    def unsignedIntType(self) -> Any:
-        ...
+    def unsignedIntType(self) -> Any: ...
     @property
-    def voidType(self) -> Any:
-        ...
+    def voidType(self) -> Any: ...
     @property
-    def wireNetType(self) -> Any:
-        ...
-class CompilationFlags:
-    """
-    Members:
+    def wireNetType(self) -> Any: ...
 
-      None_
+class CompilationFlags(metaclass=_metaclass):
+    AllowBareValParamAssignment: ClassVar[CompilationFlags]
+    """Value = 256"""
+    AllowHierarchicalConst: ClassVar[CompilationFlags]
+    """Value = 1"""
+    AllowMergingAnsiPorts: ClassVar[CompilationFlags]
+    """Value = 1024"""
+    AllowRecursiveImplicitCall: ClassVar[CompilationFlags]
+    """Value = 128"""
+    AllowSelfDeterminedStreamConcat: ClassVar[CompilationFlags]
+    """Value = 512"""
+    AllowTopLevelIfacePorts: ClassVar[CompilationFlags]
+    """Value = 8"""
+    AllowUseBeforeDeclare: ClassVar[CompilationFlags]
+    """Value = 4"""
+    DisableInstanceCaching: ClassVar[CompilationFlags]
+    """Value = 2048"""
+    DisallowRefsToUnknownInstances: ClassVar[CompilationFlags]
+    """Value = 4096"""
+    IgnoreUnknownModules: ClassVar[CompilationFlags]
+    """Value = 32"""
+    LintMode: ClassVar[CompilationFlags]
+    """Value = 16"""
+    None_: ClassVar[CompilationFlags]
+    """Value = 0"""
+    RelaxEnumConversions: ClassVar[CompilationFlags]
+    """Value = 2"""
+    RelaxStringConversions: ClassVar[CompilationFlags]
+    """Value = 64"""
 
-      AllowHierarchicalConst
+    __members__: dict[str, Self]
 
-      RelaxEnumConversions
-
-      AllowUseBeforeDeclare
-
-      AllowTopLevelIfacePorts
-
-      LintMode
-
-      IgnoreUnknownModules
-
-      RelaxStringConversions
-
-      AllowRecursiveImplicitCall
-
-      AllowBareValParamAssignment
-
-      AllowSelfDeterminedStreamConcat
-
-      AllowMergingAnsiPorts
-
-      DisableInstanceCaching
-
-      DisallowRefsToUnknownInstances
-    """
-    AllowBareValParamAssignment: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowBareValParamAssignment: 256>
-    AllowHierarchicalConst: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowHierarchicalConst: 1>
-    AllowMergingAnsiPorts: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowMergingAnsiPorts: 1024>
-    AllowRecursiveImplicitCall: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowRecursiveImplicitCall: 128>
-    AllowSelfDeterminedStreamConcat: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowSelfDeterminedStreamConcat: 512>
-    AllowTopLevelIfacePorts: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowTopLevelIfacePorts: 8>
-    AllowUseBeforeDeclare: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.AllowUseBeforeDeclare: 4>
-    DisableInstanceCaching: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.DisableInstanceCaching: 2048>
-    DisallowRefsToUnknownInstances: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.DisallowRefsToUnknownInstances: 4096>
-    IgnoreUnknownModules: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.IgnoreUnknownModules: 32>
-    LintMode: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.LintMode: 16>
-    None_: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.None_: 0>
-    RelaxEnumConversions: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.RelaxEnumConversions: 2>
-    RelaxStringConversions: typing.ClassVar[CompilationFlags]  # value = <CompilationFlags.RelaxStringConversions: 64>
-    __members__: typing.ClassVar[dict[str, CompilationFlags]]  # value = {'None_': <CompilationFlags.None_: 0>, 'AllowHierarchicalConst': <CompilationFlags.AllowHierarchicalConst: 1>, 'RelaxEnumConversions': <CompilationFlags.RelaxEnumConversions: 2>, 'AllowUseBeforeDeclare': <CompilationFlags.AllowUseBeforeDeclare: 4>, 'AllowTopLevelIfacePorts': <CompilationFlags.AllowTopLevelIfacePorts: 8>, 'LintMode': <CompilationFlags.LintMode: 16>, 'IgnoreUnknownModules': <CompilationFlags.IgnoreUnknownModules: 32>, 'RelaxStringConversions': <CompilationFlags.RelaxStringConversions: 64>, 'AllowRecursiveImplicitCall': <CompilationFlags.AllowRecursiveImplicitCall: 128>, 'AllowBareValParamAssignment': <CompilationFlags.AllowBareValParamAssignment: 256>, 'AllowSelfDeterminedStreamConcat': <CompilationFlags.AllowSelfDeterminedStreamConcat: 512>, 'AllowMergingAnsiPorts': <CompilationFlags.AllowMergingAnsiPorts: 1024>, 'DisableInstanceCaching': <CompilationFlags.DisableInstanceCaching: 2048>, 'DisallowRefsToUnknownInstances': <CompilationFlags.DisallowRefsToUnknownInstances: 4096>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class CompilationOptions:
+    def value(self) -> int: ...
+
+class CompilationOptions(metaclass=_metaclass):
     defaultLiblist: list[str]
     defaultTimeScale: Any | None
     errorLimit: int
@@ -1816,38 +1348,38 @@ class CompilationOptions:
     paramOverrides: list[str]
     topModules: set[str]
     typoCorrectionLimit: int
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
+
 class CompilationUnitSymbol(Symbol, Scope):
     @property
-    def timeScale(self) -> TimeScale | None:
-        ...
+    def timeScale(self) -> TimeScale | None: ...
+
 class CompilationUnitSyntax(SyntaxNode):
     endOfFile: Token
     members: Any
+
 class ConcatenationExpression(Expression):
     @property
-    def operands(self) -> List[Expression]:
-        ...
+    def operands(self) -> list[Expression]: ...
+
 class ConcatenationExpressionSyntax(PrimaryExpressionSyntax):
     closeBrace: Token
     expressions: Any
     openBrace: Token
+
 class ConcurrentAssertionMemberSyntax(MemberSyntax):
     statement: ConcurrentAssertionStatementSyntax
+
 class ConcurrentAssertionStatement(Statement):
     @property
-    def assertionKind(self) -> AssertionKind:
-        ...
+    def assertionKind(self) -> AssertionKind: ...
     @property
-    def ifFalse(self) -> Statement:
-        ...
+    def ifFalse(self) -> Statement: ...
     @property
-    def ifTrue(self) -> Statement:
-        ...
+    def ifTrue(self) -> Statement: ...
     @property
-    def propertySpec(self) -> AssertionExpr:
-        ...
+    def propertySpec(self) -> AssertionExpr: ...
+
 class ConcurrentAssertionStatementSyntax(StatementSyntax):
     action: ActionBlockSyntax
     closeParen: Token
@@ -1855,36 +1387,33 @@ class ConcurrentAssertionStatementSyntax(StatementSyntax):
     openParen: Token
     propertyOrSequence: Token
     propertySpec: PropertySpecSyntax
+
 class ConditionBinsSelectExpr(BinsSelectExpr):
     @property
-    def intersects(self) -> List[Any]:
-        ...
+    def intersects(self) -> list[Any]: ...
     @property
-    def target(self) -> Any:
-        ...
+    def target(self) -> Any: ...
+
 class ConditionalAssertionExpr(AssertionExpr):
     @property
-    def condition(self) -> Any:
-        ...
+    def condition(self) -> Any: ...
     @property
-    def elseExpr(self) -> AssertionExpr:
-        ...
+    def elseExpr(self) -> AssertionExpr: ...
     @property
-    def ifExpr(self) -> AssertionExpr:
-        ...
+    def ifExpr(self) -> AssertionExpr: ...
+
 class ConditionalBranchDirectiveSyntax(DirectiveSyntax):
     disabledTokens: Any
     expr: ConditionalDirectiveExpressionSyntax
+
 class ConditionalConstraint(Constraint):
     @property
-    def elseBody(self) -> Constraint:
-        ...
+    def elseBody(self) -> Constraint: ...
     @property
-    def ifBody(self) -> Constraint:
-        ...
+    def ifBody(self) -> Constraint: ...
     @property
-    def predicate(self) -> Any:
-        ...
+    def predicate(self) -> Any: ...
+
 class ConditionalConstraintSyntax(ConstraintItemSyntax):
     closeParen: Token
     condition: ExpressionSyntax
@@ -1892,25 +1421,24 @@ class ConditionalConstraintSyntax(ConstraintItemSyntax):
     elseClause: ElseConstraintClauseSyntax
     ifKeyword: Token
     openParen: Token
+
 class ConditionalDirectiveExpressionSyntax(SyntaxNode):
     pass
+
 class ConditionalExpression(Expression):
-    class Condition:
+    class Condition(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def pattern(self) -> Pattern:
-            ...
+        def pattern(self) -> Pattern: ...
+
     @property
-    def conditions(self) -> List[Any]:
-        ...
+    def conditions(self) -> list[Any]: ...
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def right(self) -> Expression:
-        ...
+    def right(self) -> Expression: ...
+
 class ConditionalExpressionSyntax(ExpressionSyntax):
     attributes: Any
     colon: Token
@@ -1918,17 +1446,21 @@ class ConditionalExpressionSyntax(ExpressionSyntax):
     predicate: ConditionalPredicateSyntax
     question: Token
     right: ExpressionSyntax
+
 class ConditionalPathDeclarationSyntax(MemberSyntax):
     closeParen: Token
     keyword: Token
     openParen: Token
     path: PathDeclarationSyntax
     predicate: ExpressionSyntax
+
 class ConditionalPatternSyntax(SyntaxNode):
     expr: ExpressionSyntax
     matchesClause: MatchesClauseSyntax
+
 class ConditionalPredicateSyntax(SyntaxNode):
     conditions: Any
+
 class ConditionalPropertyExprSyntax(PropertyExprSyntax):
     closeParen: Token
     condition: ExpressionSyntax
@@ -1936,26 +1468,23 @@ class ConditionalPropertyExprSyntax(PropertyExprSyntax):
     expr: PropertyExprSyntax
     ifKeyword: Token
     openParen: Token
+
 class ConditionalStatement(Statement):
-    class Condition:
+    class Condition(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def pattern(self) -> Pattern:
-            ...
+        def pattern(self) -> Pattern: ...
+
     @property
-    def check(self) -> UniquePriorityCheck:
-        ...
+    def check(self) -> UniquePriorityCheck: ...
     @property
-    def conditions(self) -> List[Any]:
-        ...
+    def conditions(self) -> list[Any]: ...
     @property
-    def ifFalse(self) -> Statement:
-        ...
+    def ifFalse(self) -> Statement: ...
     @property
-    def ifTrue(self) -> Statement:
-        ...
+    def ifTrue(self) -> Statement: ...
+
 class ConditionalStatementSyntax(StatementSyntax):
     closeParen: Token
     elseClause: ElseClauseSyntax
@@ -1964,12 +1493,15 @@ class ConditionalStatementSyntax(StatementSyntax):
     predicate: ConditionalPredicateSyntax
     statement: StatementSyntax
     uniqueOrPriority: Token
+
 class ConfigBlockSymbol(Symbol, Scope):
     pass
+
 class ConfigCellIdentifierSyntax(SyntaxNode):
     cell: Token
     dot: Token
     library: Token
+
 class ConfigDeclarationSyntax(MemberSyntax):
     blockName: NamedBlockClauseSyntax
     config: Token
@@ -1981,378 +1513,259 @@ class ConfigDeclarationSyntax(MemberSyntax):
     semi1: Token
     semi2: Token
     topCells: Any
+
 class ConfigInstanceIdentifierSyntax(SyntaxNode):
     dot: Token
     name: Token
+
 class ConfigLiblistSyntax(ConfigRuleClauseSyntax):
     liblist: Token
     libraries: Any
+
 class ConfigRuleClauseSyntax(SyntaxNode):
     pass
+
 class ConfigRuleSyntax(SyntaxNode):
     pass
+
 class ConfigUseClauseSyntax(ConfigRuleClauseSyntax):
     colon: Token
     config: Token
     name: ConfigCellIdentifierSyntax
     paramAssignments: ParameterValueAssignmentSyntax
     use: Token
+
 class ConstantPattern(Pattern):
     @property
-    def expr(self) -> Any:
-        ...
-class ConstantRange:
+    def expr(self) -> Any: ...
+
+class ConstantRange(metaclass=_metaclass):
     left: int
     right: int
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, left: int, right: int) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def containsPoint(self, arg0: int) -> bool:
-        ...
-    def getIndexedRange(self, arg0: int, arg1: bool, arg2: bool) -> ConstantRange | None:
-        ...
-    def overlaps(self, arg0: ConstantRange) -> bool:
-        ...
-    def reverse(self) -> ConstantRange:
-        ...
-    def subrange(self, arg0: ConstantRange) -> ConstantRange:
-        ...
-    def translateIndex(self, arg0: int) -> int:
-        ...
+    def __init__(self, left: int, right: int) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def containsPoint(self, arg0: int) -> bool: ...
+    def getIndexedRange(self, arg0: int, arg1: bool, arg2: bool) -> ConstantRange | None: ...
+    def overlaps(self, arg0: ConstantRange) -> bool: ...
+    def reverse(self) -> ConstantRange: ...
+    def subrange(self, arg0: ConstantRange) -> ConstantRange: ...
+    def translateIndex(self, arg0: int) -> int: ...
     @property
-    def isLittleEndian(self) -> bool:
-        ...
+    def isLittleEndian(self) -> bool: ...
     @property
-    def lower(self) -> int:
-        ...
+    def lower(self) -> int: ...
     @property
-    def upper(self) -> int:
-        ...
+    def upper(self) -> int: ...
     @property
-    def width(self) -> int:
-        ...
-class ConstantValue:
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
-    def __hash__(self) -> int:
-        ...
-    @typing.overload
-    def __init__(self) -> None:
-        ...
-    @typing.overload
-    def __init__(self, integer: SVInt) -> None:
-        ...
-    @typing.overload
-    def __init__(self, str: str) -> None:
-        ...
-    @typing.overload
-    def __init__(self, value: int) -> None:
-        ...
-    @typing.overload
-    def __init__(self, value: float) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def bitstreamWidth(self) -> int:
-        ...
-    def convertToByteArray(self, size: int, isSigned: bool) -> ConstantValue:
-        ...
-    def convertToByteQueue(self, isSigned: bool) -> ConstantValue:
-        ...
-    @typing.overload
-    def convertToInt(self) -> ConstantValue:
-        ...
-    @typing.overload
-    def convertToInt(self, width: int, isSigned: bool, isFourState: bool) -> ConstantValue:
-        ...
-    def convertToReal(self) -> ConstantValue:
-        ...
-    def convertToShortReal(self) -> ConstantValue:
-        ...
-    def convertToStr(self) -> ConstantValue:
-        ...
-    def empty(self) -> bool:
-        ...
-    def getSlice(self, upper: int, lower: int, defaultValue: ConstantValue) -> ConstantValue:
-        ...
-    def hasUnknown(self) -> bool:
-        ...
-    def isContainer(self) -> bool:
-        ...
-    def isFalse(self) -> bool:
-        ...
-    def isTrue(self) -> bool:
-        ...
-    def size(self) -> int:
-        ...
-    @property
-    def value(self) -> typing.Any:
-        ...
-class Constraint:
-    def __repr__(self) -> str:
-        ...
-    @property
-    def bad(self) -> bool:
-        ...
-    @property
-    def kind(self) -> ConstraintKind:
-        ...
-    @property
-    def syntax(self) -> Any:
-        ...
-class ConstraintBlockFlags:
-    """
-    Members:
+    def width(self) -> int: ...
 
-      None_
-
-      Pure
-
-      Static
-
-      Extern
-
-      ExplicitExtern
-
-      Initial
-
-      Extends
-
-      Final
-    """
-    ExplicitExtern: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.ExplicitExtern: 16>
-    Extends: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Extends: 64>
-    Extern: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Extern: 8>
-    Final: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Final: 128>
-    Initial: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Initial: 32>
-    None_: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.None_: 0>
-    Pure: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Pure: 2>
-    Static: typing.ClassVar[ConstraintBlockFlags]  # value = <ConstraintBlockFlags.Static: 4>
-    __members__: typing.ClassVar[dict[str, ConstraintBlockFlags]]  # value = {'None_': <ConstraintBlockFlags.None_: 0>, 'Pure': <ConstraintBlockFlags.Pure: 2>, 'Static': <ConstraintBlockFlags.Static: 4>, 'Extern': <ConstraintBlockFlags.Extern: 8>, 'ExplicitExtern': <ConstraintBlockFlags.ExplicitExtern: 16>, 'Initial': <ConstraintBlockFlags.Initial: 32>, 'Extends': <ConstraintBlockFlags.Extends: 64>, 'Final': <ConstraintBlockFlags.Final: 128>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+class ConstantValue(metaclass=_metaclass):
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: object) -> bool: ...
+    def __hash__(self) -> int: ...
+    @typing.overload
+    def __init__(self) -> None: ...
+    @typing.overload
+    def __init__(self, integer: SVInt) -> None: ...
+    @typing.overload
+    def __init__(self, str: str) -> None: ...
+    @typing.overload
+    def __init__(self, value: int) -> None: ...
+    @typing.overload
+    def __init__(self, value: float) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def bitstreamWidth(self) -> int: ...
+    def convertToByteArray(self, size: int, isSigned: bool) -> ConstantValue: ...
+    def convertToByteQueue(self, isSigned: bool) -> ConstantValue: ...
+    @typing.overload
+    def convertToInt(self) -> ConstantValue: ...
+    @typing.overload
+    def convertToInt(self, width: int, isSigned: bool, isFourState: bool) -> ConstantValue: ...
+    def convertToReal(self) -> ConstantValue: ...
+    def convertToShortReal(self) -> ConstantValue: ...
+    def convertToStr(self) -> ConstantValue: ...
+    def empty(self) -> bool: ...
+    def getSlice(self, upper: int, lower: int, defaultValue: ConstantValue) -> ConstantValue: ...
+    def hasUnknown(self) -> bool: ...
+    def isContainer(self) -> bool: ...
+    def isFalse(self) -> bool: ...
+    def isTrue(self) -> bool: ...
+    def size(self) -> int: ...
     @property
-    def name(self) -> str:
-        ...
+    def value(self) -> typing.Any: ...
+
+class Constraint(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def bad(self) -> bool: ...
+    @property
+    def kind(self) -> ConstraintKind: ...
+    @property
+    def syntax(self) -> Any: ...
+
+class ConstraintBlockFlags(metaclass=_metaclass):
+    ExplicitExtern: ClassVar[ConstraintBlockFlags]
+    """Value = 16"""
+    Extends: ClassVar[ConstraintBlockFlags]
+    """Value = 64"""
+    Extern: ClassVar[ConstraintBlockFlags]
+    """Value = 8"""
+    Final: ClassVar[ConstraintBlockFlags]
+    """Value = 128"""
+    Initial: ClassVar[ConstraintBlockFlags]
+    """Value = 32"""
+    None_: ClassVar[ConstraintBlockFlags]
+    """Value = 0"""
+    Pure: ClassVar[ConstraintBlockFlags]
+    """Value = 2"""
+    Static: ClassVar[ConstraintBlockFlags]
+    """Value = 4"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class ConstraintBlockSymbol(Symbol, Scope):
     @property
-    def constraints(self) -> Constraint:
-        ...
+    def constraints(self) -> Constraint: ...
     @property
-    def flags(self) -> ConstraintBlockFlags:
-        ...
+    def flags(self) -> ConstraintBlockFlags: ...
     @property
-    def thisVar(self) -> VariableSymbol:
-        ...
+    def thisVar(self) -> VariableSymbol: ...
+
 class ConstraintBlockSyntax(ConstraintItemSyntax):
     closeBrace: Token
     items: Any
     openBrace: Token
+
 class ConstraintDeclarationSyntax(MemberSyntax):
     block: ConstraintBlockSyntax
     keyword: Token
     name: NameSyntax
     qualifiers: Any
     specifiers: Any
+
 class ConstraintItemSyntax(SyntaxNode):
     pass
-class ConstraintKind:
-    """
-    Members:
 
-      Invalid
+class ConstraintKind(metaclass=_metaclass):
+    Conditional: ClassVar[ConstraintKind]
+    """Value = 4"""
+    DisableSoft: ClassVar[ConstraintKind]
+    """Value = 6"""
+    Expression: ClassVar[ConstraintKind]
+    """Value = 2"""
+    Foreach: ClassVar[ConstraintKind]
+    """Value = 8"""
+    Implication: ClassVar[ConstraintKind]
+    """Value = 3"""
+    Invalid: ClassVar[ConstraintKind]
+    """Value = 0"""
+    List: ClassVar[ConstraintKind]
+    """Value = 1"""
+    SolveBefore: ClassVar[ConstraintKind]
+    """Value = 7"""
+    Uniqueness: ClassVar[ConstraintKind]
+    """Value = 5"""
 
-      List
+    __members__: dict[str, Self]
 
-      Expression
-
-      Implication
-
-      Conditional
-
-      Uniqueness
-
-      DisableSoft
-
-      SolveBefore
-
-      Foreach
-    """
-    Conditional: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Conditional: 4>
-    DisableSoft: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.DisableSoft: 6>
-    Expression: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Expression: 2>
-    Foreach: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Foreach: 8>
-    Implication: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Implication: 3>
-    Invalid: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Invalid: 0>
-    List: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.List: 1>
-    SolveBefore: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.SolveBefore: 7>
-    Uniqueness: typing.ClassVar[ConstraintKind]  # value = <ConstraintKind.Uniqueness: 5>
-    __members__: typing.ClassVar[dict[str, ConstraintKind]]  # value = {'Invalid': <ConstraintKind.Invalid: 0>, 'List': <ConstraintKind.List: 1>, 'Expression': <ConstraintKind.Expression: 2>, 'Implication': <ConstraintKind.Implication: 3>, 'Conditional': <ConstraintKind.Conditional: 4>, 'Uniqueness': <ConstraintKind.Uniqueness: 5>, 'DisableSoft': <ConstraintKind.DisableSoft: 6>, 'SolveBefore': <ConstraintKind.SolveBefore: 7>, 'Foreach': <ConstraintKind.Foreach: 8>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ConstraintList(Constraint):
     @property
-    def list(self) -> List[Constraint]:
-        ...
+    def list(self) -> list[Constraint]: ...
+
 class ConstraintPrototypeSyntax(MemberSyntax):
     keyword: Token
     name: NameSyntax
     qualifiers: Any
     semi: Token
     specifiers: Any
+
 class ContinueStatement(Statement):
     pass
+
 class ContinuousAssignSymbol(Symbol):
     @property
-    def assignment(self) -> Expression:
-        ...
+    def assignment(self) -> Expression: ...
     @property
-    def delay(self) -> TimingControl:
-        ...
+    def delay(self) -> TimingControl: ...
     @property
-    def driveStrength(self) -> tuple[Any | None, Any | None]:
-        ...
+    def driveStrength(self) -> tuple[Any | None, Any | None]: ...
+
 class ContinuousAssignSyntax(MemberSyntax):
     assign: Token
     assignments: Any
     delay: TimingControlSyntax
     semi: Token
     strength: DriveStrengthSyntax
+
 class ConversionExpression(Expression):
     @property
-    def conversionKind(self) -> ConversionKind:
-        ...
+    def conversionKind(self) -> ConversionKind: ...
     @property
-    def isImplicit(self) -> bool:
-        ...
+    def isImplicit(self) -> bool: ...
     @property
-    def operand(self) -> Expression:
-        ...
-class ConversionKind:
-    """
-    Members:
+    def operand(self) -> Expression: ...
 
-      Implicit
+class ConversionKind(metaclass=_metaclass):
+    BitstreamCast: ClassVar[ConversionKind]
+    """Value = 4"""
+    Explicit: ClassVar[ConversionKind]
+    """Value = 3"""
+    Implicit: ClassVar[ConversionKind]
+    """Value = 0"""
+    Propagated: ClassVar[ConversionKind]
+    """Value = 1"""
+    StreamingConcat: ClassVar[ConversionKind]
+    """Value = 2"""
 
-      Propagated
+    __members__: dict[str, Self]
 
-      StreamingConcat
-
-      Explicit
-
-      BitstreamCast
-    """
-    BitstreamCast: typing.ClassVar[ConversionKind]  # value = <ConversionKind.BitstreamCast: 4>
-    Explicit: typing.ClassVar[ConversionKind]  # value = <ConversionKind.Explicit: 3>
-    Implicit: typing.ClassVar[ConversionKind]  # value = <ConversionKind.Implicit: 0>
-    Propagated: typing.ClassVar[ConversionKind]  # value = <ConversionKind.Propagated: 1>
-    StreamingConcat: typing.ClassVar[ConversionKind]  # value = <ConversionKind.StreamingConcat: 2>
-    __members__: typing.ClassVar[dict[str, ConversionKind]]  # value = {'Implicit': <ConversionKind.Implicit: 0>, 'Propagated': <ConversionKind.Propagated: 1>, 'StreamingConcat': <ConversionKind.StreamingConcat: 2>, 'Explicit': <ConversionKind.Explicit: 3>, 'BitstreamCast': <ConversionKind.BitstreamCast: 4>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class CopyClassExpression(Expression):
     @property
-    def sourceExpr(self) -> Expression:
-        ...
+    def sourceExpr(self) -> Expression: ...
+
 class CopyClassExpressionSyntax(ExpressionSyntax):
     expr: ExpressionSyntax
     scopedNew: NameSyntax
+
 class CoverCrossBodySymbol(Symbol, Scope):
     @property
-    def crossQueueType(self) -> Any:
-        ...
+    def crossQueueType(self) -> Any: ...
+
 class CoverCrossSymbol(Symbol, Scope):
     @property
-    def iffExpr(self) -> Expression:
-        ...
+    def iffExpr(self) -> Expression: ...
     @property
-    def options(self) -> List[CoverageOptionSetter]:
-        ...
+    def options(self) -> list[CoverageOptionSetter]: ...
     @property
-    def targets(self) -> List[CoverpointSymbol]:
-        ...
+    def targets(self) -> list[CoverpointSymbol]: ...
+
 class CoverCrossSyntax(MemberSyntax):
     closeBrace: Token
     cross: Token
@@ -2362,149 +1775,90 @@ class CoverCrossSyntax(MemberSyntax):
     label: NamedLabelSyntax
     members: Any
     openBrace: Token
+
 class CoverageBinInitializerSyntax(SyntaxNode):
     pass
+
 class CoverageBinSymbol(Symbol):
-    class BinKind:
-        """
-        Members:
+    class BinKind(metaclass=_metaclass):
+        Bins: ClassVar[Self]
+        """Value = 0"""
+        IgnoreBins: ClassVar[Self]
+        """Value = 2"""
+        IllegalBins: ClassVar[Self]
+        """Value = 1"""
 
-          Bins
+        __members__: dict[str, Self]
 
-          IllegalBins
-
-          IgnoreBins
-        """
-        Bins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.Bins: 0>
-        IgnoreBins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.IgnoreBins: 2>
-        IllegalBins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.IllegalBins: 1>
-        __members__: typing.ClassVar[dict[str, CoverageBinSymbol.BinKind]]  # value = {'Bins': <BinKind.Bins: 0>, 'IllegalBins': <BinKind.IllegalBins: 1>, 'IgnoreBins': <BinKind.IgnoreBins: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    class TransRangeList:
-        class RepeatKind:
-            """
-            Members:
+        def value(self) -> int: ...
 
-              None_
+    class TransRangeList(metaclass=_metaclass):
+        class RepeatKind(metaclass=_metaclass):
+            Consecutive = 1
+            GoTo = 3
+            Nonconsecutive = 2
+            None_ = 0
 
-              Consecutive
+            __members__: dict[str, Self]
 
-              Nonconsecutive
-
-              GoTo
-            """
-            Consecutive: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.Consecutive: 1>
-            GoTo: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.GoTo: 3>
-            Nonconsecutive: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.Nonconsecutive: 2>
-            None_: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.None_: 0>
-            __members__: typing.ClassVar[dict[str, CoverageBinSymbol.TransRangeList.RepeatKind]]  # value = {'None_': <RepeatKind.None_: 0>, 'Consecutive': <RepeatKind.Consecutive: 1>, 'Nonconsecutive': <RepeatKind.Nonconsecutive: 2>, 'GoTo': <RepeatKind.GoTo: 3>}
-            def __eq__(self, other: typing.Any) -> bool:
-                ...
-            def __getstate__(self) -> int:
-                ...
-            def __hash__(self) -> int:
-                ...
-            def __index__(self) -> int:
-                ...
-            def __init__(self, value: int) -> None:
-                ...
-            def __int__(self) -> int:
-                ...
-            def __ne__(self, other: typing.Any) -> bool:
-                ...
-            def __repr__(self) -> str:
-                ...
-            def __setstate__(self, state: int) -> None:
-                ...
-            def __str__(self) -> str:
-                ...
+            def __int__(self) -> int: ...
+            def __index__(self, index: int) -> Self: ...
             @property
-            def name(self) -> str:
-                ...
+            def name(self) -> str: ...
             @property
-            def value(self) -> int:
-                ...
-        Consecutive: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.Consecutive: 1>
-        GoTo: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.GoTo: 3>
-        Nonconsecutive: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.Nonconsecutive: 2>
-        None_: typing.ClassVar[CoverageBinSymbol.TransRangeList.RepeatKind]  # value = <RepeatKind.None_: 0>
+            def value(self) -> int: ...
+
+        Consecutive: Final = RepeatKind.Consecutive
+        GoTo: Final = RepeatKind.GoTo
+        Nonconsecutive: Final = RepeatKind.Nonconsecutive
+        None_: Final = RepeatKind.None_
+
         @property
-        def items(self) -> List[Expression]:
-            ...
+        def items(self) -> list[Expression]: ...
         @property
-        def repeatFrom(self) -> Expression:
-            ...
+        def repeatFrom(self) -> Expression: ...
         @property
-        def repeatKind(self) -> Any:
-            ...
+        def repeatKind(self) -> Any: ...
         @property
-        def repeatTo(self) -> Expression:
-            ...
-    Bins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.Bins: 0>
-    IgnoreBins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.IgnoreBins: 2>
-    IllegalBins: typing.ClassVar[CoverageBinSymbol.BinKind]  # value = <BinKind.IllegalBins: 1>
+        def repeatTo(self) -> Expression: ...
+
+    Bins: Final = BinKind.Bins
+    IgnoreBins: Final = BinKind.IgnoreBins
+    IllegalBins: Final = BinKind.IllegalBins
+
     @property
-    def binsKind(self) -> Any:
-        ...
+    def binsKind(self) -> Any: ...
     @property
-    def crossSelectExpr(self) -> BinsSelectExpr:
-        ...
+    def crossSelectExpr(self) -> BinsSelectExpr: ...
     @property
-    def iffExpr(self) -> Expression:
-        ...
+    def iffExpr(self) -> Expression: ...
     @property
-    def isArray(self) -> bool:
-        ...
+    def isArray(self) -> bool: ...
     @property
-    def isDefault(self) -> bool:
-        ...
+    def isDefault(self) -> bool: ...
     @property
-    def isDefaultSequence(self) -> bool:
-        ...
+    def isDefaultSequence(self) -> bool: ...
     @property
-    def isWildcard(self) -> bool:
-        ...
+    def isWildcard(self) -> bool: ...
     @property
-    def numberOfBinsExpr(self) -> Expression:
-        ...
+    def numberOfBinsExpr(self) -> Expression: ...
     @property
-    def setCoverageExpr(self) -> Expression:
-        ...
+    def setCoverageExpr(self) -> Expression: ...
     @property
-    def values(self) -> List[Expression]:
-        ...
+    def values(self) -> list[Expression]: ...
     @property
-    def withExpr(self) -> Expression:
-        ...
+    def withExpr(self) -> Expression: ...
+
 class CoverageBinsArraySizeSyntax(SyntaxNode):
     closeBracket: Token
     expr: ExpressionSyntax
     openBracket: Token
+
 class CoverageBinsSyntax(MemberSyntax):
     equals: Token
     iff: CoverageIffClauseSyntax
@@ -2514,28 +1868,29 @@ class CoverageBinsSyntax(MemberSyntax):
     semi: Token
     size: CoverageBinsArraySizeSyntax
     wildcard: Token
+
 class CoverageIffClauseSyntax(SyntaxNode):
     closeParen: Token
     expr: ExpressionSyntax
     iff: Token
     openParen: Token
-class CoverageOptionSetter:
+
+class CoverageOptionSetter(metaclass=_metaclass):
     @property
-    def expression(self) -> Expression:
-        ...
+    def expression(self) -> Expression: ...
     @property
-    def isTypeOption(self) -> bool:
-        ...
+    def isTypeOption(self) -> bool: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
+
 class CoverageOptionSyntax(MemberSyntax):
     expr: ExpressionSyntax
     semi: Token
+
 class CovergroupBodySymbol(Symbol, Scope):
     @property
-    def options(self) -> List[CoverageOptionSetter]:
-        ...
+    def options(self) -> list[CoverageOptionSetter]: ...
+
 class CovergroupDeclarationSyntax(MemberSyntax):
     covergroup: Token
     endBlockName: NamedBlockClauseSyntax
@@ -2546,32 +1901,27 @@ class CovergroupDeclarationSyntax(MemberSyntax):
     name: Token
     portList: FunctionPortListSyntax
     semi: Token
+
 class CovergroupType(Type, Scope):
     @property
-    def arguments(self) -> List[FormalArgumentSymbol]:
-        ...
+    def arguments(self) -> list[FormalArgumentSymbol]: ...
     @property
-    def baseGroup(self) -> Type:
-        ...
+    def baseGroup(self) -> Type: ...
     @property
-    def body(self) -> CovergroupBodySymbol:
-        ...
+    def body(self) -> CovergroupBodySymbol: ...
     @property
-    def coverageEvent(self) -> TimingControl:
-        ...
+    def coverageEvent(self) -> TimingControl: ...
+
 class CoverpointSymbol(Symbol, Scope):
     @property
-    def coverageExpr(self) -> Expression:
-        ...
+    def coverageExpr(self) -> Expression: ...
     @property
-    def iffExpr(self) -> Expression:
-        ...
+    def iffExpr(self) -> Expression: ...
     @property
-    def options(self) -> List[CoverageOptionSetter]:
-        ...
+    def options(self) -> list[CoverageOptionSetter]: ...
     @property
-    def type(self) -> Any:
-        ...
+    def type(self) -> Any: ...
+
 class CoverpointSyntax(MemberSyntax):
     closeBrace: Token
     coverpoint: Token
@@ -2582,12 +1932,14 @@ class CoverpointSyntax(MemberSyntax):
     members: Any
     openBrace: Token
     type: DataTypeSyntax
+
 class CrossIdBinsSelectExpr(BinsSelectExpr):
     pass
+
 class CycleDelayControl(TimingControl):
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
+
 class DPIExportSyntax(MemberSyntax):
     c_identifier: Token
     equals: Token
@@ -2596,6 +1948,7 @@ class DPIExportSyntax(MemberSyntax):
     name: Token
     semi: Token
     specString: Token
+
 class DPIImportSyntax(MemberSyntax):
     c_identifier: Token
     equals: Token
@@ -2604,199 +1957,180 @@ class DPIImportSyntax(MemberSyntax):
     property: Token
     semi: Token
     specString: Token
+
 class DPIOpenArrayType(Type):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
     @property
-    def isPacked(self) -> bool:
-        ...
+    def isPacked(self) -> bool: ...
+
 class DataDeclarationSyntax(MemberSyntax):
     declarators: Any
     modifiers: Any
     semi: Token
     type: DataTypeSyntax
+
 class DataTypeExpression(Expression):
     pass
+
 class DataTypeSyntax(ExpressionSyntax):
     pass
+
 class DeclaratorSyntax(SyntaxNode):
     dimensions: Any
     initializer: EqualsValueClauseSyntax
     name: Token
-class DeclaredType:
+
+class DeclaredType(metaclass=_metaclass):
     @property
-    def initializer(self) -> Expression:
-        ...
+    def initializer(self) -> Expression: ...
     @property
-    def initializerLocation(self) -> SourceLocation:
-        ...
+    def initializerLocation(self) -> SourceLocation: ...
     @property
-    def initializerSyntax(self) -> ExpressionSyntax:
-        ...
+    def initializerSyntax(self) -> ExpressionSyntax: ...
     @property
-    def isEvaluating(self) -> bool:
-        ...
+    def isEvaluating(self) -> bool: ...
     @property
-    def type(self) -> Type:
-        ...
+    def type(self) -> Type: ...
     @property
-    def typeSyntax(self) -> DataTypeSyntax:
-        ...
+    def typeSyntax(self) -> DataTypeSyntax: ...
+
 class DefParamAssignmentSyntax(SyntaxNode):
     name: NameSyntax
     setter: EqualsValueClauseSyntax
+
 class DefParamSymbol(Symbol):
     @property
-    def initializer(self) -> Expression:
-        ...
+    def initializer(self) -> Expression: ...
     @property
-    def target(self) -> Symbol:
-        ...
+    def target(self) -> Symbol: ...
     @property
-    def value(self) -> ConstantValue:
-        ...
+    def value(self) -> ConstantValue: ...
+
 class DefParamSyntax(MemberSyntax):
     assignments: Any
     defparam: Token
     semi: Token
+
 class DefaultCaseItemSyntax(CaseItemSyntax):
     clause: SyntaxNode
     colon: Token
     defaultKeyword: Token
+
 class DefaultClockingReferenceSyntax(MemberSyntax):
     clocking: Token
     defaultKeyword: Token
     name: Token
     semi: Token
+
 class DefaultConfigRuleSyntax(ConfigRuleSyntax):
     defaultKeyword: Token
     liblist: ConfigLiblistSyntax
     semi: Token
+
 class DefaultCoverageBinInitializerSyntax(CoverageBinInitializerSyntax):
     defaultKeyword: Token
     sequenceKeyword: Token
+
 class DefaultDecayTimeDirectiveSyntax(DirectiveSyntax):
     time: Token
+
 class DefaultDisableDeclarationSyntax(MemberSyntax):
     defaultKeyword: Token
     disableKeyword: Token
     expr: ExpressionSyntax
     iffKeyword: Token
     semi: Token
+
 class DefaultDistItemSyntax(DistItemBaseSyntax):
     defaultKeyword: Token
     weight: DistWeightSyntax
+
 class DefaultExtendsClauseArgSyntax(SyntaxNode):
     closeParen: Token
     defaultKeyword: Token
     openParen: Token
+
 class DefaultFunctionPortSyntax(FunctionPortBaseSyntax):
     keyword: Token
+
 class DefaultNetTypeDirectiveSyntax(DirectiveSyntax):
     netType: Token
+
 class DefaultPropertyCaseItemSyntax(PropertyCaseItemSyntax):
     colon: Token
     defaultKeyword: Token
     expr: PropertyExprSyntax
     semi: Token
+
 class DefaultRsCaseItemSyntax(RsCaseItemSyntax):
     colon: Token
     defaultKeyword: Token
     item: RsProdItemSyntax
     semi: Token
+
 class DefaultSkewItemSyntax(MemberSyntax):
     direction: ClockingDirectionSyntax
     keyword: Token
     semi: Token
+
 class DefaultTriregStrengthDirectiveSyntax(DirectiveSyntax):
     strength: Token
+
 class DeferredAssertionSyntax(SyntaxNode):
     finalKeyword: Token
     hash: Token
     zero: Token
+
 class DefineDirectiveSyntax(DirectiveSyntax):
     body: Any
     formalArguments: MacroFormalArgumentListSyntax
     name: Token
-class DefinitionKind:
-    """
-    Members:
 
-      Module
+class DefinitionKind(metaclass=_metaclass):
+    Interface: ClassVar[DefinitionKind]
+    """Value = 1"""
+    Module: ClassVar[DefinitionKind]
+    """Value = 0"""
+    Program: ClassVar[DefinitionKind]
+    """Value = 2"""
 
-      Interface
+    __members__: dict[str, Self]
 
-      Program
-    """
-    Interface: typing.ClassVar[DefinitionKind]  # value = <DefinitionKind.Interface: 1>
-    Module: typing.ClassVar[DefinitionKind]  # value = <DefinitionKind.Module: 0>
-    Program: typing.ClassVar[DefinitionKind]  # value = <DefinitionKind.Program: 2>
-    __members__: typing.ClassVar[dict[str, DefinitionKind]]  # value = {'Module': <DefinitionKind.Module: 0>, 'Interface': <DefinitionKind.Interface: 1>, 'Program': <DefinitionKind.Program: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class DefinitionSymbol(Symbol):
-    def __repr__(self) -> str:
-        ...
-    def getArticleKindString(self) -> str:
-        ...
-    def getKindString(self) -> str:
-        ...
+    def __repr__(self) -> str: ...
+    def getArticleKindString(self) -> str: ...
+    def getKindString(self) -> str: ...
     @property
-    def cellDefine(self) -> bool:
-        ...
+    def cellDefine(self) -> bool: ...
     @property
-    def defaultLifetime(self) -> VariableLifetime:
-        ...
+    def defaultLifetime(self) -> VariableLifetime: ...
     @property
-    def defaultNetType(self) -> Any:
-        ...
+    def defaultNetType(self) -> Any: ...
     @property
-    def definitionKind(self) -> DefinitionKind:
-        ...
+    def definitionKind(self) -> DefinitionKind: ...
     @property
-    def instanceCount(self) -> int:
-        ...
+    def instanceCount(self) -> int: ...
     @property
-    def timeScale(self) -> TimeScale | None:
-        ...
+    def timeScale(self) -> TimeScale | None: ...
     @property
-    def unconnectedDrive(self) -> UnconnectedDrive:
-        ...
+    def unconnectedDrive(self) -> UnconnectedDrive: ...
+
 class Delay3Control(TimingControl):
     @property
-    def expr1(self) -> Any:
-        ...
+    def expr1(self) -> Any: ...
     @property
-    def expr2(self) -> Any:
-        ...
+    def expr2(self) -> Any: ...
     @property
-    def expr3(self) -> Any:
-        ...
+    def expr3(self) -> Any: ...
+
 class Delay3Syntax(TimingControlSyntax):
     closeParen: Token
     comma1: Token
@@ -2806,13 +2140,15 @@ class Delay3Syntax(TimingControlSyntax):
     delay3: ExpressionSyntax
     hash: Token
     openParen: Token
+
 class DelayControl(TimingControl):
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
+
 class DelaySyntax(TimingControlSyntax):
     delayValue: ExpressionSyntax
     hash: Token
+
 class DelayedSequenceElementSyntax(SyntaxNode):
     closeBracket: Token
     delayVal: ExpressionSyntax
@@ -2821,1630 +2157,1472 @@ class DelayedSequenceElementSyntax(SyntaxNode):
     op: Token
     openBracket: Token
     range: SelectorSyntax
+
 class DelayedSequenceExprSyntax(SequenceExprSyntax):
     elements: Any
     first: SequenceExprSyntax
-class DiagCode:
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
-    def __hash__(self) -> int:
-        ...
+
+class DiagCode(metaclass=_metaclass):
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: object) -> bool: ...
+    def __hash__(self) -> int: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, subsystem: DiagSubsystem, code: int) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def getCode(self) -> int:
-        ...
-    def getSubsystem(self) -> DiagSubsystem:
-        ...
-class DiagGroup:
-    def __init__(self, name: str, diags: list[DiagCode]) -> None:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def getDiags(self) -> List[DiagCode]:
-        ...
-    def getName(self) -> str:
-        ...
-class DiagSubsystem:
-    """
-    Members:
+    def __init__(self, subsystem: DiagSubsystem, code: int) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def getCode(self) -> int: ...
+    def getSubsystem(self) -> DiagSubsystem: ...
 
-      Invalid
+class DiagGroup(metaclass=_metaclass):
+    def __init__(self, name: str, diags: list[DiagCode]) -> None: ...
+    def __repr__(self) -> str: ...
+    def getDiags(self) -> list[DiagCode]: ...
+    def getName(self) -> str: ...
 
-      General
+class DiagSubsystem(metaclass=_metaclass):
+    Analysis: ClassVar[DiagSubsystem]
+    """Value = 14"""
+    Compilation: ClassVar[DiagSubsystem]
+    """Value = 13"""
+    ConstEval: ClassVar[DiagSubsystem]
+    """Value = 12"""
+    Declarations: ClassVar[DiagSubsystem]
+    """Value = 6"""
+    Expressions: ClassVar[DiagSubsystem]
+    """Value = 7"""
+    General: ClassVar[DiagSubsystem]
+    """Value = 1"""
+    Invalid: ClassVar[DiagSubsystem]
+    """Value = 0"""
+    Lexer: ClassVar[DiagSubsystem]
+    """Value = 2"""
+    Lookup: ClassVar[DiagSubsystem]
+    """Value = 10"""
+    Meta: ClassVar[DiagSubsystem]
+    """Value = 15"""
+    Netlist: ClassVar[DiagSubsystem]
+    """Value = 17"""
+    Numeric: ClassVar[DiagSubsystem]
+    """Value = 3"""
+    Parser: ClassVar[DiagSubsystem]
+    """Value = 5"""
+    Preprocessor: ClassVar[DiagSubsystem]
+    """Value = 4"""
+    Statements: ClassVar[DiagSubsystem]
+    """Value = 8"""
+    SysFuncs: ClassVar[DiagSubsystem]
+    """Value = 11"""
+    Tidy: ClassVar[DiagSubsystem]
+    """Value = 16"""
+    Types: ClassVar[DiagSubsystem]
+    """Value = 9"""
 
-      Lexer
+    __members__: dict[str, Self]
 
-      Numeric
-
-      Preprocessor
-
-      Parser
-
-      Declarations
-
-      Expressions
-
-      Statements
-
-      Types
-
-      Lookup
-
-      SysFuncs
-
-      ConstEval
-
-      Compilation
-
-      Analysis
-
-      Meta
-
-      Tidy
-
-      Netlist
-    """
-    Analysis: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Analysis: 14>
-    Compilation: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Compilation: 13>
-    ConstEval: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.ConstEval: 12>
-    Declarations: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Declarations: 6>
-    Expressions: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Expressions: 7>
-    General: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.General: 1>
-    Invalid: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Invalid: 0>
-    Lexer: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Lexer: 2>
-    Lookup: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Lookup: 10>
-    Meta: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Meta: 15>
-    Netlist: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Netlist: 17>
-    Numeric: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Numeric: 3>
-    Parser: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Parser: 5>
-    Preprocessor: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Preprocessor: 4>
-    Statements: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Statements: 8>
-    SysFuncs: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.SysFuncs: 11>
-    Tidy: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Tidy: 16>
-    Types: typing.ClassVar[DiagSubsystem]  # value = <DiagSubsystem.Types: 9>
-    __members__: typing.ClassVar[dict[str, DiagSubsystem]]  # value = {'Invalid': <DiagSubsystem.Invalid: 0>, 'General': <DiagSubsystem.General: 1>, 'Lexer': <DiagSubsystem.Lexer: 2>, 'Numeric': <DiagSubsystem.Numeric: 3>, 'Preprocessor': <DiagSubsystem.Preprocessor: 4>, 'Parser': <DiagSubsystem.Parser: 5>, 'Declarations': <DiagSubsystem.Declarations: 6>, 'Expressions': <DiagSubsystem.Expressions: 7>, 'Statements': <DiagSubsystem.Statements: 8>, 'Types': <DiagSubsystem.Types: 9>, 'Lookup': <DiagSubsystem.Lookup: 10>, 'SysFuncs': <DiagSubsystem.SysFuncs: 11>, 'ConstEval': <DiagSubsystem.ConstEval: 12>, 'Compilation': <DiagSubsystem.Compilation: 13>, 'Analysis': <DiagSubsystem.Analysis: 14>, 'Meta': <DiagSubsystem.Meta: 15>, 'Tidy': <DiagSubsystem.Tidy: 16>, 'Netlist': <DiagSubsystem.Netlist: 17>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class Diagnostic:
-    def __eq__(self, arg0: object) -> bool:
-        ...
-    def __init__(self, code: DiagCode, location: SourceLocation) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def isError(self) -> bool:
-        ...
+    def value(self) -> int: ...
+
+class Diagnostic(metaclass=_metaclass):
+    def __eq__(self, arg0: object) -> bool: ...
+    def __init__(self, code: DiagCode, location: SourceLocation) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def isError(self) -> bool: ...
     @property
-    def args(self) -> list[str | int | int | str | ConstantValue | tuple[Any, Any]]:
-        ...
+    def args(self) -> list[str | int | int | str | ConstantValue | tuple[Any, Any]]: ...
     @property
-    def code(self) -> DiagCode:
-        ...
+    def code(self) -> DiagCode: ...
     @property
-    def location(self) -> SourceLocation:
-        ...
+    def location(self) -> SourceLocation: ...
     @property
-    def ranges(self) -> list[SourceRange]:
-        ...
+    def ranges(self) -> list[SourceRange]: ...
     @property
-    def symbol(self) -> Any:
-        ...
-class DiagnosticClient:
-    def report(self, diagnostic: ReportedDiagnostic) -> None:
-        ...
-    def setEngine(self, engine: DiagnosticEngine) -> None:
-        ...
-    def showAbsPaths(self, show: bool) -> None:
-        ...
-class DiagnosticEngine:
+    def symbol(self) -> Any: ...
+
+class DiagnosticClient(metaclass=_metaclass):
+    def report(self, diagnostic: ReportedDiagnostic) -> None: ...
+    def setEngine(self, engine: DiagnosticEngine) -> None: ...
+    def showAbsPaths(self, show: bool) -> None: ...
+
+class DiagnosticEngine(metaclass=_metaclass):
     @staticmethod
-    def reportAll(sourceManager: SourceManager, diag: List[Diagnostic]) -> str:
-        ...
-    def __init__(self, sourceManager: SourceManager) -> None:
-        ...
-    def addClient(self, client: Any) -> None:
-        ...
-    def clearClients(self) -> None:
-        ...
-    def clearCounts(self) -> None:
-        ...
+    def reportAll(sourceManager: SourceManager, diag: list[Diagnostic]) -> str: ...
+    def __init__(self, sourceManager: SourceManager) -> None: ...
+    def addClient(self, client: Any) -> None: ...
+    def clearClients(self) -> None: ...
+    def clearCounts(self) -> None: ...
     @typing.overload
-    def clearMappings(self) -> None:
-        ...
+    def clearMappings(self) -> None: ...
     @typing.overload
-    def clearMappings(self, severity: DiagnosticSeverity) -> None:
-        ...
-    def findDiagGroup(self, name: str) -> DiagGroup:
-        ...
-    def findFromOptionName(self, optionName: str) -> List[DiagCode]:
-        ...
-    def formatMessage(self, diag: Diagnostic) -> str:
-        ...
-    def getMessage(self, code: DiagCode) -> str:
-        ...
-    def getOptionName(self, code: DiagCode) -> str:
-        ...
-    def getSeverity(self, code: DiagCode, location: SourceLocation) -> DiagnosticSeverity:
-        ...
-    def issue(self, diagnostic: Diagnostic) -> None:
-        ...
-    def setErrorLimit(self, limit: int) -> None:
-        ...
-    def setErrorsAsFatal(self, set: bool) -> None:
-        ...
-    def setFatalsAsErrors(self, set: bool) -> None:
-        ...
-    def setIgnoreAllNotes(self, set: bool) -> None:
-        ...
-    def setIgnoreAllWarnings(self, set: bool) -> None:
-        ...
+    def clearMappings(self, severity: DiagnosticSeverity) -> None: ...
+    def findDiagGroup(self, name: str) -> DiagGroup: ...
+    def findFromOptionName(self, optionName: str) -> list[DiagCode]: ...
+    def formatMessage(self, diag: Diagnostic) -> str: ...
+    def getMessage(self, code: DiagCode) -> str: ...
+    def getOptionName(self, code: DiagCode) -> str: ...
+    def getSeverity(self, code: DiagCode, location: SourceLocation) -> DiagnosticSeverity: ...
+    def issue(self, diagnostic: Diagnostic) -> None: ...
+    def setErrorLimit(self, limit: int) -> None: ...
+    def setErrorsAsFatal(self, set: bool) -> None: ...
+    def setFatalsAsErrors(self, set: bool) -> None: ...
+    def setIgnoreAllNotes(self, set: bool) -> None: ...
+    def setIgnoreAllWarnings(self, set: bool) -> None: ...
     @typing.overload
-    def setMappingsFromPragmas(self) -> Diagnostics:
-        ...
+    def setMappingsFromPragmas(self) -> Diagnostics: ...
     @typing.overload
-    def setMappingsFromPragmas(self, buffer: BufferID) -> Diagnostics:
-        ...
-    def setMessage(self, code: DiagCode, message: str) -> None:
-        ...
-    def setSeverity(self, code: DiagCode, severity: DiagnosticSeverity) -> None:
-        ...
-    def setWarningOptions(self, options: List[str]) -> Diagnostics:
-        ...
-    def setWarningsAsErrors(self, set: bool) -> None:
-        ...
+    def setMappingsFromPragmas(self, buffer: BufferID) -> Diagnostics: ...
+    def setMessage(self, code: DiagCode, message: str) -> None: ...
+    def setSeverity(self, code: DiagCode, severity: DiagnosticSeverity) -> None: ...
+    def setWarningOptions(self, options: list[str]) -> Diagnostics: ...
+    def setWarningsAsErrors(self, set: bool) -> None: ...
     @property
-    def numErrors(self) -> int:
-        ...
+    def numErrors(self) -> int: ...
     @property
-    def numWarnings(self) -> int:
-        ...
+    def numWarnings(self) -> int: ...
     @property
-    def sourceManager(self) -> SourceManager:
-        ...
-class DiagnosticSeverity:
-    """
-    Members:
+    def sourceManager(self) -> SourceManager: ...
 
-      Ignored
+class DiagnosticSeverity(metaclass=_metaclass):
+    Error: ClassVar[DiagnosticSeverity]
+    """Value = 3"""
+    Fatal: ClassVar[DiagnosticSeverity]
+    """Value = 4"""
+    Ignored: ClassVar[DiagnosticSeverity]
+    """Value = 0"""
+    Note: ClassVar[DiagnosticSeverity]
+    """Value = 1"""
+    Warning: ClassVar[DiagnosticSeverity]
+    """Value = 2"""
 
-      Note
+    __members__: dict[str, Self]
 
-      Warning
-
-      Error
-
-      Fatal
-    """
-    Error: typing.ClassVar[DiagnosticSeverity]  # value = <DiagnosticSeverity.Error: 3>
-    Fatal: typing.ClassVar[DiagnosticSeverity]  # value = <DiagnosticSeverity.Fatal: 4>
-    Ignored: typing.ClassVar[DiagnosticSeverity]  # value = <DiagnosticSeverity.Ignored: 0>
-    Note: typing.ClassVar[DiagnosticSeverity]  # value = <DiagnosticSeverity.Note: 1>
-    Warning: typing.ClassVar[DiagnosticSeverity]  # value = <DiagnosticSeverity.Warning: 2>
-    __members__: typing.ClassVar[dict[str, DiagnosticSeverity]]  # value = {'Ignored': <DiagnosticSeverity.Ignored: 0>, 'Note': <DiagnosticSeverity.Note: 1>, 'Warning': <DiagnosticSeverity.Warning: 2>, 'Error': <DiagnosticSeverity.Error: 3>, 'Fatal': <DiagnosticSeverity.Fatal: 4>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class Diagnostics:
-    def __getitem__(self, arg0: int) -> Diagnostic:
-        ...
-    def __init__(self) -> None:
-        ...
-    def __iter__(self) -> typing.Iterator[Diagnostic]:
-        ...
-    def __len__(self) -> int:
-        ...
+    def value(self) -> int: ...
+
+class Diagnostics(metaclass=_metaclass):
+    def __getitem__(self, arg0: int) -> Diagnostic: ...
+    def __init__(self) -> None: ...
+    def __iter__(self) -> typing.Iterator[Diagnostic]: ...
+    def __len__(self) -> int: ...
     @typing.overload
-    def add(self, code: DiagCode, location: SourceLocation) -> Diagnostic:
-        ...
+    def add(self, code: DiagCode, location: SourceLocation) -> Diagnostic: ...
     @typing.overload
-    def add(self, code: DiagCode, range: SourceRange) -> Diagnostic:
-        ...
+    def add(self, code: DiagCode, range: SourceRange) -> Diagnostic: ...
     @typing.overload
-    def add(self, source: Any, code: DiagCode, location: SourceLocation) -> Diagnostic:
-        ...
+    def add(self, source: Any, code: DiagCode, location: SourceLocation) -> Diagnostic: ...
     @typing.overload
-    def add(self, source: Any, code: DiagCode, range: SourceRange) -> Diagnostic:
-        ...
-    def sort(self, sourceManager: SourceManager) -> None:
-        ...
-class Diags:
-    AlwaysFFEventControl: typing.ClassVar[DiagCode]  # value = DiagCode(AlwaysFFEventControl)
-    AlwaysInChecker: typing.ClassVar[DiagCode]  # value = DiagCode(AlwaysInChecker)
-    AlwaysWithoutTimingControl: typing.ClassVar[DiagCode]  # value = DiagCode(AlwaysWithoutTimingControl)
-    AmbiguousWildcardImport: typing.ClassVar[DiagCode]  # value = DiagCode(AmbiguousWildcardImport)
-    AnsiIfacePortDefault: typing.ClassVar[DiagCode]  # value = DiagCode(AnsiIfacePortDefault)
-    ArgCannotBeEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(ArgCannotBeEmpty)
-    ArgDoesNotExist: typing.ClassVar[DiagCode]  # value = DiagCode(ArgDoesNotExist)
-    ArithInShift: typing.ClassVar[DiagCode]  # value = DiagCode(ArithInShift)
-    ArithOpMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(ArithOpMismatch)
-    ArrayDimTooLarge: typing.ClassVar[DiagCode]  # value = DiagCode(ArrayDimTooLarge)
-    ArrayLocatorWithClause: typing.ClassVar[DiagCode]  # value = DiagCode(ArrayLocatorWithClause)
-    ArrayMethodComparable: typing.ClassVar[DiagCode]  # value = DiagCode(ArrayMethodComparable)
-    ArrayMethodIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(ArrayMethodIntegral)
-    AssertionArgNeedsRegExpr: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionArgNeedsRegExpr)
-    AssertionArgTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionArgTypeMismatch)
-    AssertionArgTypeSequence: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionArgTypeSequence)
-    AssertionDelayFormalType: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionDelayFormalType)
-    AssertionExprType: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionExprType)
-    AssertionFuncArg: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionFuncArg)
-    AssertionNoClock: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionNoClock)
-    AssertionOutputLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionOutputLocalVar)
-    AssertionPortDirNoLocal: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionPortDirNoLocal)
-    AssertionPortOutputDefault: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionPortOutputDefault)
-    AssertionPortPropOutput: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionPortPropOutput)
-    AssertionPortRef: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionPortRef)
-    AssertionPortTypedLValue: typing.ClassVar[DiagCode]  # value = DiagCode(AssertionPortTypedLValue)
-    AssignToCHandle: typing.ClassVar[DiagCode]  # value = DiagCode(AssignToCHandle)
-    AssignToNet: typing.ClassVar[DiagCode]  # value = DiagCode(AssignToNet)
-    AssignedToLocalBodyParam: typing.ClassVar[DiagCode]  # value = DiagCode(AssignedToLocalBodyParam)
-    AssignedToLocalPortParam: typing.ClassVar[DiagCode]  # value = DiagCode(AssignedToLocalPortParam)
-    AssignmentNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentNotAllowed)
-    AssignmentPatternAssociativeType: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternAssociativeType)
-    AssignmentPatternDynamicDefault: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternDynamicDefault)
-    AssignmentPatternDynamicType: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternDynamicType)
-    AssignmentPatternKeyDupDefault: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternKeyDupDefault)
-    AssignmentPatternKeyDupName: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternKeyDupName)
-    AssignmentPatternKeyDupValue: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternKeyDupValue)
-    AssignmentPatternKeyExpr: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternKeyExpr)
-    AssignmentPatternLValueDynamic: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternLValueDynamic)
-    AssignmentPatternMissingElements: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternMissingElements)
-    AssignmentPatternNoContext: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternNoContext)
-    AssignmentPatternNoMember: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentPatternNoMember)
-    AssignmentRequiresParens: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentRequiresParens)
-    AssignmentToConstVar: typing.ClassVar[DiagCode]  # value = DiagCode(AssignmentToConstVar)
-    AssociativeWildcardNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(AssociativeWildcardNotAllowed)
-    AttributesNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(AttributesNotAllowed)
-    AutoFromNonBlockingTiming: typing.ClassVar[DiagCode]  # value = DiagCode(AutoFromNonBlockingTiming)
-    AutoFromNonProcedural: typing.ClassVar[DiagCode]  # value = DiagCode(AutoFromNonProcedural)
-    AutoFromStaticInit: typing.ClassVar[DiagCode]  # value = DiagCode(AutoFromStaticInit)
-    AutoVarToRefStatic: typing.ClassVar[DiagCode]  # value = DiagCode(AutoVarToRefStatic)
-    AutoVarTraced: typing.ClassVar[DiagCode]  # value = DiagCode(AutoVarTraced)
-    AutoVariableHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(AutoVariableHierarchical)
-    AutomaticNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(AutomaticNotAllowed)
-    BadAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(BadAssignment)
-    BadAssignmentPatternType: typing.ClassVar[DiagCode]  # value = DiagCode(BadAssignmentPatternType)
-    BadBinaryDigit: typing.ClassVar[DiagCode]  # value = DiagCode(BadBinaryDigit)
-    BadBinaryExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadBinaryExpression)
-    BadCastType: typing.ClassVar[DiagCode]  # value = DiagCode(BadCastType)
-    BadConcatExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadConcatExpression)
-    BadConditionalExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadConditionalExpression)
-    BadConversion: typing.ClassVar[DiagCode]  # value = DiagCode(BadConversion)
-    BadDecimalDigit: typing.ClassVar[DiagCode]  # value = DiagCode(BadDecimalDigit)
-    BadDisableSoft: typing.ClassVar[DiagCode]  # value = DiagCode(BadDisableSoft)
-    BadFinishNum: typing.ClassVar[DiagCode]  # value = DiagCode(BadFinishNum)
-    BadForceNetType: typing.ClassVar[DiagCode]  # value = DiagCode(BadForceNetType)
-    BadHexDigit: typing.ClassVar[DiagCode]  # value = DiagCode(BadHexDigit)
-    BadIndexExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadIndexExpression)
-    BadInstanceArrayRange: typing.ClassVar[DiagCode]  # value = DiagCode(BadInstanceArrayRange)
-    BadIntegerCast: typing.ClassVar[DiagCode]  # value = DiagCode(BadIntegerCast)
-    BadOctalDigit: typing.ClassVar[DiagCode]  # value = DiagCode(BadOctalDigit)
-    BadProceduralAssign: typing.ClassVar[DiagCode]  # value = DiagCode(BadProceduralAssign)
-    BadProceduralForce: typing.ClassVar[DiagCode]  # value = DiagCode(BadProceduralForce)
-    BadReplicationExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadReplicationExpression)
-    BadSetMembershipType: typing.ClassVar[DiagCode]  # value = DiagCode(BadSetMembershipType)
-    BadSliceType: typing.ClassVar[DiagCode]  # value = DiagCode(BadSliceType)
-    BadSolveBefore: typing.ClassVar[DiagCode]  # value = DiagCode(BadSolveBefore)
-    BadStreamCast: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamCast)
-    BadStreamContext: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamContext)
-    BadStreamExprType: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamExprType)
-    BadStreamSize: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamSize)
-    BadStreamSlice: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamSlice)
-    BadStreamSourceType: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamSourceType)
-    BadStreamTargetType: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamTargetType)
-    BadStreamWithOrder: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamWithOrder)
-    BadStreamWithType: typing.ClassVar[DiagCode]  # value = DiagCode(BadStreamWithType)
-    BadSystemSubroutineArg: typing.ClassVar[DiagCode]  # value = DiagCode(BadSystemSubroutineArg)
-    BadTypeParamExpr: typing.ClassVar[DiagCode]  # value = DiagCode(BadTypeParamExpr)
-    BadUnaryExpression: typing.ClassVar[DiagCode]  # value = DiagCode(BadUnaryExpression)
-    BadUniquenessType: typing.ClassVar[DiagCode]  # value = DiagCode(BadUniquenessType)
-    BadValueRange: typing.ClassVar[DiagCode]  # value = DiagCode(BadValueRange)
-    BaseConstructorDuplicate: typing.ClassVar[DiagCode]  # value = DiagCode(BaseConstructorDuplicate)
-    BaseConstructorNotCalled: typing.ClassVar[DiagCode]  # value = DiagCode(BaseConstructorNotCalled)
-    BiDiSwitchNetTypes: typing.ClassVar[DiagCode]  # value = DiagCode(BiDiSwitchNetTypes)
-    BindDirectiveInvalidName: typing.ClassVar[DiagCode]  # value = DiagCode(BindDirectiveInvalidName)
-    BindTargetPrimitive: typing.ClassVar[DiagCode]  # value = DiagCode(BindTargetPrimitive)
-    BindTypeParamMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(BindTypeParamMismatch)
-    BindTypeParamNotFound: typing.ClassVar[DiagCode]  # value = DiagCode(BindTypeParamNotFound)
-    BindUnderBind: typing.ClassVar[DiagCode]  # value = DiagCode(BindUnderBind)
-    BitwiseOpMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(BitwiseOpMismatch)
-    BitwiseOpParentheses: typing.ClassVar[DiagCode]  # value = DiagCode(BitwiseOpParentheses)
-    BitwiseRelPrecedence: typing.ClassVar[DiagCode]  # value = DiagCode(BitwiseRelPrecedence)
-    BlockingAssignToFreeVar: typing.ClassVar[DiagCode]  # value = DiagCode(BlockingAssignToFreeVar)
-    BlockingInAlwaysFF: typing.ClassVar[DiagCode]  # value = DiagCode(BlockingInAlwaysFF)
-    BodyForPure: typing.ClassVar[DiagCode]  # value = DiagCode(BodyForPure)
-    BodyForPureConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(BodyForPureConstraint)
-    BodyParamNoInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(BodyParamNoInitializer)
-    CHandleInAssertion: typing.ClassVar[DiagCode]  # value = DiagCode(CHandleInAssertion)
-    CannotCompareTwoInstances: typing.ClassVar[DiagCode]  # value = DiagCode(CannotCompareTwoInstances)
-    CannotDeclareType: typing.ClassVar[DiagCode]  # value = DiagCode(CannotDeclareType)
-    CannotIndexScalar: typing.ClassVar[DiagCode]  # value = DiagCode(CannotIndexScalar)
-    CantDeclarePortSigned: typing.ClassVar[DiagCode]  # value = DiagCode(CantDeclarePortSigned)
-    CantModifyConst: typing.ClassVar[DiagCode]  # value = DiagCode(CantModifyConst)
-    CaseComplex: typing.ClassVar[DiagCode]  # value = DiagCode(CaseComplex)
-    CaseDefault: typing.ClassVar[DiagCode]  # value = DiagCode(CaseDefault)
-    CaseDup: typing.ClassVar[DiagCode]  # value = DiagCode(CaseDup)
-    CaseEnum: typing.ClassVar[DiagCode]  # value = DiagCode(CaseEnum)
-    CaseEnumExplicit: typing.ClassVar[DiagCode]  # value = DiagCode(CaseEnumExplicit)
-    CaseGenerateDup: typing.ClassVar[DiagCode]  # value = DiagCode(CaseGenerateDup)
-    CaseGenerateEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(CaseGenerateEmpty)
-    CaseGenerateNoBlock: typing.ClassVar[DiagCode]  # value = DiagCode(CaseGenerateNoBlock)
-    CaseIncomplete: typing.ClassVar[DiagCode]  # value = DiagCode(CaseIncomplete)
-    CaseInsideKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(CaseInsideKeyword)
-    CaseNotWildcard: typing.ClassVar[DiagCode]  # value = DiagCode(CaseNotWildcard)
-    CaseOutsideRange: typing.ClassVar[DiagCode]  # value = DiagCode(CaseOutsideRange)
-    CaseOverlap: typing.ClassVar[DiagCode]  # value = DiagCode(CaseOverlap)
-    CaseRedundantDefault: typing.ClassVar[DiagCode]  # value = DiagCode(CaseRedundantDefault)
-    CaseStatementEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(CaseStatementEmpty)
-    CaseTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(CaseTypeMismatch)
-    CaseUnreachable: typing.ClassVar[DiagCode]  # value = DiagCode(CaseUnreachable)
-    CaseWildcard2State: typing.ClassVar[DiagCode]  # value = DiagCode(CaseWildcard2State)
-    CaseZWithX: typing.ClassVar[DiagCode]  # value = DiagCode(CaseZWithX)
-    ChainedMethodParens: typing.ClassVar[DiagCode]  # value = DiagCode(ChainedMethodParens)
-    ChargeWithTriReg: typing.ClassVar[DiagCode]  # value = DiagCode(ChargeWithTriReg)
-    CheckerArgCannotBeEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerArgCannotBeEmpty)
-    CheckerBlockingAssign: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerBlockingAssign)
-    CheckerClassBadInstantiation: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerClassBadInstantiation)
-    CheckerForkJoinRef: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerForkJoinRef)
-    CheckerFuncArg: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerFuncArg)
-    CheckerFuncBadInstantiation: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerFuncBadInstantiation)
-    CheckerHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerHierarchical)
-    CheckerInCheckerProc: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerInCheckerProc)
-    CheckerInForkJoin: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerInForkJoin)
-    CheckerNotInProc: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerNotInProc)
-    CheckerOutputBadType: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerOutputBadType)
-    CheckerParameterAssign: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerParameterAssign)
-    CheckerPortDirectionType: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerPortDirectionType)
-    CheckerPortInout: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerPortInout)
-    CheckerTimingControl: typing.ClassVar[DiagCode]  # value = DiagCode(CheckerTimingControl)
-    ClassInheritanceCycle: typing.ClassVar[DiagCode]  # value = DiagCode(ClassInheritanceCycle)
-    ClassMemberInAssertion: typing.ClassVar[DiagCode]  # value = DiagCode(ClassMemberInAssertion)
-    ClassPrivateMembersBitstream: typing.ClassVar[DiagCode]  # value = DiagCode(ClassPrivateMembersBitstream)
-    ClassSpecifierConflict: typing.ClassVar[DiagCode]  # value = DiagCode(ClassSpecifierConflict)
-    ClockVarAssignConcat: typing.ClassVar[DiagCode]  # value = DiagCode(ClockVarAssignConcat)
-    ClockVarBadTiming: typing.ClassVar[DiagCode]  # value = DiagCode(ClockVarBadTiming)
-    ClockVarOutputRead: typing.ClassVar[DiagCode]  # value = DiagCode(ClockVarOutputRead)
-    ClockVarSyncDrive: typing.ClassVar[DiagCode]  # value = DiagCode(ClockVarSyncDrive)
-    ClockVarTargetAssign: typing.ClassVar[DiagCode]  # value = DiagCode(ClockVarTargetAssign)
-    ClockingBlockEventEdge: typing.ClassVar[DiagCode]  # value = DiagCode(ClockingBlockEventEdge)
-    ClockingBlockEventIff: typing.ClassVar[DiagCode]  # value = DiagCode(ClockingBlockEventIff)
-    ClockingNameEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(ClockingNameEmpty)
-    ComparisonMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(ComparisonMismatch)
-    CompilationUnitFromPackage: typing.ClassVar[DiagCode]  # value = DiagCode(CompilationUnitFromPackage)
-    ConcatWithStringInt: typing.ClassVar[DiagCode]  # value = DiagCode(ConcatWithStringInt)
-    ConcurrentAssertActionBlock: typing.ClassVar[DiagCode]  # value = DiagCode(ConcurrentAssertActionBlock)
-    ConcurrentAssertNotInProc: typing.ClassVar[DiagCode]  # value = DiagCode(ConcurrentAssertNotInProc)
-    ConditionalPrecedence: typing.ClassVar[DiagCode]  # value = DiagCode(ConditionalPrecedence)
-    ConfigDupTop: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigDupTop)
-    ConfigInstanceUnderOtherConfig: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigInstanceUnderOtherConfig)
-    ConfigInstanceWrongTop: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigInstanceWrongTop)
-    ConfigMissingName: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigMissingName)
-    ConfigOverrideTop: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigOverrideTop)
-    ConfigParamLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigParamLiteral)
-    ConfigParamsForPrimitive: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigParamsForPrimitive)
-    ConfigParamsIgnored: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigParamsIgnored)
-    ConfigParamsOrdered: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigParamsOrdered)
-    ConfigSpecificCellLiblist: typing.ClassVar[DiagCode]  # value = DiagCode(ConfigSpecificCellLiblist)
-    ConsecutiveComparison: typing.ClassVar[DiagCode]  # value = DiagCode(ConsecutiveComparison)
-    ConstEvalAssertionFailed: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalAssertionFailed)
-    ConstEvalAssociativeElementNotFound: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalAssociativeElementNotFound)
-    ConstEvalAssociativeIndexInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalAssociativeIndexInvalid)
-    ConstEvalBitstreamCastSize: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalBitstreamCastSize)
-    ConstEvalCaseItemsNotUnique: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalCaseItemsNotUnique)
-    ConstEvalCheckers: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalCheckers)
-    ConstEvalClassType: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalClassType)
-    ConstEvalCovergroupType: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalCovergroupType)
-    ConstEvalDPINotConstant: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalDPINotConstant)
-    ConstEvalDisableTarget: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalDisableTarget)
-    ConstEvalDynamicArrayIndex: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalDynamicArrayIndex)
-    ConstEvalDynamicArrayRange: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalDynamicArrayRange)
-    ConstEvalDynamicToFixedSize: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalDynamicToFixedSize)
-    ConstEvalEmptyQueue: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalEmptyQueue)
-    ConstEvalExceededMaxCallDepth: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalExceededMaxCallDepth)
-    ConstEvalExceededMaxSteps: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalExceededMaxSteps)
-    ConstEvalFunctionArgDirection: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalFunctionArgDirection)
-    ConstEvalFunctionIdentifiersMustBeLocal: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalFunctionIdentifiersMustBeLocal)
-    ConstEvalFunctionInsideGenerate: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalFunctionInsideGenerate)
-    ConstEvalHierarchicalName: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalHierarchicalName)
-    ConstEvalIdUsedInCEBeforeDecl: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalIdUsedInCEBeforeDecl)
-    ConstEvalIfItemsNotUnique: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalIfItemsNotUnique)
-    ConstEvalMethodNotConstant: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalMethodNotConstant)
-    ConstEvalNoCaseItemsMatched: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalNoCaseItemsMatched)
-    ConstEvalNoIfItemsMatched: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalNoIfItemsMatched)
-    ConstEvalNonConstVariable: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalNonConstVariable)
-    ConstEvalParallelBlockNotConst: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalParallelBlockNotConst)
-    ConstEvalParamCycle: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalParamCycle)
-    ConstEvalProceduralAssign: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalProceduralAssign)
-    ConstEvalQueueRange: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalQueueRange)
-    ConstEvalRandValue: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalRandValue)
-    ConstEvalReplicationCountInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalReplicationCountInvalid)
-    ConstEvalStaticSkipped: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalStaticSkipped)
-    ConstEvalSubroutineNotConstant: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalSubroutineNotConstant)
-    ConstEvalTaggedUnion: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalTaggedUnion)
-    ConstEvalTaskNotConstant: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalTaskNotConstant)
-    ConstEvalTimedStmtNotConst: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalTimedStmtNotConst)
-    ConstEvalVoidNotConstant: typing.ClassVar[DiagCode]  # value = DiagCode(ConstEvalVoidNotConstant)
-    ConstFunctionPortRequiresRef: typing.ClassVar[DiagCode]  # value = DiagCode(ConstFunctionPortRequiresRef)
-    ConstPortNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(ConstPortNotAllowed)
-    ConstSysTaskIgnored: typing.ClassVar[DiagCode]  # value = DiagCode(ConstSysTaskIgnored)
-    ConstVarNoInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(ConstVarNoInitializer)
-    ConstVarToRef: typing.ClassVar[DiagCode]  # value = DiagCode(ConstVarToRef)
-    ConstantConversion: typing.ClassVar[DiagCode]  # value = DiagCode(ConstantConversion)
-    ConstraintNotInClass: typing.ClassVar[DiagCode]  # value = DiagCode(ConstraintNotInClass)
-    ConstraintQualOutOfBlock: typing.ClassVar[DiagCode]  # value = DiagCode(ConstraintQualOutOfBlock)
-    ConstructorOutsideClass: typing.ClassVar[DiagCode]  # value = DiagCode(ConstructorOutsideClass)
-    ConstructorReturnType: typing.ClassVar[DiagCode]  # value = DiagCode(ConstructorReturnType)
-    CopyClassTarget: typing.ClassVar[DiagCode]  # value = DiagCode(CopyClassTarget)
-    CouldNotOpenIncludeFile: typing.ClassVar[DiagCode]  # value = DiagCode(CouldNotOpenIncludeFile)
-    CouldNotResolveHierarchicalPath: typing.ClassVar[DiagCode]  # value = DiagCode(CouldNotResolveHierarchicalPath)
-    CoverCrossItems: typing.ClassVar[DiagCode]  # value = DiagCode(CoverCrossItems)
-    CoverOptionImmutable: typing.ClassVar[DiagCode]  # value = DiagCode(CoverOptionImmutable)
-    CoverStmtNoFail: typing.ClassVar[DiagCode]  # value = DiagCode(CoverStmtNoFail)
-    CoverageBinDefSeqSize: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageBinDefSeqSize)
-    CoverageBinDefaultIgnore: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageBinDefaultIgnore)
-    CoverageBinDefaultWildcard: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageBinDefaultWildcard)
-    CoverageBinTargetName: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageBinTargetName)
-    CoverageBinTransSize: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageBinTransSize)
-    CoverageExprVar: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageExprVar)
-    CoverageOptionDup: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageOptionDup)
-    CoverageSampleFormal: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageSampleFormal)
-    CoverageSetType: typing.ClassVar[DiagCode]  # value = DiagCode(CoverageSetType)
-    CovergroupOutArg: typing.ClassVar[DiagCode]  # value = DiagCode(CovergroupOutArg)
-    CycleDelayNonClock: typing.ClassVar[DiagCode]  # value = DiagCode(CycleDelayNonClock)
-    DPIExportDifferentScope: typing.ClassVar[DiagCode]  # value = DiagCode(DPIExportDifferentScope)
-    DPIExportDuplicate: typing.ClassVar[DiagCode]  # value = DiagCode(DPIExportDuplicate)
-    DPIExportDuplicateCId: typing.ClassVar[DiagCode]  # value = DiagCode(DPIExportDuplicateCId)
-    DPIExportImportedFunc: typing.ClassVar[DiagCode]  # value = DiagCode(DPIExportImportedFunc)
-    DPIExportKindMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(DPIExportKindMismatch)
-    DPIPureArg: typing.ClassVar[DiagCode]  # value = DiagCode(DPIPureArg)
-    DPIPureReturn: typing.ClassVar[DiagCode]  # value = DiagCode(DPIPureReturn)
-    DPIPureTask: typing.ClassVar[DiagCode]  # value = DiagCode(DPIPureTask)
-    DPIRefArg: typing.ClassVar[DiagCode]  # value = DiagCode(DPIRefArg)
-    DPISignatureMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(DPISignatureMismatch)
-    DPISpecDisallowed: typing.ClassVar[DiagCode]  # value = DiagCode(DPISpecDisallowed)
-    DecimalDigitMultipleUnknown: typing.ClassVar[DiagCode]  # value = DiagCode(DecimalDigitMultipleUnknown)
-    DeclModifierConflict: typing.ClassVar[DiagCode]  # value = DiagCode(DeclModifierConflict)
-    DeclModifierOrdering: typing.ClassVar[DiagCode]  # value = DiagCode(DeclModifierOrdering)
-    DeclarationsAtStart: typing.ClassVar[DiagCode]  # value = DiagCode(DeclarationsAtStart)
-    DefParamCycle: typing.ClassVar[DiagCode]  # value = DiagCode(DefParamCycle)
-    DefParamLocal: typing.ClassVar[DiagCode]  # value = DiagCode(DefParamLocal)
-    DefParamTarget: typing.ClassVar[DiagCode]  # value = DiagCode(DefParamTarget)
-    DefParamTargetChange: typing.ClassVar[DiagCode]  # value = DiagCode(DefParamTargetChange)
-    DefaultArgNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(DefaultArgNotAllowed)
-    DefaultSuperArgLocalReference: typing.ClassVar[DiagCode]  # value = DiagCode(DefaultSuperArgLocalReference)
-    DeferredAssertAutoRefArg: typing.ClassVar[DiagCode]  # value = DiagCode(DeferredAssertAutoRefArg)
-    DeferredAssertNonVoid: typing.ClassVar[DiagCode]  # value = DiagCode(DeferredAssertNonVoid)
-    DeferredAssertOutArg: typing.ClassVar[DiagCode]  # value = DiagCode(DeferredAssertOutArg)
-    DeferredDelayMustBeZero: typing.ClassVar[DiagCode]  # value = DiagCode(DeferredDelayMustBeZero)
-    DefinitionUsedAsType: typing.ClassVar[DiagCode]  # value = DiagCode(DefinitionUsedAsType)
-    DefinitionUsedAsValue: typing.ClassVar[DiagCode]  # value = DiagCode(DefinitionUsedAsValue)
-    DefparamBadHierarchy: typing.ClassVar[DiagCode]  # value = DiagCode(DefparamBadHierarchy)
-    Delay3NotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(Delay3NotAllowed)
-    Delay3OnVar: typing.ClassVar[DiagCode]  # value = DiagCode(Delay3OnVar)
-    Delay3UdpNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(Delay3UdpNotAllowed)
-    DelayNotNumeric: typing.ClassVar[DiagCode]  # value = DiagCode(DelayNotNumeric)
-    DelaysNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(DelaysNotAllowed)
-    DerivedCovergroupNoBase: typing.ClassVar[DiagCode]  # value = DiagCode(DerivedCovergroupNoBase)
-    DerivedCovergroupNotInClass: typing.ClassVar[DiagCode]  # value = DiagCode(DerivedCovergroupNotInClass)
-    DifferentClockInClockingBlock: typing.ClassVar[DiagCode]  # value = DiagCode(DifferentClockInClockingBlock)
-    DigitsLeadingUnderscore: typing.ClassVar[DiagCode]  # value = DiagCode(DigitsLeadingUnderscore)
-    DimensionIndexInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(DimensionIndexInvalid)
-    DimensionRequiresConstRange: typing.ClassVar[DiagCode]  # value = DiagCode(DimensionRequiresConstRange)
-    DirectionOnInterfacePort: typing.ClassVar[DiagCode]  # value = DiagCode(DirectionOnInterfacePort)
-    DirectionWithInterfacePort: typing.ClassVar[DiagCode]  # value = DiagCode(DirectionWithInterfacePort)
-    DirectiveInsideDesignElement: typing.ClassVar[DiagCode]  # value = DiagCode(DirectiveInsideDesignElement)
-    DisableIffLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(DisableIffLocalVar)
-    DisableIffMatched: typing.ClassVar[DiagCode]  # value = DiagCode(DisableIffMatched)
-    DisallowedPortDefault: typing.ClassVar[DiagCode]  # value = DiagCode(DisallowedPortDefault)
-    DistRealRangeWeight: typing.ClassVar[DiagCode]  # value = DiagCode(DistRealRangeWeight)
-    DotIntoInstArray: typing.ClassVar[DiagCode]  # value = DiagCode(DotIntoInstArray)
-    DotOnType: typing.ClassVar[DiagCode]  # value = DiagCode(DotOnType)
-    DriveStrengthHighZ: typing.ClassVar[DiagCode]  # value = DiagCode(DriveStrengthHighZ)
-    DriveStrengthInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(DriveStrengthInvalid)
-    DriveStrengthNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(DriveStrengthNotAllowed)
-    DupConfigRule: typing.ClassVar[DiagCode]  # value = DiagCode(DupConfigRule)
-    DupInterfaceExternMethod: typing.ClassVar[DiagCode]  # value = DiagCode(DupInterfaceExternMethod)
-    DupTimingPath: typing.ClassVar[DiagCode]  # value = DiagCode(DupTimingPath)
-    DuplicateArgAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateArgAssignment)
-    DuplicateAttribute: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateAttribute)
-    DuplicateBind: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateBind)
-    DuplicateClassSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateClassSpecifier)
-    DuplicateDeclModifier: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateDeclModifier)
-    DuplicateDefinition: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateDefinition)
-    DuplicateDefparam: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateDefparam)
-    DuplicateImport: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateImport)
-    DuplicateParamAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateParamAssignment)
-    DuplicatePortConnection: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicatePortConnection)
-    DuplicateQualifier: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateQualifier)
-    DuplicateWildcardPortConnection: typing.ClassVar[DiagCode]  # value = DiagCode(DuplicateWildcardPortConnection)
-    DynamicDimensionIndex: typing.ClassVar[DiagCode]  # value = DiagCode(DynamicDimensionIndex)
-    DynamicFromChecker: typing.ClassVar[DiagCode]  # value = DiagCode(DynamicFromChecker)
-    DynamicNotProcedural: typing.ClassVar[DiagCode]  # value = DiagCode(DynamicNotProcedural)
-    EdgeDescWrongKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(EdgeDescWrongKeyword)
-    EmbeddedNull: typing.ClassVar[DiagCode]  # value = DiagCode(EmbeddedNull)
-    EmptyArgNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyArgNotAllowed)
-    EmptyAssignmentPattern: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyAssignmentPattern)
-    EmptyBody: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyBody)
-    EmptyConcatNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyConcatNotAllowed)
-    EmptyMember: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyMember)
-    EmptyStatement: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyStatement)
-    EmptyUdpPort: typing.ClassVar[DiagCode]  # value = DiagCode(EmptyUdpPort)
-    EndNameMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(EndNameMismatch)
-    EndNameNotEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(EndNameNotEmpty)
-    EnumIncrementUnknown: typing.ClassVar[DiagCode]  # value = DiagCode(EnumIncrementUnknown)
-    EnumRangeLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(EnumRangeLiteral)
-    EnumRangeMultiDimensional: typing.ClassVar[DiagCode]  # value = DiagCode(EnumRangeMultiDimensional)
-    EnumValueDuplicate: typing.ClassVar[DiagCode]  # value = DiagCode(EnumValueDuplicate)
-    EnumValueOutOfRange: typing.ClassVar[DiagCode]  # value = DiagCode(EnumValueOutOfRange)
-    EnumValueOverflow: typing.ClassVar[DiagCode]  # value = DiagCode(EnumValueOverflow)
-    EnumValueSizeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(EnumValueSizeMismatch)
-    EnumValueUnknownBits: typing.ClassVar[DiagCode]  # value = DiagCode(EnumValueUnknownBits)
-    ErrorTask: typing.ClassVar[DiagCode]  # value = DiagCode(ErrorTask)
-    EscapedWhitespace: typing.ClassVar[DiagCode]  # value = DiagCode(EscapedWhitespace)
-    EventExprAssertionArg: typing.ClassVar[DiagCode]  # value = DiagCode(EventExprAssertionArg)
-    EventExpressionConstant: typing.ClassVar[DiagCode]  # value = DiagCode(EventExpressionConstant)
-    EventExpressionFuncArg: typing.ClassVar[DiagCode]  # value = DiagCode(EventExpressionFuncArg)
-    EventTriggerCycleDelay: typing.ClassVar[DiagCode]  # value = DiagCode(EventTriggerCycleDelay)
-    ExceededMaxIncludeDepth: typing.ClassVar[DiagCode]  # value = DiagCode(ExceededMaxIncludeDepth)
-    ExpectedAnsiPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedAnsiPort)
-    ExpectedArgument: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedArgument)
-    ExpectedAssertionItemPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedAssertionItemPort)
-    ExpectedAssignmentKey: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedAssignmentKey)
-    ExpectedAttribute: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedAttribute)
-    ExpectedCaseItem: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedCaseItem)
-    ExpectedClassPropertyName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedClassPropertyName)
-    ExpectedClassSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedClassSpecifier)
-    ExpectedClockingSkew: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedClockingSkew)
-    ExpectedClosingQuote: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedClosingQuote)
-    ExpectedConditionalPattern: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedConditionalPattern)
-    ExpectedConstraintName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedConstraintName)
-    ExpectedContinuousAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedContinuousAssignment)
-    ExpectedDPISpecString: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDPISpecString)
-    ExpectedDeclarator: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDeclarator)
-    ExpectedDiagPragmaArg: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDiagPragmaArg)
-    ExpectedDiagPragmaLevel: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDiagPragmaLevel)
-    ExpectedDistItem: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDistItem)
-    ExpectedDriveStrength: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedDriveStrength)
-    ExpectedEdgeDescriptor: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedEdgeDescriptor)
-    ExpectedEnumBase: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedEnumBase)
-    ExpectedExpression: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedExpression)
-    ExpectedForInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedForInitializer)
-    ExpectedFunctionPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedFunctionPort)
-    ExpectedFunctionPortList: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedFunctionPortList)
-    ExpectedGenvarIterVar: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedGenvarIterVar)
-    ExpectedHierarchicalInstantiation: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedHierarchicalInstantiation)
-    ExpectedIdentifier: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIdentifier)
-    ExpectedIfOrCase: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIfOrCase)
-    ExpectedImportExport: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedImportExport)
-    ExpectedIncludeFileName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIncludeFileName)
-    ExpectedIntegerBaseAfterSigned: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIntegerBaseAfterSigned)
-    ExpectedIntegerLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIntegerLiteral)
-    ExpectedInterfaceClassName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedInterfaceClassName)
-    ExpectedIterationExpression: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIterationExpression)
-    ExpectedIteratorName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedIteratorName)
-    ExpectedMacroArgs: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedMacroArgs)
-    ExpectedMacroStringifyEnd: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedMacroStringifyEnd)
-    ExpectedMember: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedMember)
-    ExpectedModOrVarName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedModOrVarName)
-    ExpectedModportPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedModportPort)
-    ExpectedModuleInstance: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedModuleInstance)
-    ExpectedModuleName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedModuleName)
-    ExpectedNetDelay: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedNetDelay)
-    ExpectedNetRef: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedNetRef)
-    ExpectedNetStrength: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedNetStrength)
-    ExpectedNetType: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedNetType)
-    ExpectedNonAnsiPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedNonAnsiPort)
-    ExpectedPackageImport: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPackageImport)
-    ExpectedParameterPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedParameterPort)
-    ExpectedPathOp: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPathOp)
-    ExpectedPattern: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPattern)
-    ExpectedPortConnection: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPortConnection)
-    ExpectedPortList: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPortList)
-    ExpectedPragmaExpression: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPragmaExpression)
-    ExpectedPragmaName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedPragmaName)
-    ExpectedProtectArg: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedProtectArg)
-    ExpectedProtectKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedProtectKeyword)
-    ExpectedRsRule: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedRsRule)
-    ExpectedSampleKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedSampleKeyword)
-    ExpectedScopeName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedScopeName)
-    ExpectedScopeOrAssert: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedScopeOrAssert)
-    ExpectedStatement: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedStatement)
-    ExpectedStreamExpression: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedStreamExpression)
-    ExpectedStringLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedStringLiteral)
-    ExpectedSubroutineName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedSubroutineName)
-    ExpectedTimeLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedTimeLiteral)
-    ExpectedToken: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedToken)
-    ExpectedUdpPort: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedUdpPort)
-    ExpectedUdpSymbol: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedUdpSymbol)
-    ExpectedValueRangeElement: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedValueRangeElement)
-    ExpectedVariableAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedVariableAssignment)
-    ExpectedVariableName: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedVariableName)
-    ExpectedVectorDigits: typing.ClassVar[DiagCode]  # value = DiagCode(ExpectedVectorDigits)
-    ExplicitClockInClockingBlock: typing.ClassVar[DiagCode]  # value = DiagCode(ExplicitClockInClockingBlock)
-    ExprMustBeIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(ExprMustBeIntegral)
-    ExprNotConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(ExprNotConstraint)
-    ExprNotStatement: typing.ClassVar[DiagCode]  # value = DiagCode(ExprNotStatement)
-    ExpressionNotAssignable: typing.ClassVar[DiagCode]  # value = DiagCode(ExpressionNotAssignable)
-    ExpressionNotCallable: typing.ClassVar[DiagCode]  # value = DiagCode(ExpressionNotCallable)
-    ExtendClassFromIface: typing.ClassVar[DiagCode]  # value = DiagCode(ExtendClassFromIface)
-    ExtendFromFinal: typing.ClassVar[DiagCode]  # value = DiagCode(ExtendFromFinal)
-    ExtendIfaceFromClass: typing.ClassVar[DiagCode]  # value = DiagCode(ExtendIfaceFromClass)
-    ExternDeclMismatchImpl: typing.ClassVar[DiagCode]  # value = DiagCode(ExternDeclMismatchImpl)
-    ExternDeclMismatchPrev: typing.ClassVar[DiagCode]  # value = DiagCode(ExternDeclMismatchPrev)
-    ExternFuncForkJoin: typing.ClassVar[DiagCode]  # value = DiagCode(ExternFuncForkJoin)
-    ExternIfaceArrayMethod: typing.ClassVar[DiagCode]  # value = DiagCode(ExternIfaceArrayMethod)
-    ExternWildcardPortList: typing.ClassVar[DiagCode]  # value = DiagCode(ExternWildcardPortList)
-    ExtraPragmaArgs: typing.ClassVar[DiagCode]  # value = DiagCode(ExtraPragmaArgs)
-    ExtraProtectEnd: typing.ClassVar[DiagCode]  # value = DiagCode(ExtraProtectEnd)
-    FatalTask: typing.ClassVar[DiagCode]  # value = DiagCode(FatalTask)
-    FinalSpecifierLast: typing.ClassVar[DiagCode]  # value = DiagCode(FinalSpecifierLast)
-    FinalWithPure: typing.ClassVar[DiagCode]  # value = DiagCode(FinalWithPure)
-    FloatBoolConv: typing.ClassVar[DiagCode]  # value = DiagCode(FloatBoolConv)
-    FloatIntConv: typing.ClassVar[DiagCode]  # value = DiagCode(FloatIntConv)
-    FloatNarrow: typing.ClassVar[DiagCode]  # value = DiagCode(FloatNarrow)
-    FloatWiden: typing.ClassVar[DiagCode]  # value = DiagCode(FloatWiden)
-    ForeachDynamicDimAfterSkipped: typing.ClassVar[DiagCode]  # value = DiagCode(ForeachDynamicDimAfterSkipped)
-    ForeachWildcardIndex: typing.ClassVar[DiagCode]  # value = DiagCode(ForeachWildcardIndex)
-    ForkJoinAlwaysComb: typing.ClassVar[DiagCode]  # value = DiagCode(ForkJoinAlwaysComb)
-    FormatEmptyArg: typing.ClassVar[DiagCode]  # value = DiagCode(FormatEmptyArg)
-    FormatMismatchedType: typing.ClassVar[DiagCode]  # value = DiagCode(FormatMismatchedType)
-    FormatMultibitStrength: typing.ClassVar[DiagCode]  # value = DiagCode(FormatMultibitStrength)
-    FormatNoArgument: typing.ClassVar[DiagCode]  # value = DiagCode(FormatNoArgument)
-    FormatRealInt: typing.ClassVar[DiagCode]  # value = DiagCode(FormatRealInt)
-    FormatSpecifierInvalidWidth: typing.ClassVar[DiagCode]  # value = DiagCode(FormatSpecifierInvalidWidth)
-    FormatSpecifierNotFloat: typing.ClassVar[DiagCode]  # value = DiagCode(FormatSpecifierNotFloat)
-    FormatSpecifierWidthNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(FormatSpecifierWidthNotAllowed)
-    FormatTooManyArgs: typing.ClassVar[DiagCode]  # value = DiagCode(FormatTooManyArgs)
-    FormatUnspecifiedType: typing.ClassVar[DiagCode]  # value = DiagCode(FormatUnspecifiedType)
-    ForwardTypedefDoesNotMatch: typing.ClassVar[DiagCode]  # value = DiagCode(ForwardTypedefDoesNotMatch)
-    ForwardTypedefVisibility: typing.ClassVar[DiagCode]  # value = DiagCode(ForwardTypedefVisibility)
-    GFSVMatchItems: typing.ClassVar[DiagCode]  # value = DiagCode(GFSVMatchItems)
-    GateUDNTConn: typing.ClassVar[DiagCode]  # value = DiagCode(GateUDNTConn)
-    GenericClassScopeResolution: typing.ClassVar[DiagCode]  # value = DiagCode(GenericClassScopeResolution)
-    GenvarDuplicate: typing.ClassVar[DiagCode]  # value = DiagCode(GenvarDuplicate)
-    GenvarUnknownBits: typing.ClassVar[DiagCode]  # value = DiagCode(GenvarUnknownBits)
-    GlobalClockEventExpr: typing.ClassVar[DiagCode]  # value = DiagCode(GlobalClockEventExpr)
-    GlobalClockingEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(GlobalClockingEmpty)
-    GlobalClockingGenerate: typing.ClassVar[DiagCode]  # value = DiagCode(GlobalClockingGenerate)
-    GlobalSampledValueAssertionExpr: typing.ClassVar[DiagCode]  # value = DiagCode(GlobalSampledValueAssertionExpr)
-    GlobalSampledValueNested: typing.ClassVar[DiagCode]  # value = DiagCode(GlobalSampledValueNested)
-    HierarchicalFromPackage: typing.ClassVar[DiagCode]  # value = DiagCode(HierarchicalFromPackage)
-    HierarchicalRefUnknownModule: typing.ClassVar[DiagCode]  # value = DiagCode(HierarchicalRefUnknownModule)
-    IfNoneEdgeSensitive: typing.ClassVar[DiagCode]  # value = DiagCode(IfNoneEdgeSensitive)
-    IfaceExtendIncomplete: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceExtendIncomplete)
-    IfaceExtendTypeParam: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceExtendTypeParam)
-    IfaceImportExportTarget: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceImportExportTarget)
-    IfaceMethodHidden: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceMethodHidden)
-    IfaceMethodNoImpl: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceMethodNoImpl)
-    IfaceMethodNotExtern: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceMethodNotExtern)
-    IfaceMethodNotVirtual: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceMethodNotVirtual)
-    IfaceMethodPure: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceMethodPure)
-    IfaceNameConflict: typing.ClassVar[DiagCode]  # value = DiagCode(IfaceNameConflict)
-    IfacePortInExpr: typing.ClassVar[DiagCode]  # value = DiagCode(IfacePortInExpr)
-    IgnoredMacroPaste: typing.ClassVar[DiagCode]  # value = DiagCode(IgnoredMacroPaste)
-    IgnoredSlice: typing.ClassVar[DiagCode]  # value = DiagCode(IgnoredSlice)
-    IllegalReferenceToProgramItem: typing.ClassVar[DiagCode]  # value = DiagCode(IllegalReferenceToProgramItem)
-    ImplementNonIface: typing.ClassVar[DiagCode]  # value = DiagCode(ImplementNonIface)
-    ImplicitConnNetInconsistent: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitConnNetInconsistent)
-    ImplicitConvert: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitConvert)
-    ImplicitEventInAssertion: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitEventInAssertion)
-    ImplicitNamedPortNotFound: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitNamedPortNotFound)
-    ImplicitNamedPortTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitNamedPortTypeMismatch)
-    ImplicitNetPortNoDefault: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitNetPortNoDefault)
-    ImplicitNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(ImplicitNotAllowed)
-    ImportNameCollision: typing.ClassVar[DiagCode]  # value = DiagCode(ImportNameCollision)
-    InOutDefaultSkew: typing.ClassVar[DiagCode]  # value = DiagCode(InOutDefaultSkew)
-    InOutPortCannotBeVariable: typing.ClassVar[DiagCode]  # value = DiagCode(InOutPortCannotBeVariable)
-    InOutUWireConn: typing.ClassVar[DiagCode]  # value = DiagCode(InOutUWireConn)
-    InOutUWirePort: typing.ClassVar[DiagCode]  # value = DiagCode(InOutUWirePort)
-    InOutVarPortConn: typing.ClassVar[DiagCode]  # value = DiagCode(InOutVarPortConn)
-    IncDecNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(IncDecNotAllowed)
-    IncompleteReturn: typing.ClassVar[DiagCode]  # value = DiagCode(IncompleteReturn)
-    IndexOOB: typing.ClassVar[DiagCode]  # value = DiagCode(IndexOOB)
-    IndexValueInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(IndexValueInvalid)
-    InequivalentUniquenessTypes: typing.ClassVar[DiagCode]  # value = DiagCode(InequivalentUniquenessTypes)
-    InferredComb: typing.ClassVar[DiagCode]  # value = DiagCode(InferredComb)
-    InferredLatch: typing.ClassVar[DiagCode]  # value = DiagCode(InferredLatch)
-    InferredValDefArg: typing.ClassVar[DiagCode]  # value = DiagCode(InferredValDefArg)
-    InfinitelyRecursiveHierarchy: typing.ClassVar[DiagCode]  # value = DiagCode(InfinitelyRecursiveHierarchy)
-    InfoTask: typing.ClassVar[DiagCode]  # value = DiagCode(InfoTask)
-    InheritFromAbstract: typing.ClassVar[DiagCode]  # value = DiagCode(InheritFromAbstract)
-    InheritFromAbstractConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(InheritFromAbstractConstraint)
-    InitializerRequired: typing.ClassVar[DiagCode]  # value = DiagCode(InitializerRequired)
-    InputPortAssign: typing.ClassVar[DiagCode]  # value = DiagCode(InputPortAssign)
-    InputPortCoercion: typing.ClassVar[DiagCode]  # value = DiagCode(InputPortCoercion)
-    InstanceArrayEndianMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(InstanceArrayEndianMismatch)
-    InstanceMissingParens: typing.ClassVar[DiagCode]  # value = DiagCode(InstanceMissingParens)
-    InstanceNameRequired: typing.ClassVar[DiagCode]  # value = DiagCode(InstanceNameRequired)
-    InstanceWithDelay: typing.ClassVar[DiagCode]  # value = DiagCode(InstanceWithDelay)
-    InstanceWithStrength: typing.ClassVar[DiagCode]  # value = DiagCode(InstanceWithStrength)
-    IntBoolConv: typing.ClassVar[DiagCode]  # value = DiagCode(IntBoolConv)
-    IntFloatConv: typing.ClassVar[DiagCode]  # value = DiagCode(IntFloatConv)
-    InterconnectDelaySyntax: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectDelaySyntax)
-    InterconnectInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectInitializer)
-    InterconnectMultiPort: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectMultiPort)
-    InterconnectPortVar: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectPortVar)
-    InterconnectReference: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectReference)
-    InterconnectTypeSyntax: typing.ClassVar[DiagCode]  # value = DiagCode(InterconnectTypeSyntax)
-    InterfacePortInvalidExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InterfacePortInvalidExpression)
-    InterfacePortNotConnected: typing.ClassVar[DiagCode]  # value = DiagCode(InterfacePortNotConnected)
-    InterfacePortTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(InterfacePortTypeMismatch)
-    InvalidAccessDotColon: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidAccessDotColon)
-    InvalidArgumentExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidArgumentExpr)
-    InvalidArrayElemType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidArrayElemType)
-    InvalidArraySize: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidArraySize)
-    InvalidAssociativeIndexType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidAssociativeIndexType)
-    InvalidBindTarget: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidBindTarget)
-    InvalidBinsMatches: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidBinsMatches)
-    InvalidBinsTarget: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidBinsTarget)
-    InvalidBlockEventTarget: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidBlockEventTarget)
-    InvalidClassAccess: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidClassAccess)
-    InvalidClockingSignal: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidClockingSignal)
-    InvalidCommaInPropExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidCommaInPropExpr)
-    InvalidConstraintExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidConstraintExpr)
-    InvalidConstraintQualifier: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidConstraintQualifier)
-    InvalidConstructorAccess: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidConstructorAccess)
-    InvalidCoverageExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidCoverageExpr)
-    InvalidCoverageOption: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidCoverageOption)
-    InvalidDPIArgType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDPIArgType)
-    InvalidDPICIdentifier: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDPICIdentifier)
-    InvalidDPIReturnType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDPIReturnType)
-    InvalidDeferredAssertAction: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDeferredAssertAction)
-    InvalidDelayValue: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDelayValue)
-    InvalidDimensionRange: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDimensionRange)
-    InvalidDisableTarget: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDisableTarget)
-    InvalidDistExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidDistExpression)
-    InvalidEdgeDescriptor: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidEdgeDescriptor)
-    InvalidEncodingByte: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidEncodingByte)
-    InvalidEnumBase: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidEnumBase)
-    InvalidEventExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidEventExpression)
-    InvalidExtendsDefault: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidExtendsDefault)
-    InvalidForInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidForInitializer)
-    InvalidForStepExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidForStepExpression)
-    InvalidGenvarIterExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidGenvarIterExpression)
-    InvalidHexEscapeCode: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidHexEscapeCode)
-    InvalidHierarchicalIfacePortConn: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidHierarchicalIfacePortConn)
-    InvalidInferredTimeScale: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidInferredTimeScale)
-    InvalidInstanceForParent: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidInstanceForParent)
-    InvalidLineDirectiveLevel: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidLineDirectiveLevel)
-    InvalidMacroName: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMacroName)
-    InvalidMatchItem: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMatchItem)
-    InvalidMemberAccess: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMemberAccess)
-    InvalidMethodOverride: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMethodOverride)
-    InvalidMethodQualifier: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMethodQualifier)
-    InvalidModportAccess: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidModportAccess)
-    InvalidMulticlockedSeqOp: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidMulticlockedSeqOp)
-    InvalidNGateCount: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidNGateCount)
-    InvalidNetType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidNetType)
-    InvalidPackageDecl: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPackageDecl)
-    InvalidParamOverrideOpt: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidParamOverrideOpt)
-    InvalidPortSubType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPortSubType)
-    InvalidPortType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPortType)
-    InvalidPragmaNumber: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPragmaNumber)
-    InvalidPragmaViewport: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPragmaViewport)
-    InvalidPrimInstanceForParent: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPrimInstanceForParent)
-    InvalidPrimitivePortConn: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPrimitivePortConn)
-    InvalidPropertyIndex: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPropertyIndex)
-    InvalidPropertyQualifier: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPropertyQualifier)
-    InvalidPropertyRange: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPropertyRange)
-    InvalidPullStrength: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPullStrength)
-    InvalidPulseStyle: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidPulseStyle)
-    InvalidQualifierForConstructor: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidQualifierForConstructor)
-    InvalidQualifierForIfaceMember: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidQualifierForIfaceMember)
-    InvalidQualifierForMember: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidQualifierForMember)
-    InvalidRandType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidRandType)
-    InvalidRandomizeOverride: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidRandomizeOverride)
-    InvalidRefArg: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidRefArg)
-    InvalidRepeatRange: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidRepeatRange)
-    InvalidScopeIndexExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidScopeIndexExpression)
-    InvalidSelectExpression: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSelectExpression)
-    InvalidSignalEventInSeq: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSignalEventInSeq)
-    InvalidSpecifyDest: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSpecifyDest)
-    InvalidSpecifyPath: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSpecifyPath)
-    InvalidSpecifySource: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSpecifySource)
-    InvalidSpecifyType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSpecifyType)
-    InvalidStmtInChecker: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidStmtInChecker)
-    InvalidStringArg: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidStringArg)
-    InvalidSuperNew: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSuperNew)
-    InvalidSuperNewDefault: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSuperNewDefault)
-    InvalidSyntaxInEventExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidSyntaxInEventExpr)
-    InvalidThisHandle: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidThisHandle)
-    InvalidTimeScalePrecision: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidTimeScalePrecision)
-    InvalidTimeScaleSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidTimeScaleSpecifier)
-    InvalidTimingCheckNotifierArg: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidTimingCheckNotifierArg)
-    InvalidTopModule: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidTopModule)
-    InvalidUTF8Seq: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidUTF8Seq)
-    InvalidUnionMember: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidUnionMember)
-    InvalidUniquenessExpr: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidUniquenessExpr)
-    InvalidUserDefinedNetType: typing.ClassVar[DiagCode]  # value = DiagCode(InvalidUserDefinedNetType)
-    IsUnboundedParamArg: typing.ClassVar[DiagCode]  # value = DiagCode(IsUnboundedParamArg)
-    IteratorArgsWithoutWithClause: typing.ClassVar[DiagCode]  # value = DiagCode(IteratorArgsWithoutWithClause)
-    LabelAndName: typing.ClassVar[DiagCode]  # value = DiagCode(LabelAndName)
-    LetHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(LetHierarchical)
-    LifetimeForPrototype: typing.ClassVar[DiagCode]  # value = DiagCode(LifetimeForPrototype)
-    LiteralSizeIsZero: typing.ClassVar[DiagCode]  # value = DiagCode(LiteralSizeIsZero)
-    LiteralSizeTooLarge: typing.ClassVar[DiagCode]  # value = DiagCode(LiteralSizeTooLarge)
-    LocalFormalVarMultiAssign: typing.ClassVar[DiagCode]  # value = DiagCode(LocalFormalVarMultiAssign)
-    LocalMemberAccess: typing.ClassVar[DiagCode]  # value = DiagCode(LocalMemberAccess)
-    LocalNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(LocalNotAllowed)
-    LocalParamNoInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(LocalParamNoInitializer)
-    LocalVarEventExpr: typing.ClassVar[DiagCode]  # value = DiagCode(LocalVarEventExpr)
-    LocalVarMatchItem: typing.ClassVar[DiagCode]  # value = DiagCode(LocalVarMatchItem)
-    LocalVarOutputEmptyMatch: typing.ClassVar[DiagCode]  # value = DiagCode(LocalVarOutputEmptyMatch)
-    LocalVarTypeRequired: typing.ClassVar[DiagCode]  # value = DiagCode(LocalVarTypeRequired)
-    LogicalNotParentheses: typing.ClassVar[DiagCode]  # value = DiagCode(LogicalNotParentheses)
-    LogicalOpParentheses: typing.ClassVar[DiagCode]  # value = DiagCode(LogicalOpParentheses)
-    LoopVarShadowsArray: typing.ClassVar[DiagCode]  # value = DiagCode(LoopVarShadowsArray)
-    MacroOpsOutsideDefinition: typing.ClassVar[DiagCode]  # value = DiagCode(MacroOpsOutsideDefinition)
-    MacroTokensAfterPragmaProtect: typing.ClassVar[DiagCode]  # value = DiagCode(MacroTokensAfterPragmaProtect)
-    MatchItemsAdmitEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(MatchItemsAdmitEmpty)
-    MaxGenerateStepsExceeded: typing.ClassVar[DiagCode]  # value = DiagCode(MaxGenerateStepsExceeded)
-    MaxInstanceArrayExceeded: typing.ClassVar[DiagCode]  # value = DiagCode(MaxInstanceArrayExceeded)
-    MaxInstanceDepthExceeded: typing.ClassVar[DiagCode]  # value = DiagCode(MaxInstanceDepthExceeded)
-    MemberDefinitionBeforeClass: typing.ClassVar[DiagCode]  # value = DiagCode(MemberDefinitionBeforeClass)
-    MethodArgCountMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgCountMismatch)
-    MethodArgDefaultMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgDefaultMismatch)
-    MethodArgDirectionMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgDirectionMismatch)
-    MethodArgNameMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgNameMismatch)
-    MethodArgNoDefault: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgNoDefault)
-    MethodArgTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodArgTypeMismatch)
-    MethodKindMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodKindMismatch)
-    MethodReturnMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(MethodReturnMismatch)
-    MethodReturnTypeScoped: typing.ClassVar[DiagCode]  # value = DiagCode(MethodReturnTypeScoped)
-    MethodStaticLifetime: typing.ClassVar[DiagCode]  # value = DiagCode(MethodStaticLifetime)
-    MismatchConstraintSpecifiers: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchConstraintSpecifiers)
-    MismatchStaticConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchStaticConstraint)
-    MismatchedEndKeywordsDirective: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchedEndKeywordsDirective)
-    MismatchedTimeScales: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchedTimeScales)
-    MismatchedUserDefPortConn: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchedUserDefPortConn)
-    MismatchedUserDefPortDir: typing.ClassVar[DiagCode]  # value = DiagCode(MismatchedUserDefPortDir)
-    MisplacedDirectiveChar: typing.ClassVar[DiagCode]  # value = DiagCode(MisplacedDirectiveChar)
-    MisplacedTrailingSeparator: typing.ClassVar[DiagCode]  # value = DiagCode(MisplacedTrailingSeparator)
-    MissingConstraintBlock: typing.ClassVar[DiagCode]  # value = DiagCode(MissingConstraintBlock)
-    MissingEndIfDirective: typing.ClassVar[DiagCode]  # value = DiagCode(MissingEndIfDirective)
-    MissingExponentDigits: typing.ClassVar[DiagCode]  # value = DiagCode(MissingExponentDigits)
-    MissingExportImpl: typing.ClassVar[DiagCode]  # value = DiagCode(MissingExportImpl)
-    MissingExternImpl: typing.ClassVar[DiagCode]  # value = DiagCode(MissingExternImpl)
-    MissingExternModuleImpl: typing.ClassVar[DiagCode]  # value = DiagCode(MissingExternModuleImpl)
-    MissingExternWildcardPorts: typing.ClassVar[DiagCode]  # value = DiagCode(MissingExternWildcardPorts)
-    MissingFormatSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(MissingFormatSpecifier)
-    MissingFractionalDigits: typing.ClassVar[DiagCode]  # value = DiagCode(MissingFractionalDigits)
-    MissingInvocationParens: typing.ClassVar[DiagCode]  # value = DiagCode(MissingInvocationParens)
-    MissingModportPortDirection: typing.ClassVar[DiagCode]  # value = DiagCode(MissingModportPortDirection)
-    MissingPortIODeclaration: typing.ClassVar[DiagCode]  # value = DiagCode(MissingPortIODeclaration)
-    MissingReturn: typing.ClassVar[DiagCode]  # value = DiagCode(MissingReturn)
-    MissingReturnValue: typing.ClassVar[DiagCode]  # value = DiagCode(MissingReturnValue)
-    MissingReturnValueProd: typing.ClassVar[DiagCode]  # value = DiagCode(MissingReturnValueProd)
-    MissingTimeScale: typing.ClassVar[DiagCode]  # value = DiagCode(MissingTimeScale)
-    MixedVarAssigns: typing.ClassVar[DiagCode]  # value = DiagCode(MixedVarAssigns)
-    MixingOrderedAndNamedArgs: typing.ClassVar[DiagCode]  # value = DiagCode(MixingOrderedAndNamedArgs)
-    MixingOrderedAndNamedParams: typing.ClassVar[DiagCode]  # value = DiagCode(MixingOrderedAndNamedParams)
-    MixingOrderedAndNamedPorts: typing.ClassVar[DiagCode]  # value = DiagCode(MixingOrderedAndNamedPorts)
-    MixingSubroutinePortKinds: typing.ClassVar[DiagCode]  # value = DiagCode(MixingSubroutinePortKinds)
-    ModportConnMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(ModportConnMismatch)
-    MultiBitEdge: typing.ClassVar[DiagCode]  # value = DiagCode(MultiBitEdge)
-    MulticlockedInClockingBlock: typing.ClassVar[DiagCode]  # value = DiagCode(MulticlockedInClockingBlock)
-    MulticlockedSeqEmptyMatch: typing.ClassVar[DiagCode]  # value = DiagCode(MulticlockedSeqEmptyMatch)
-    MultipleAlwaysAssigns: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleAlwaysAssigns)
-    MultipleContAssigns: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleContAssigns)
-    MultipleDefaultCases: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultCases)
-    MultipleDefaultClocking: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultClocking)
-    MultipleDefaultConstructorArg: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultConstructorArg)
-    MultipleDefaultDisable: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultDisable)
-    MultipleDefaultDistWeight: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultDistWeight)
-    MultipleDefaultInputSkew: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultInputSkew)
-    MultipleDefaultOutputSkew: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultOutputSkew)
-    MultipleDefaultRules: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleDefaultRules)
-    MultipleGenerateDefaultCases: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleGenerateDefaultCases)
-    MultipleGlobalClocking: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleGlobalClocking)
-    MultipleNetAlias: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleNetAlias)
-    MultiplePackedOpenArrays: typing.ClassVar[DiagCode]  # value = DiagCode(MultiplePackedOpenArrays)
-    MultipleParallelTerminals: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleParallelTerminals)
-    MultipleTopDupName: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleTopDupName)
-    MultipleUDNTDrivers: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleUDNTDrivers)
-    MultipleUWireDrivers: typing.ClassVar[DiagCode]  # value = DiagCode(MultipleUWireDrivers)
-    NTResolveArgModify: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveArgModify)
-    NTResolveClass: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveClass)
-    NTResolveReturn: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveReturn)
-    NTResolveSingleArg: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveSingleArg)
-    NTResolveTask: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveTask)
-    NTResolveUserDef: typing.ClassVar[DiagCode]  # value = DiagCode(NTResolveUserDef)
-    NameListWithScopeRandomize: typing.ClassVar[DiagCode]  # value = DiagCode(NameListWithScopeRandomize)
-    NamedArgNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(NamedArgNotAllowed)
-    NegativeTimingLimit: typing.ClassVar[DiagCode]  # value = DiagCode(NegativeTimingLimit)
-    NestedBlockComment: typing.ClassVar[DiagCode]  # value = DiagCode(NestedBlockComment)
-    NestedConfigMultipleTops: typing.ClassVar[DiagCode]  # value = DiagCode(NestedConfigMultipleTops)
-    NestedDisableIff: typing.ClassVar[DiagCode]  # value = DiagCode(NestedDisableIff)
-    NestedIface: typing.ClassVar[DiagCode]  # value = DiagCode(NestedIface)
-    NestedNonStaticClassMethod: typing.ClassVar[DiagCode]  # value = DiagCode(NestedNonStaticClassMethod)
-    NestedNonStaticClassProperty: typing.ClassVar[DiagCode]  # value = DiagCode(NestedNonStaticClassProperty)
-    NestedProtectBegin: typing.ClassVar[DiagCode]  # value = DiagCode(NestedProtectBegin)
-    NetAliasCommonNetType: typing.ClassVar[DiagCode]  # value = DiagCode(NetAliasCommonNetType)
-    NetAliasHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(NetAliasHierarchical)
-    NetAliasNotANet: typing.ClassVar[DiagCode]  # value = DiagCode(NetAliasNotANet)
-    NetAliasSelf: typing.ClassVar[DiagCode]  # value = DiagCode(NetAliasSelf)
-    NetAliasWidthMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(NetAliasWidthMismatch)
-    NetInconsistent: typing.ClassVar[DiagCode]  # value = DiagCode(NetInconsistent)
-    NetRangeInconsistent: typing.ClassVar[DiagCode]  # value = DiagCode(NetRangeInconsistent)
-    NewArrayTarget: typing.ClassVar[DiagCode]  # value = DiagCode(NewArrayTarget)
-    NewClassTarget: typing.ClassVar[DiagCode]  # value = DiagCode(NewClassTarget)
-    NewInterfaceClass: typing.ClassVar[DiagCode]  # value = DiagCode(NewInterfaceClass)
-    NewKeywordQualified: typing.ClassVar[DiagCode]  # value = DiagCode(NewKeywordQualified)
-    NewVirtualClass: typing.ClassVar[DiagCode]  # value = DiagCode(NewVirtualClass)
-    NoChangeEdgeRequired: typing.ClassVar[DiagCode]  # value = DiagCode(NoChangeEdgeRequired)
-    NoCommaInList: typing.ClassVar[DiagCode]  # value = DiagCode(NoCommaInList)
-    NoCommonComparisonType: typing.ClassVar[DiagCode]  # value = DiagCode(NoCommonComparisonType)
-    NoConstraintBody: typing.ClassVar[DiagCode]  # value = DiagCode(NoConstraintBody)
-    NoDeclInClass: typing.ClassVar[DiagCode]  # value = DiagCode(NoDeclInClass)
-    NoDefaultClocking: typing.ClassVar[DiagCode]  # value = DiagCode(NoDefaultClocking)
-    NoDefaultSpecialization: typing.ClassVar[DiagCode]  # value = DiagCode(NoDefaultSpecialization)
-    NoGlobalClocking: typing.ClassVar[DiagCode]  # value = DiagCode(NoGlobalClocking)
-    NoImplicitConversion: typing.ClassVar[DiagCode]  # value = DiagCode(NoImplicitConversion)
-    NoInferredClock: typing.ClassVar[DiagCode]  # value = DiagCode(NoInferredClock)
-    NoLabelOnSemicolon: typing.ClassVar[DiagCode]  # value = DiagCode(NoLabelOnSemicolon)
-    NoMemberImplFound: typing.ClassVar[DiagCode]  # value = DiagCode(NoMemberImplFound)
-    NoTopModules: typing.ClassVar[DiagCode]  # value = DiagCode(NoTopModules)
-    NoUniqueClock: typing.ClassVar[DiagCode]  # value = DiagCode(NoUniqueClock)
-    NonIntegralConstraintLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(NonIntegralConstraintLiteral)
-    NonPrintableChar: typing.ClassVar[DiagCode]  # value = DiagCode(NonPrintableChar)
-    NonProceduralFuncArg: typing.ClassVar[DiagCode]  # value = DiagCode(NonProceduralFuncArg)
-    NonStandardGenBlock: typing.ClassVar[DiagCode]  # value = DiagCode(NonStandardGenBlock)
-    NonStaticClassMethod: typing.ClassVar[DiagCode]  # value = DiagCode(NonStaticClassMethod)
-    NonStaticClassProperty: typing.ClassVar[DiagCode]  # value = DiagCode(NonStaticClassProperty)
-    NonblockingAssignmentToAuto: typing.ClassVar[DiagCode]  # value = DiagCode(NonblockingAssignmentToAuto)
-    NonblockingDynamicAssign: typing.ClassVar[DiagCode]  # value = DiagCode(NonblockingDynamicAssign)
-    NonblockingInFinal: typing.ClassVar[DiagCode]  # value = DiagCode(NonblockingInFinal)
-    NonstandardDist: typing.ClassVar[DiagCode]  # value = DiagCode(NonstandardDist)
-    NonstandardEscapeCode: typing.ClassVar[DiagCode]  # value = DiagCode(NonstandardEscapeCode)
-    NonstandardForeach: typing.ClassVar[DiagCode]  # value = DiagCode(NonstandardForeach)
-    NonstandardSysFunc: typing.ClassVar[DiagCode]  # value = DiagCode(NonstandardSysFunc)
-    NotAChecker: typing.ClassVar[DiagCode]  # value = DiagCode(NotAChecker)
-    NotAClass: typing.ClassVar[DiagCode]  # value = DiagCode(NotAClass)
-    NotAClockingBlock: typing.ClassVar[DiagCode]  # value = DiagCode(NotAClockingBlock)
-    NotAGenericClass: typing.ClassVar[DiagCode]  # value = DiagCode(NotAGenericClass)
-    NotAGenvar: typing.ClassVar[DiagCode]  # value = DiagCode(NotAGenvar)
-    NotAHierarchicalScope: typing.ClassVar[DiagCode]  # value = DiagCode(NotAHierarchicalScope)
-    NotAModport: typing.ClassVar[DiagCode]  # value = DiagCode(NotAModport)
-    NotAProduction: typing.ClassVar[DiagCode]  # value = DiagCode(NotAProduction)
-    NotASubroutine: typing.ClassVar[DiagCode]  # value = DiagCode(NotASubroutine)
-    NotAType: typing.ClassVar[DiagCode]  # value = DiagCode(NotAType)
-    NotAValue: typing.ClassVar[DiagCode]  # value = DiagCode(NotAValue)
-    NotAllowedInAnonymousProgram: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInAnonymousProgram)
-    NotAllowedInCU: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInCU)
-    NotAllowedInChecker: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInChecker)
-    NotAllowedInClass: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInClass)
-    NotAllowedInClocking: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInClocking)
-    NotAllowedInGenerate: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInGenerate)
-    NotAllowedInIfaceClass: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInIfaceClass)
-    NotAllowedInInterface: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInInterface)
-    NotAllowedInModport: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInModport)
-    NotAllowedInModule: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInModule)
-    NotAllowedInPackage: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInPackage)
-    NotAllowedInProgram: typing.ClassVar[DiagCode]  # value = DiagCode(NotAllowedInProgram)
-    NotAnArray: typing.ClassVar[DiagCode]  # value = DiagCode(NotAnArray)
-    NotAnEvent: typing.ClassVar[DiagCode]  # value = DiagCode(NotAnEvent)
-    NotAnInterface: typing.ClassVar[DiagCode]  # value = DiagCode(NotAnInterface)
-    NotAnInterfaceOrPort: typing.ClassVar[DiagCode]  # value = DiagCode(NotAnInterfaceOrPort)
-    NotBooleanConvertible: typing.ClassVar[DiagCode]  # value = DiagCode(NotBooleanConvertible)
-    NotEnoughMacroArgs: typing.ClassVar[DiagCode]  # value = DiagCode(NotEnoughMacroArgs)
-    NoteAliasDeclaration: typing.ClassVar[DiagCode]  # value = DiagCode(NoteAliasDeclaration)
-    NoteAliasedTo: typing.ClassVar[DiagCode]  # value = DiagCode(NoteAliasedTo)
-    NoteAlwaysFalse: typing.ClassVar[DiagCode]  # value = DiagCode(NoteAlwaysFalse)
-    NoteAssignedHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteAssignedHere)
-    NoteClockHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteClockHere)
-    NoteCommonAncestor: typing.ClassVar[DiagCode]  # value = DiagCode(NoteCommonAncestor)
-    NoteComparisonReduces: typing.ClassVar[DiagCode]  # value = DiagCode(NoteComparisonReduces)
-    NoteConditionalPrecedenceFix: typing.ClassVar[DiagCode]  # value = DiagCode(NoteConditionalPrecedenceFix)
-    NoteConfigRule: typing.ClassVar[DiagCode]  # value = DiagCode(NoteConfigRule)
-    NoteDeclarationHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteDeclarationHere)
-    NoteDirectiveHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteDirectiveHere)
-    NoteDrivenHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteDrivenHere)
-    NoteExpandedHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteExpandedHere)
-    NoteFromHere2: typing.ClassVar[DiagCode]  # value = DiagCode(NoteFromHere2)
-    NoteHierarchicalRef: typing.ClassVar[DiagCode]  # value = DiagCode(NoteHierarchicalRef)
-    NoteImportedFrom: typing.ClassVar[DiagCode]  # value = DiagCode(NoteImportedFrom)
-    NoteInCallTo: typing.ClassVar[DiagCode]  # value = DiagCode(NoteInCallTo)
-    NoteLastBlockEnded: typing.ClassVar[DiagCode]  # value = DiagCode(NoteLastBlockEnded)
-    NoteLastBlockStarted: typing.ClassVar[DiagCode]  # value = DiagCode(NoteLastBlockStarted)
-    NoteLogicalNotFix: typing.ClassVar[DiagCode]  # value = DiagCode(NoteLogicalNotFix)
-    NoteLogicalNotSilence: typing.ClassVar[DiagCode]  # value = DiagCode(NoteLogicalNotSilence)
-    NoteOriginalAssign: typing.ClassVar[DiagCode]  # value = DiagCode(NoteOriginalAssign)
-    NotePrecedenceBitwiseFirst: typing.ClassVar[DiagCode]  # value = DiagCode(NotePrecedenceBitwiseFirst)
-    NotePrecedenceSilence: typing.ClassVar[DiagCode]  # value = DiagCode(NotePrecedenceSilence)
-    NotePreviousDefinition: typing.ClassVar[DiagCode]  # value = DiagCode(NotePreviousDefinition)
-    NotePreviousMatch: typing.ClassVar[DiagCode]  # value = DiagCode(NotePreviousMatch)
-    NotePreviousUsage: typing.ClassVar[DiagCode]  # value = DiagCode(NotePreviousUsage)
-    NoteReferencedHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteReferencedHere)
-    NoteRequiredHere: typing.ClassVar[DiagCode]  # value = DiagCode(NoteRequiredHere)
-    NoteSkippingFrames: typing.ClassVar[DiagCode]  # value = DiagCode(NoteSkippingFrames)
-    NoteToMatchThis: typing.ClassVar[DiagCode]  # value = DiagCode(NoteToMatchThis)
-    NoteUdpCoverage: typing.ClassVar[DiagCode]  # value = DiagCode(NoteUdpCoverage)
-    NoteWhileExpanding: typing.ClassVar[DiagCode]  # value = DiagCode(NoteWhileExpanding)
-    NullPortExpression: typing.ClassVar[DiagCode]  # value = DiagCode(NullPortExpression)
-    ObjectTooLarge: typing.ClassVar[DiagCode]  # value = DiagCode(ObjectTooLarge)
-    OctalEscapeCodeTooBig: typing.ClassVar[DiagCode]  # value = DiagCode(OctalEscapeCodeTooBig)
-    OutRefFuncConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(OutRefFuncConstraint)
-    OutputPortCoercion: typing.ClassVar[DiagCode]  # value = DiagCode(OutputPortCoercion)
-    OverridingExtends: typing.ClassVar[DiagCode]  # value = DiagCode(OverridingExtends)
-    OverridingFinal: typing.ClassVar[DiagCode]  # value = DiagCode(OverridingFinal)
-    OverridingInitial: typing.ClassVar[DiagCode]  # value = DiagCode(OverridingInitial)
-    PackageExportSelf: typing.ClassVar[DiagCode]  # value = DiagCode(PackageExportSelf)
-    PackageImportSelf: typing.ClassVar[DiagCode]  # value = DiagCode(PackageImportSelf)
-    PackageNetInit: typing.ClassVar[DiagCode]  # value = DiagCode(PackageNetInit)
-    PackedArrayConv: typing.ClassVar[DiagCode]  # value = DiagCode(PackedArrayConv)
-    PackedArrayNotIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(PackedArrayNotIntegral)
-    PackedDimsOnPredefinedType: typing.ClassVar[DiagCode]  # value = DiagCode(PackedDimsOnPredefinedType)
-    PackedDimsOnUnpacked: typing.ClassVar[DiagCode]  # value = DiagCode(PackedDimsOnUnpacked)
-    PackedDimsRequireFullRange: typing.ClassVar[DiagCode]  # value = DiagCode(PackedDimsRequireFullRange)
-    PackedMemberHasInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(PackedMemberHasInitializer)
-    PackedMemberNotIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(PackedMemberNotIntegral)
-    PackedTypeTooLarge: typing.ClassVar[DiagCode]  # value = DiagCode(PackedTypeTooLarge)
-    PackedUnionWidthMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(PackedUnionWidthMismatch)
-    ParallelPathWidth: typing.ClassVar[DiagCode]  # value = DiagCode(ParallelPathWidth)
-    ParamHasNoValue: typing.ClassVar[DiagCode]  # value = DiagCode(ParamHasNoValue)
-    ParameterDoesNotExist: typing.ClassVar[DiagCode]  # value = DiagCode(ParameterDoesNotExist)
-    ParseTreeTooDeep: typing.ClassVar[DiagCode]  # value = DiagCode(ParseTreeTooDeep)
-    PastNumTicksInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(PastNumTicksInvalid)
-    PathPulseInExpr: typing.ClassVar[DiagCode]  # value = DiagCode(PathPulseInExpr)
-    PathPulseInvalidPathName: typing.ClassVar[DiagCode]  # value = DiagCode(PathPulseInvalidPathName)
-    PatternStructTooFew: typing.ClassVar[DiagCode]  # value = DiagCode(PatternStructTooFew)
-    PatternStructTooMany: typing.ClassVar[DiagCode]  # value = DiagCode(PatternStructTooMany)
-    PatternStructType: typing.ClassVar[DiagCode]  # value = DiagCode(PatternStructType)
-    PatternTaggedType: typing.ClassVar[DiagCode]  # value = DiagCode(PatternTaggedType)
-    PlaRangeInAscendingOrder: typing.ClassVar[DiagCode]  # value = DiagCode(PlaRangeInAscendingOrder)
-    PointlessVoidCast: typing.ClassVar[DiagCode]  # value = DiagCode(PointlessVoidCast)
-    PortConcatInOut: typing.ClassVar[DiagCode]  # value = DiagCode(PortConcatInOut)
-    PortConcatRef: typing.ClassVar[DiagCode]  # value = DiagCode(PortConcatRef)
-    PortConnArrayMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(PortConnArrayMismatch)
-    PortConnDimensionsMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(PortConnDimensionsMismatch)
-    PortDeclDimensionsMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(PortDeclDimensionsMismatch)
-    PortDeclInANSIModule: typing.ClassVar[DiagCode]  # value = DiagCode(PortDeclInANSIModule)
-    PortDoesNotExist: typing.ClassVar[DiagCode]  # value = DiagCode(PortDoesNotExist)
-    PortTypeNotInterfaceOrData: typing.ClassVar[DiagCode]  # value = DiagCode(PortTypeNotInterfaceOrData)
-    PortWidthExpand: typing.ClassVar[DiagCode]  # value = DiagCode(PortWidthExpand)
-    PortWidthTruncate: typing.ClassVar[DiagCode]  # value = DiagCode(PortWidthTruncate)
-    PrimitiveAnsiMix: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveAnsiMix)
-    PrimitiveDupInitial: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveDupInitial)
-    PrimitiveDupOutput: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveDupOutput)
-    PrimitiveInitVal: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveInitVal)
-    PrimitiveInitialInComb: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveInitialInComb)
-    PrimitiveOutputFirst: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveOutputFirst)
-    PrimitivePortCountWrong: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitivePortCountWrong)
-    PrimitivePortDup: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitivePortDup)
-    PrimitivePortMissing: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitivePortMissing)
-    PrimitivePortUnknown: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitivePortUnknown)
-    PrimitiveRegDup: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveRegDup)
-    PrimitiveRegInput: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveRegInput)
-    PrimitiveTwoPorts: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveTwoPorts)
-    PrimitiveWrongInitial: typing.ClassVar[DiagCode]  # value = DiagCode(PrimitiveWrongInitial)
-    PropAbortLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(PropAbortLocalVar)
-    PropAbortMatched: typing.ClassVar[DiagCode]  # value = DiagCode(PropAbortMatched)
-    PropExprInSequence: typing.ClassVar[DiagCode]  # value = DiagCode(PropExprInSequence)
-    PropInstanceRepetition: typing.ClassVar[DiagCode]  # value = DiagCode(PropInstanceRepetition)
-    PropertyLhsInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(PropertyLhsInvalid)
-    PropertyPortInLet: typing.ClassVar[DiagCode]  # value = DiagCode(PropertyPortInLet)
-    PropertyPortInSeq: typing.ClassVar[DiagCode]  # value = DiagCode(PropertyPortInSeq)
-    ProtectArgList: typing.ClassVar[DiagCode]  # value = DiagCode(ProtectArgList)
-    ProtectEncodingBytes: typing.ClassVar[DiagCode]  # value = DiagCode(ProtectEncodingBytes)
-    ProtectedEnvelope: typing.ClassVar[DiagCode]  # value = DiagCode(ProtectedEnvelope)
-    ProtectedMemberAccess: typing.ClassVar[DiagCode]  # value = DiagCode(ProtectedMemberAccess)
-    PullStrengthHighZ: typing.ClassVar[DiagCode]  # value = DiagCode(PullStrengthHighZ)
-    PulseControlPATHPULSE: typing.ClassVar[DiagCode]  # value = DiagCode(PulseControlPATHPULSE)
-    PulseControlSpecifyParent: typing.ClassVar[DiagCode]  # value = DiagCode(PulseControlSpecifyParent)
-    PureConstraintInAbstract: typing.ClassVar[DiagCode]  # value = DiagCode(PureConstraintInAbstract)
-    PureInAbstract: typing.ClassVar[DiagCode]  # value = DiagCode(PureInAbstract)
-    PureRequiresVirtual: typing.ClassVar[DiagCode]  # value = DiagCode(PureRequiresVirtual)
-    QualifierConflict: typing.ClassVar[DiagCode]  # value = DiagCode(QualifierConflict)
-    QualifierNotFirst: typing.ClassVar[DiagCode]  # value = DiagCode(QualifierNotFirst)
-    QualifiersOnOutOfBlock: typing.ClassVar[DiagCode]  # value = DiagCode(QualifiersOnOutOfBlock)
-    QueryOnAssociativeNonIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(QueryOnAssociativeNonIntegral)
-    QueryOnAssociativeWildcard: typing.ClassVar[DiagCode]  # value = DiagCode(QueryOnAssociativeWildcard)
-    QueryOnDynamicType: typing.ClassVar[DiagCode]  # value = DiagCode(QueryOnDynamicType)
-    RandCInDist: typing.ClassVar[DiagCode]  # value = DiagCode(RandCInDist)
-    RandCInSoft: typing.ClassVar[DiagCode]  # value = DiagCode(RandCInSoft)
-    RandCInSolveBefore: typing.ClassVar[DiagCode]  # value = DiagCode(RandCInSolveBefore)
-    RandCInUnique: typing.ClassVar[DiagCode]  # value = DiagCode(RandCInUnique)
-    RandJoinNotEnough: typing.ClassVar[DiagCode]  # value = DiagCode(RandJoinNotEnough)
-    RandJoinNotNumeric: typing.ClassVar[DiagCode]  # value = DiagCode(RandJoinNotNumeric)
-    RandJoinProdItem: typing.ClassVar[DiagCode]  # value = DiagCode(RandJoinProdItem)
-    RandNeededInDist: typing.ClassVar[DiagCode]  # value = DiagCode(RandNeededInDist)
-    RandOnPackedMember: typing.ClassVar[DiagCode]  # value = DiagCode(RandOnPackedMember)
-    RandOnUnionMember: typing.ClassVar[DiagCode]  # value = DiagCode(RandOnUnionMember)
-    RangeOOB: typing.ClassVar[DiagCode]  # value = DiagCode(RangeOOB)
-    RangeSelectAssociative: typing.ClassVar[DiagCode]  # value = DiagCode(RangeSelectAssociative)
-    RangeWidthOOB: typing.ClassVar[DiagCode]  # value = DiagCode(RangeWidthOOB)
-    RangeWidthOverflow: typing.ClassVar[DiagCode]  # value = DiagCode(RangeWidthOverflow)
-    RawProtectEOF: typing.ClassVar[DiagCode]  # value = DiagCode(RawProtectEOF)
-    RealCoverpointBins: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointBins)
-    RealCoverpointDefaultArray: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointDefaultArray)
-    RealCoverpointImplicit: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointImplicit)
-    RealCoverpointTransBins: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointTransBins)
-    RealCoverpointWildcardBins: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointWildcardBins)
-    RealCoverpointWithExpr: typing.ClassVar[DiagCode]  # value = DiagCode(RealCoverpointWithExpr)
-    RealLiteralOverflow: typing.ClassVar[DiagCode]  # value = DiagCode(RealLiteralOverflow)
-    RealLiteralUnderflow: typing.ClassVar[DiagCode]  # value = DiagCode(RealLiteralUnderflow)
-    RecursiveClassSpecialization: typing.ClassVar[DiagCode]  # value = DiagCode(RecursiveClassSpecialization)
-    RecursiveDefinition: typing.ClassVar[DiagCode]  # value = DiagCode(RecursiveDefinition)
-    RecursiveLet: typing.ClassVar[DiagCode]  # value = DiagCode(RecursiveLet)
-    RecursiveMacro: typing.ClassVar[DiagCode]  # value = DiagCode(RecursiveMacro)
-    RecursivePropArgExpr: typing.ClassVar[DiagCode]  # value = DiagCode(RecursivePropArgExpr)
-    RecursivePropDisableIff: typing.ClassVar[DiagCode]  # value = DiagCode(RecursivePropDisableIff)
-    RecursivePropNegation: typing.ClassVar[DiagCode]  # value = DiagCode(RecursivePropNegation)
-    RecursivePropTimeAdvance: typing.ClassVar[DiagCode]  # value = DiagCode(RecursivePropTimeAdvance)
-    RecursiveSequence: typing.ClassVar[DiagCode]  # value = DiagCode(RecursiveSequence)
-    RedefiningMacro: typing.ClassVar[DiagCode]  # value = DiagCode(RedefiningMacro)
-    Redefinition: typing.ClassVar[DiagCode]  # value = DiagCode(Redefinition)
-    RedefinitionDifferentType: typing.ClassVar[DiagCode]  # value = DiagCode(RedefinitionDifferentType)
-    RefArgAutomaticFunc: typing.ClassVar[DiagCode]  # value = DiagCode(RefArgAutomaticFunc)
-    RefArgForkJoin: typing.ClassVar[DiagCode]  # value = DiagCode(RefArgForkJoin)
-    RefPortMustBeVariable: typing.ClassVar[DiagCode]  # value = DiagCode(RefPortMustBeVariable)
-    RefPortUnconnected: typing.ClassVar[DiagCode]  # value = DiagCode(RefPortUnconnected)
-    RefPortUnnamedUnconnected: typing.ClassVar[DiagCode]  # value = DiagCode(RefPortUnnamedUnconnected)
-    RefTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(RefTypeMismatch)
-    RegAfterNettype: typing.ClassVar[DiagCode]  # value = DiagCode(RegAfterNettype)
-    RepeatControlNotEvent: typing.ClassVar[DiagCode]  # value = DiagCode(RepeatControlNotEvent)
-    RepeatNotNumeric: typing.ClassVar[DiagCode]  # value = DiagCode(RepeatNotNumeric)
-    ReplicationZeroOutsideConcat: typing.ClassVar[DiagCode]  # value = DiagCode(ReplicationZeroOutsideConcat)
-    RestrictStmtNoFail: typing.ClassVar[DiagCode]  # value = DiagCode(RestrictStmtNoFail)
-    ReturnInParallel: typing.ClassVar[DiagCode]  # value = DiagCode(ReturnInParallel)
-    ReturnNotInSubroutine: typing.ClassVar[DiagCode]  # value = DiagCode(ReturnNotInSubroutine)
-    ReversedValueRange: typing.ClassVar[DiagCode]  # value = DiagCode(ReversedValueRange)
-    SampledValueFuncClock: typing.ClassVar[DiagCode]  # value = DiagCode(SampledValueFuncClock)
-    SampledValueLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(SampledValueLocalVar)
-    SampledValueMatched: typing.ClassVar[DiagCode]  # value = DiagCode(SampledValueMatched)
-    ScopeIncompleteTypedef: typing.ClassVar[DiagCode]  # value = DiagCode(ScopeIncompleteTypedef)
-    ScopeIndexOutOfRange: typing.ClassVar[DiagCode]  # value = DiagCode(ScopeIndexOutOfRange)
-    ScopeNotIndexable: typing.ClassVar[DiagCode]  # value = DiagCode(ScopeNotIndexable)
-    ScopedClassCopy: typing.ClassVar[DiagCode]  # value = DiagCode(ScopedClassCopy)
-    SelectAfterRangeSelect: typing.ClassVar[DiagCode]  # value = DiagCode(SelectAfterRangeSelect)
-    SelectEndianDynamic: typing.ClassVar[DiagCode]  # value = DiagCode(SelectEndianDynamic)
-    SelectEndianMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(SelectEndianMismatch)
-    SelectOfVectoredNet: typing.ClassVar[DiagCode]  # value = DiagCode(SelectOfVectoredNet)
-    SeqEmptyMatch: typing.ClassVar[DiagCode]  # value = DiagCode(SeqEmptyMatch)
-    SeqInstanceRepetition: typing.ClassVar[DiagCode]  # value = DiagCode(SeqInstanceRepetition)
-    SeqMethodEndClock: typing.ClassVar[DiagCode]  # value = DiagCode(SeqMethodEndClock)
-    SeqMethodInputLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(SeqMethodInputLocalVar)
-    SeqNoMatch: typing.ClassVar[DiagCode]  # value = DiagCode(SeqNoMatch)
-    SeqOnlyEmpty: typing.ClassVar[DiagCode]  # value = DiagCode(SeqOnlyEmpty)
-    SeqRangeMinMax: typing.ClassVar[DiagCode]  # value = DiagCode(SeqRangeMinMax)
-    SequenceMatchedOutsideAssertion: typing.ClassVar[DiagCode]  # value = DiagCode(SequenceMatchedOutsideAssertion)
-    SequenceMethodLocalVar: typing.ClassVar[DiagCode]  # value = DiagCode(SequenceMethodLocalVar)
-    SignCompare: typing.ClassVar[DiagCode]  # value = DiagCode(SignCompare)
-    SignConversion: typing.ClassVar[DiagCode]  # value = DiagCode(SignConversion)
-    SignedIntegerOverflow: typing.ClassVar[DiagCode]  # value = DiagCode(SignedIntegerOverflow)
-    SignednessNoEffect: typing.ClassVar[DiagCode]  # value = DiagCode(SignednessNoEffect)
-    SingleBitVectored: typing.ClassVar[DiagCode]  # value = DiagCode(SingleBitVectored)
-    SolveBeforeDisallowed: typing.ClassVar[DiagCode]  # value = DiagCode(SolveBeforeDisallowed)
-    SpecifiersNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(SpecifiersNotAllowed)
-    SpecifyBlockParam: typing.ClassVar[DiagCode]  # value = DiagCode(SpecifyBlockParam)
-    SpecifyPathBadReference: typing.ClassVar[DiagCode]  # value = DiagCode(SpecifyPathBadReference)
-    SpecifyPathConditionExpr: typing.ClassVar[DiagCode]  # value = DiagCode(SpecifyPathConditionExpr)
-    SpecifyPathMultiDim: typing.ClassVar[DiagCode]  # value = DiagCode(SpecifyPathMultiDim)
-    SpecparamInConstant: typing.ClassVar[DiagCode]  # value = DiagCode(SpecparamInConstant)
-    SplitDistWeightOp: typing.ClassVar[DiagCode]  # value = DiagCode(SplitDistWeightOp)
-    StatementNotInLoop: typing.ClassVar[DiagCode]  # value = DiagCode(StatementNotInLoop)
-    StaticAssert: typing.ClassVar[DiagCode]  # value = DiagCode(StaticAssert)
-    StaticConstNoInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(StaticConstNoInitializer)
-    StaticFuncSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(StaticFuncSpecifier)
-    StaticInitOrder: typing.ClassVar[DiagCode]  # value = DiagCode(StaticInitOrder)
-    StaticInitValue: typing.ClassVar[DiagCode]  # value = DiagCode(StaticInitValue)
-    StaticInitializerMustBeExplicit: typing.ClassVar[DiagCode]  # value = DiagCode(StaticInitializerMustBeExplicit)
-    SubroutineMatchAutoRefArg: typing.ClassVar[DiagCode]  # value = DiagCode(SubroutineMatchAutoRefArg)
-    SubroutineMatchNonVoid: typing.ClassVar[DiagCode]  # value = DiagCode(SubroutineMatchNonVoid)
-    SubroutineMatchOutArg: typing.ClassVar[DiagCode]  # value = DiagCode(SubroutineMatchOutArg)
-    SubroutinePortInitializer: typing.ClassVar[DiagCode]  # value = DiagCode(SubroutinePortInitializer)
-    SubroutinePrototypeScoped: typing.ClassVar[DiagCode]  # value = DiagCode(SubroutinePrototypeScoped)
-    SuperNoBase: typing.ClassVar[DiagCode]  # value = DiagCode(SuperNoBase)
-    SuperOutsideClass: typing.ClassVar[DiagCode]  # value = DiagCode(SuperOutsideClass)
-    SysFuncHierarchicalNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(SysFuncHierarchicalNotAllowed)
-    SysFuncNotConst: typing.ClassVar[DiagCode]  # value = DiagCode(SysFuncNotConst)
-    TaggedStruct: typing.ClassVar[DiagCode]  # value = DiagCode(TaggedStruct)
-    TaggedUnionMissingInit: typing.ClassVar[DiagCode]  # value = DiagCode(TaggedUnionMissingInit)
-    TaggedUnionTarget: typing.ClassVar[DiagCode]  # value = DiagCode(TaggedUnionTarget)
-    TaskConstructor: typing.ClassVar[DiagCode]  # value = DiagCode(TaskConstructor)
-    TaskFromFinal: typing.ClassVar[DiagCode]  # value = DiagCode(TaskFromFinal)
-    TaskFromFunction: typing.ClassVar[DiagCode]  # value = DiagCode(TaskFromFunction)
-    TaskInConstraint: typing.ClassVar[DiagCode]  # value = DiagCode(TaskInConstraint)
-    TaskReturnType: typing.ClassVar[DiagCode]  # value = DiagCode(TaskReturnType)
-    ThroughoutLhsInvalid: typing.ClassVar[DiagCode]  # value = DiagCode(ThroughoutLhsInvalid)
-    TimeScaleFirstInScope: typing.ClassVar[DiagCode]  # value = DiagCode(TimeScaleFirstInScope)
-    TimingCheckEventEdgeRequired: typing.ClassVar[DiagCode]  # value = DiagCode(TimingCheckEventEdgeRequired)
-    TimingCheckEventNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(TimingCheckEventNotAllowed)
-    TimingControlNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(TimingControlNotAllowed)
-    TimingInFuncNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(TimingInFuncNotAllowed)
-    TooFewArguments: typing.ClassVar[DiagCode]  # value = DiagCode(TooFewArguments)
-    TooManyActualMacroArgs: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyActualMacroArgs)
-    TooManyArguments: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyArguments)
-    TooManyEdgeDescriptors: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyEdgeDescriptors)
-    TooManyErrors: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyErrors)
-    TooManyForeachVars: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyForeachVars)
-    TooManyLexerErrors: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyLexerErrors)
-    TooManyParamAssignments: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyParamAssignments)
-    TooManyPortConnections: typing.ClassVar[DiagCode]  # value = DiagCode(TooManyPortConnections)
-    TopModuleIfacePort: typing.ClassVar[DiagCode]  # value = DiagCode(TopModuleIfacePort)
-    TopModuleRefPort: typing.ClassVar[DiagCode]  # value = DiagCode(TopModuleRefPort)
-    TopModuleUnnamedRefPort: typing.ClassVar[DiagCode]  # value = DiagCode(TopModuleUnnamedRefPort)
-    TypeHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(TypeHierarchical)
-    TypeIsNotAClass: typing.ClassVar[DiagCode]  # value = DiagCode(TypeIsNotAClass)
-    TypeRefDeclVar: typing.ClassVar[DiagCode]  # value = DiagCode(TypeRefDeclVar)
-    TypeRefHierarchical: typing.ClassVar[DiagCode]  # value = DiagCode(TypeRefHierarchical)
-    TypeRefVoid: typing.ClassVar[DiagCode]  # value = DiagCode(TypeRefVoid)
-    TypeRestrictionMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(TypeRestrictionMismatch)
-    TypoIdentifier: typing.ClassVar[DiagCode]  # value = DiagCode(TypoIdentifier)
-    UTF8Char: typing.ClassVar[DiagCode]  # value = DiagCode(UTF8Char)
-    UdpAllX: typing.ClassVar[DiagCode]  # value = DiagCode(UdpAllX)
-    UdpCombState: typing.ClassVar[DiagCode]  # value = DiagCode(UdpCombState)
-    UdpCoverage: typing.ClassVar[DiagCode]  # value = DiagCode(UdpCoverage)
-    UdpDupDiffOutput: typing.ClassVar[DiagCode]  # value = DiagCode(UdpDupDiffOutput)
-    UdpDupTransition: typing.ClassVar[DiagCode]  # value = DiagCode(UdpDupTransition)
-    UdpEdgeInComb: typing.ClassVar[DiagCode]  # value = DiagCode(UdpEdgeInComb)
-    UdpInvalidEdgeSymbol: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidEdgeSymbol)
-    UdpInvalidInputOnly: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidInputOnly)
-    UdpInvalidMinus: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidMinus)
-    UdpInvalidOutput: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidOutput)
-    UdpInvalidSymbol: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidSymbol)
-    UdpInvalidTransition: typing.ClassVar[DiagCode]  # value = DiagCode(UdpInvalidTransition)
-    UdpSequentialState: typing.ClassVar[DiagCode]  # value = DiagCode(UdpSequentialState)
-    UdpSingleChar: typing.ClassVar[DiagCode]  # value = DiagCode(UdpSingleChar)
-    UdpTransSameChar: typing.ClassVar[DiagCode]  # value = DiagCode(UdpTransSameChar)
-    UdpTransitionLength: typing.ClassVar[DiagCode]  # value = DiagCode(UdpTransitionLength)
-    UdpWrongInputCount: typing.ClassVar[DiagCode]  # value = DiagCode(UdpWrongInputCount)
-    UnassignedVariable: typing.ClassVar[DiagCode]  # value = DiagCode(UnassignedVariable)
-    UnbalancedMacroArgDims: typing.ClassVar[DiagCode]  # value = DiagCode(UnbalancedMacroArgDims)
-    UnboundedNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(UnboundedNotAllowed)
-    UnclosedTranslateOff: typing.ClassVar[DiagCode]  # value = DiagCode(UnclosedTranslateOff)
-    UnconnectedArg: typing.ClassVar[DiagCode]  # value = DiagCode(UnconnectedArg)
-    UnconnectedNamedPort: typing.ClassVar[DiagCode]  # value = DiagCode(UnconnectedNamedPort)
-    UnconnectedUnnamedPort: typing.ClassVar[DiagCode]  # value = DiagCode(UnconnectedUnnamedPort)
-    UndeclaredButFoundPackage: typing.ClassVar[DiagCode]  # value = DiagCode(UndeclaredButFoundPackage)
-    UndeclaredIdentifier: typing.ClassVar[DiagCode]  # value = DiagCode(UndeclaredIdentifier)
-    UndefineBuiltinDirective: typing.ClassVar[DiagCode]  # value = DiagCode(UndefineBuiltinDirective)
-    UndrivenNet: typing.ClassVar[DiagCode]  # value = DiagCode(UndrivenNet)
-    UndrivenPort: typing.ClassVar[DiagCode]  # value = DiagCode(UndrivenPort)
-    UnexpectedClockingExpr: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedClockingExpr)
-    UnexpectedConditionalDirective: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedConditionalDirective)
-    UnexpectedConstraintBlock: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedConstraintBlock)
-    UnexpectedEndDelim: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedEndDelim)
-    UnexpectedLetPortKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedLetPortKeyword)
-    UnexpectedNameToken: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedNameToken)
-    UnexpectedPortDecl: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedPortDecl)
-    UnexpectedQualifiers: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedQualifiers)
-    UnexpectedSelection: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedSelection)
-    UnexpectedWithClause: typing.ClassVar[DiagCode]  # value = DiagCode(UnexpectedWithClause)
-    UnicodeBOM: typing.ClassVar[DiagCode]  # value = DiagCode(UnicodeBOM)
-    UniquePriorityAfterElse: typing.ClassVar[DiagCode]  # value = DiagCode(UniquePriorityAfterElse)
-    UnknownClassMember: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownClassMember)
-    UnknownClassOrPackage: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownClassOrPackage)
-    UnknownConstraintLiteral: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownConstraintLiteral)
-    UnknownCovergroupBase: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownCovergroupBase)
-    UnknownCovergroupMember: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownCovergroupMember)
-    UnknownDiagPragmaArg: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownDiagPragmaArg)
-    UnknownDirective: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownDirective)
-    UnknownEscapeCode: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownEscapeCode)
-    UnknownFormatSpecifier: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownFormatSpecifier)
-    UnknownInterface: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownInterface)
-    UnknownLibrary: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownLibrary)
-    UnknownMember: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownMember)
-    UnknownModule: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownModule)
-    UnknownPackage: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownPackage)
-    UnknownPackageMember: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownPackageMember)
-    UnknownPragma: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownPragma)
-    UnknownPrimitive: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownPrimitive)
-    UnknownProtectEncoding: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownProtectEncoding)
-    UnknownProtectKeyword: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownProtectKeyword)
-    UnknownProtectOption: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownProtectOption)
-    UnknownSystemMethod: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownSystemMethod)
-    UnknownSystemName: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownSystemName)
-    UnknownSystemTimingCheck: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownSystemTimingCheck)
-    UnknownWarningOption: typing.ClassVar[DiagCode]  # value = DiagCode(UnknownWarningOption)
-    UnpackedArrayParamType: typing.ClassVar[DiagCode]  # value = DiagCode(UnpackedArrayParamType)
-    UnpackedConcatAssociative: typing.ClassVar[DiagCode]  # value = DiagCode(UnpackedConcatAssociative)
-    UnpackedConcatSize: typing.ClassVar[DiagCode]  # value = DiagCode(UnpackedConcatSize)
-    UnpackedSigned: typing.ClassVar[DiagCode]  # value = DiagCode(UnpackedSigned)
-    UnrecognizedKeywordVersion: typing.ClassVar[DiagCode]  # value = DiagCode(UnrecognizedKeywordVersion)
-    UnresolvedForwardTypedef: typing.ClassVar[DiagCode]  # value = DiagCode(UnresolvedForwardTypedef)
-    UnsignedArithShift: typing.ClassVar[DiagCode]  # value = DiagCode(UnsignedArithShift)
-    UnsizedInConcat: typing.ClassVar[DiagCode]  # value = DiagCode(UnsizedInConcat)
-    UnterminatedBlockComment: typing.ClassVar[DiagCode]  # value = DiagCode(UnterminatedBlockComment)
-    UnusedArgument: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedArgument)
-    UnusedAssertionDecl: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedAssertionDecl)
-    UnusedButSetNet: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedButSetNet)
-    UnusedButSetPort: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedButSetPort)
-    UnusedButSetVariable: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedButSetVariable)
-    UnusedConfigCell: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedConfigCell)
-    UnusedConfigInstance: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedConfigInstance)
-    UnusedDefinition: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedDefinition)
-    UnusedGenvar: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedGenvar)
-    UnusedImplicitNet: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedImplicitNet)
-    UnusedImport: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedImport)
-    UnusedNet: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedNet)
-    UnusedParameter: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedParameter)
-    UnusedPort: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedPort)
-    UnusedPortDecl: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedPortDecl)
-    UnusedResult: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedResult)
-    UnusedTypeParameter: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedTypeParameter)
-    UnusedTypedef: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedTypedef)
-    UnusedVariable: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedVariable)
-    UnusedWildcardImport: typing.ClassVar[DiagCode]  # value = DiagCode(UnusedWildcardImport)
-    UsedBeforeDeclared: typing.ClassVar[DiagCode]  # value = DiagCode(UsedBeforeDeclared)
-    UselessCast: typing.ClassVar[DiagCode]  # value = DiagCode(UselessCast)
-    UserDefPartialDriver: typing.ClassVar[DiagCode]  # value = DiagCode(UserDefPartialDriver)
-    UserDefPortMixedConcat: typing.ClassVar[DiagCode]  # value = DiagCode(UserDefPortMixedConcat)
-    UserDefPortTwoSided: typing.ClassVar[DiagCode]  # value = DiagCode(UserDefPortTwoSided)
-    ValueExceedsMaxBitWidth: typing.ClassVar[DiagCode]  # value = DiagCode(ValueExceedsMaxBitWidth)
-    ValueMustBeIntegral: typing.ClassVar[DiagCode]  # value = DiagCode(ValueMustBeIntegral)
-    ValueMustBePositive: typing.ClassVar[DiagCode]  # value = DiagCode(ValueMustBePositive)
-    ValueMustNotBeUnknown: typing.ClassVar[DiagCode]  # value = DiagCode(ValueMustNotBeUnknown)
-    ValueOutOfRange: typing.ClassVar[DiagCode]  # value = DiagCode(ValueOutOfRange)
-    ValueRangeUnbounded: typing.ClassVar[DiagCode]  # value = DiagCode(ValueRangeUnbounded)
-    VarDeclWithDelay: typing.ClassVar[DiagCode]  # value = DiagCode(VarDeclWithDelay)
-    VarWithInterfacePort: typing.ClassVar[DiagCode]  # value = DiagCode(VarWithInterfacePort)
-    VectorLiteralOverflow: typing.ClassVar[DiagCode]  # value = DiagCode(VectorLiteralOverflow)
-    VirtualArgCountMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgCountMismatch)
-    VirtualArgDirectionMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgDirectionMismatch)
-    VirtualArgNameMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgNameMismatch)
-    VirtualArgNoDerivedDefault: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgNoDerivedDefault)
-    VirtualArgNoParentDefault: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgNoParentDefault)
-    VirtualArgTypeMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualArgTypeMismatch)
-    VirtualIfaceConfigRule: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualIfaceConfigRule)
-    VirtualIfaceDefparam: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualIfaceDefparam)
-    VirtualIfaceHierRef: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualIfaceHierRef)
-    VirtualIfaceIfacePort: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualIfaceIfacePort)
-    VirtualInterfaceIfaceMember: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualInterfaceIfaceMember)
-    VirtualInterfaceUnionMember: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualInterfaceUnionMember)
-    VirtualKindMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualKindMismatch)
-    VirtualReturnMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualReturnMismatch)
-    VirtualVisibilityMismatch: typing.ClassVar[DiagCode]  # value = DiagCode(VirtualVisibilityMismatch)
-    VoidAssignment: typing.ClassVar[DiagCode]  # value = DiagCode(VoidAssignment)
-    VoidCastFuncCall: typing.ClassVar[DiagCode]  # value = DiagCode(VoidCastFuncCall)
-    VoidNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(VoidNotAllowed)
-    WarnUnknownLibrary: typing.ClassVar[DiagCode]  # value = DiagCode(WarnUnknownLibrary)
-    WarningTask: typing.ClassVar[DiagCode]  # value = DiagCode(WarningTask)
-    WidthExpand: typing.ClassVar[DiagCode]  # value = DiagCode(WidthExpand)
-    WidthTruncate: typing.ClassVar[DiagCode]  # value = DiagCode(WidthTruncate)
-    WildcardPortGenericIface: typing.ClassVar[DiagCode]  # value = DiagCode(WildcardPortGenericIface)
-    WireDataType: typing.ClassVar[DiagCode]  # value = DiagCode(WireDataType)
-    WithClauseNotAllowed: typing.ClassVar[DiagCode]  # value = DiagCode(WithClauseNotAllowed)
-    WriteToInputClockVar: typing.ClassVar[DiagCode]  # value = DiagCode(WriteToInputClockVar)
-    WrongBindTargetDef: typing.ClassVar[DiagCode]  # value = DiagCode(WrongBindTargetDef)
-    WrongLanguageVersion: typing.ClassVar[DiagCode]  # value = DiagCode(WrongLanguageVersion)
-    WrongNumberAssignmentPatterns: typing.ClassVar[DiagCode]  # value = DiagCode(WrongNumberAssignmentPatterns)
-    WrongSpecifyDelayCount: typing.ClassVar[DiagCode]  # value = DiagCode(WrongSpecifyDelayCount)
-class DimensionKind:
-    """
-    Members:
+    def add(self, source: Any, code: DiagCode, range: SourceRange) -> Diagnostic: ...
+    def sort(self, sourceManager: SourceManager) -> None: ...
 
-      Unknown
+class Diags(metaclass=_metaclass):
+    AlwaysFFEventControl: typing.ClassVar[DiagCode]
+    AlwaysInChecker: typing.ClassVar[DiagCode]
+    AlwaysWithoutTimingControl: typing.ClassVar[DiagCode]
+    AmbiguousWildcardImport: typing.ClassVar[DiagCode]
+    AnsiIfacePortDefault: typing.ClassVar[DiagCode]
+    ArgCannotBeEmpty: typing.ClassVar[DiagCode]
+    ArgDoesNotExist: typing.ClassVar[DiagCode]
+    ArithInShift: typing.ClassVar[DiagCode]
+    ArithOpMismatch: typing.ClassVar[DiagCode]
+    ArrayDimTooLarge: typing.ClassVar[DiagCode]
+    ArrayLocatorWithClause: typing.ClassVar[DiagCode]
+    ArrayMethodComparable: typing.ClassVar[DiagCode]
+    ArrayMethodIntegral: typing.ClassVar[DiagCode]
+    AssertionArgNeedsRegExpr: typing.ClassVar[DiagCode]
+    AssertionArgTypeMismatch: typing.ClassVar[DiagCode]
+    AssertionArgTypeSequence: typing.ClassVar[DiagCode]
+    AssertionDelayFormalType: typing.ClassVar[DiagCode]
+    AssertionExprType: typing.ClassVar[DiagCode]
+    AssertionFuncArg: typing.ClassVar[DiagCode]
+    AssertionNoClock: typing.ClassVar[DiagCode]
+    AssertionOutputLocalVar: typing.ClassVar[DiagCode]
+    AssertionPortDirNoLocal: typing.ClassVar[DiagCode]
+    AssertionPortOutputDefault: typing.ClassVar[DiagCode]
+    AssertionPortPropOutput: typing.ClassVar[DiagCode]
+    AssertionPortRef: typing.ClassVar[DiagCode]
+    AssertionPortTypedLValue: typing.ClassVar[DiagCode]
+    AssignToCHandle: typing.ClassVar[DiagCode]
+    AssignToNet: typing.ClassVar[DiagCode]
+    AssignedToLocalBodyParam: typing.ClassVar[DiagCode]
+    AssignedToLocalPortParam: typing.ClassVar[DiagCode]
+    AssignmentNotAllowed: typing.ClassVar[DiagCode]
+    AssignmentPatternAssociativeType: typing.ClassVar[DiagCode]
+    AssignmentPatternDynamicDefault: typing.ClassVar[DiagCode]
+    AssignmentPatternDynamicType: typing.ClassVar[DiagCode]
+    AssignmentPatternKeyDupDefault: typing.ClassVar[DiagCode]
+    AssignmentPatternKeyDupName: typing.ClassVar[DiagCode]
+    AssignmentPatternKeyDupValue: typing.ClassVar[DiagCode]
+    AssignmentPatternKeyExpr: typing.ClassVar[DiagCode]
+    AssignmentPatternLValueDynamic: typing.ClassVar[DiagCode]
+    AssignmentPatternMissingElements: typing.ClassVar[DiagCode]
+    AssignmentPatternNoContext: typing.ClassVar[DiagCode]
+    AssignmentPatternNoMember: typing.ClassVar[DiagCode]
+    AssignmentRequiresParens: typing.ClassVar[DiagCode]
+    AssignmentToConstVar: typing.ClassVar[DiagCode]
+    AssociativeWildcardNotAllowed: typing.ClassVar[DiagCode]
+    AttributesNotAllowed: typing.ClassVar[DiagCode]
+    AutoFromNonBlockingTiming: typing.ClassVar[DiagCode]
+    AutoFromNonProcedural: typing.ClassVar[DiagCode]
+    AutoFromStaticInit: typing.ClassVar[DiagCode]
+    AutoVarToRefStatic: typing.ClassVar[DiagCode]
+    AutoVarTraced: typing.ClassVar[DiagCode]
+    AutoVariableHierarchical: typing.ClassVar[DiagCode]
+    AutomaticNotAllowed: typing.ClassVar[DiagCode]
+    BadAssignment: typing.ClassVar[DiagCode]
+    BadAssignmentPatternType: typing.ClassVar[DiagCode]
+    BadBinaryDigit: typing.ClassVar[DiagCode]
+    BadBinaryExpression: typing.ClassVar[DiagCode]
+    BadCastType: typing.ClassVar[DiagCode]
+    BadConcatExpression: typing.ClassVar[DiagCode]
+    BadConditionalExpression: typing.ClassVar[DiagCode]
+    BadConversion: typing.ClassVar[DiagCode]
+    BadDecimalDigit: typing.ClassVar[DiagCode]
+    BadDisableSoft: typing.ClassVar[DiagCode]
+    BadFinishNum: typing.ClassVar[DiagCode]
+    BadForceNetType: typing.ClassVar[DiagCode]
+    BadHexDigit: typing.ClassVar[DiagCode]
+    BadIndexExpression: typing.ClassVar[DiagCode]
+    BadInstanceArrayRange: typing.ClassVar[DiagCode]
+    BadIntegerCast: typing.ClassVar[DiagCode]
+    BadOctalDigit: typing.ClassVar[DiagCode]
+    BadProceduralAssign: typing.ClassVar[DiagCode]
+    BadProceduralForce: typing.ClassVar[DiagCode]
+    BadReplicationExpression: typing.ClassVar[DiagCode]
+    BadSetMembershipType: typing.ClassVar[DiagCode]
+    BadSliceType: typing.ClassVar[DiagCode]
+    BadSolveBefore: typing.ClassVar[DiagCode]
+    BadStreamCast: typing.ClassVar[DiagCode]
+    BadStreamContext: typing.ClassVar[DiagCode]
+    BadStreamExprType: typing.ClassVar[DiagCode]
+    BadStreamSize: typing.ClassVar[DiagCode]
+    BadStreamSlice: typing.ClassVar[DiagCode]
+    BadStreamSourceType: typing.ClassVar[DiagCode]
+    BadStreamTargetType: typing.ClassVar[DiagCode]
+    BadStreamWithOrder: typing.ClassVar[DiagCode]
+    BadStreamWithType: typing.ClassVar[DiagCode]
+    BadSystemSubroutineArg: typing.ClassVar[DiagCode]
+    BadTypeParamExpr: typing.ClassVar[DiagCode]
+    BadUnaryExpression: typing.ClassVar[DiagCode]
+    BadUniquenessType: typing.ClassVar[DiagCode]
+    BadValueRange: typing.ClassVar[DiagCode]
+    BaseConstructorDuplicate: typing.ClassVar[DiagCode]
+    BaseConstructorNotCalled: typing.ClassVar[DiagCode]
+    BiDiSwitchNetTypes: typing.ClassVar[DiagCode]
+    BindDirectiveInvalidName: typing.ClassVar[DiagCode]
+    BindTargetPrimitive: typing.ClassVar[DiagCode]
+    BindTypeParamMismatch: typing.ClassVar[DiagCode]
+    BindTypeParamNotFound: typing.ClassVar[DiagCode]
+    BindUnderBind: typing.ClassVar[DiagCode]
+    BitwiseOpMismatch: typing.ClassVar[DiagCode]
+    BitwiseOpParentheses: typing.ClassVar[DiagCode]
+    BitwiseRelPrecedence: typing.ClassVar[DiagCode]
+    BlockingAssignToFreeVar: typing.ClassVar[DiagCode]
+    BlockingInAlwaysFF: typing.ClassVar[DiagCode]
+    BodyForPure: typing.ClassVar[DiagCode]
+    BodyForPureConstraint: typing.ClassVar[DiagCode]
+    BodyParamNoInitializer: typing.ClassVar[DiagCode]
+    CHandleInAssertion: typing.ClassVar[DiagCode]
+    CannotCompareTwoInstances: typing.ClassVar[DiagCode]
+    CannotDeclareType: typing.ClassVar[DiagCode]
+    CannotIndexScalar: typing.ClassVar[DiagCode]
+    CantDeclarePortSigned: typing.ClassVar[DiagCode]
+    CantModifyConst: typing.ClassVar[DiagCode]
+    CaseComplex: typing.ClassVar[DiagCode]
+    CaseDefault: typing.ClassVar[DiagCode]
+    CaseDup: typing.ClassVar[DiagCode]
+    CaseEnum: typing.ClassVar[DiagCode]
+    CaseEnumExplicit: typing.ClassVar[DiagCode]
+    CaseGenerateDup: typing.ClassVar[DiagCode]
+    CaseGenerateEmpty: typing.ClassVar[DiagCode]
+    CaseGenerateNoBlock: typing.ClassVar[DiagCode]
+    CaseIncomplete: typing.ClassVar[DiagCode]
+    CaseInsideKeyword: typing.ClassVar[DiagCode]
+    CaseNotWildcard: typing.ClassVar[DiagCode]
+    CaseOutsideRange: typing.ClassVar[DiagCode]
+    CaseOverlap: typing.ClassVar[DiagCode]
+    CaseRedundantDefault: typing.ClassVar[DiagCode]
+    CaseStatementEmpty: typing.ClassVar[DiagCode]
+    CaseTypeMismatch: typing.ClassVar[DiagCode]
+    CaseUnreachable: typing.ClassVar[DiagCode]
+    CaseWildcard2State: typing.ClassVar[DiagCode]
+    CaseZWithX: typing.ClassVar[DiagCode]
+    ChainedMethodParens: typing.ClassVar[DiagCode]
+    ChargeWithTriReg: typing.ClassVar[DiagCode]
+    CheckerArgCannotBeEmpty: typing.ClassVar[DiagCode]
+    CheckerBlockingAssign: typing.ClassVar[DiagCode]
+    CheckerClassBadInstantiation: typing.ClassVar[DiagCode]
+    CheckerForkJoinRef: typing.ClassVar[DiagCode]
+    CheckerFuncArg: typing.ClassVar[DiagCode]
+    CheckerFuncBadInstantiation: typing.ClassVar[DiagCode]
+    CheckerHierarchical: typing.ClassVar[DiagCode]
+    CheckerInCheckerProc: typing.ClassVar[DiagCode]
+    CheckerInForkJoin: typing.ClassVar[DiagCode]
+    CheckerNotInProc: typing.ClassVar[DiagCode]
+    CheckerOutputBadType: typing.ClassVar[DiagCode]
+    CheckerParameterAssign: typing.ClassVar[DiagCode]
+    CheckerPortDirectionType: typing.ClassVar[DiagCode]
+    CheckerPortInout: typing.ClassVar[DiagCode]
+    CheckerTimingControl: typing.ClassVar[DiagCode]
+    ClassInheritanceCycle: typing.ClassVar[DiagCode]
+    ClassMemberInAssertion: typing.ClassVar[DiagCode]
+    ClassPrivateMembersBitstream: typing.ClassVar[DiagCode]
+    ClassSpecifierConflict: typing.ClassVar[DiagCode]
+    ClockVarAssignConcat: typing.ClassVar[DiagCode]
+    ClockVarBadTiming: typing.ClassVar[DiagCode]
+    ClockVarOutputRead: typing.ClassVar[DiagCode]
+    ClockVarSyncDrive: typing.ClassVar[DiagCode]
+    ClockVarTargetAssign: typing.ClassVar[DiagCode]
+    ClockingBlockEventEdge: typing.ClassVar[DiagCode]
+    ClockingBlockEventIff: typing.ClassVar[DiagCode]
+    ClockingNameEmpty: typing.ClassVar[DiagCode]
+    ComparisonMismatch: typing.ClassVar[DiagCode]
+    CompilationUnitFromPackage: typing.ClassVar[DiagCode]
+    ConcatWithStringInt: typing.ClassVar[DiagCode]
+    ConcurrentAssertActionBlock: typing.ClassVar[DiagCode]
+    ConcurrentAssertNotInProc: typing.ClassVar[DiagCode]
+    ConditionalPrecedence: typing.ClassVar[DiagCode]
+    ConfigDupTop: typing.ClassVar[DiagCode]
+    ConfigInstanceUnderOtherConfig: typing.ClassVar[DiagCode]
+    ConfigInstanceWrongTop: typing.ClassVar[DiagCode]
+    ConfigMissingName: typing.ClassVar[DiagCode]
+    ConfigOverrideTop: typing.ClassVar[DiagCode]
+    ConfigParamLiteral: typing.ClassVar[DiagCode]
+    ConfigParamsForPrimitive: typing.ClassVar[DiagCode]
+    ConfigParamsIgnored: typing.ClassVar[DiagCode]
+    ConfigParamsOrdered: typing.ClassVar[DiagCode]
+    ConfigSpecificCellLiblist: typing.ClassVar[DiagCode]
+    ConsecutiveComparison: typing.ClassVar[DiagCode]
+    ConstEvalAssertionFailed: typing.ClassVar[DiagCode]
+    ConstEvalAssociativeElementNotFound: typing.ClassVar[DiagCode]
+    ConstEvalAssociativeIndexInvalid: typing.ClassVar[DiagCode]
+    ConstEvalBitstreamCastSize: typing.ClassVar[DiagCode]
+    ConstEvalCaseItemsNotUnique: typing.ClassVar[DiagCode]
+    ConstEvalCheckers: typing.ClassVar[DiagCode]
+    ConstEvalClassType: typing.ClassVar[DiagCode]
+    ConstEvalCovergroupType: typing.ClassVar[DiagCode]
+    ConstEvalDPINotConstant: typing.ClassVar[DiagCode]
+    ConstEvalDisableTarget: typing.ClassVar[DiagCode]
+    ConstEvalDynamicArrayIndex: typing.ClassVar[DiagCode]
+    ConstEvalDynamicArrayRange: typing.ClassVar[DiagCode]
+    ConstEvalDynamicToFixedSize: typing.ClassVar[DiagCode]
+    ConstEvalEmptyQueue: typing.ClassVar[DiagCode]
+    ConstEvalExceededMaxCallDepth: typing.ClassVar[DiagCode]
+    ConstEvalExceededMaxSteps: typing.ClassVar[DiagCode]
+    ConstEvalFunctionArgDirection: typing.ClassVar[DiagCode]
+    ConstEvalFunctionIdentifiersMustBeLocal: typing.ClassVar[DiagCode]
+    ConstEvalFunctionInsideGenerate: typing.ClassVar[DiagCode]
+    ConstEvalHierarchicalName: typing.ClassVar[DiagCode]
+    ConstEvalIdUsedInCEBeforeDecl: typing.ClassVar[DiagCode]
+    ConstEvalIfItemsNotUnique: typing.ClassVar[DiagCode]
+    ConstEvalMethodNotConstant: typing.ClassVar[DiagCode]
+    ConstEvalNoCaseItemsMatched: typing.ClassVar[DiagCode]
+    ConstEvalNoIfItemsMatched: typing.ClassVar[DiagCode]
+    ConstEvalNonConstVariable: typing.ClassVar[DiagCode]
+    ConstEvalParallelBlockNotConst: typing.ClassVar[DiagCode]
+    ConstEvalParamCycle: typing.ClassVar[DiagCode]
+    ConstEvalProceduralAssign: typing.ClassVar[DiagCode]
+    ConstEvalQueueRange: typing.ClassVar[DiagCode]
+    ConstEvalRandValue: typing.ClassVar[DiagCode]
+    ConstEvalReplicationCountInvalid: typing.ClassVar[DiagCode]
+    ConstEvalStaticSkipped: typing.ClassVar[DiagCode]
+    ConstEvalSubroutineNotConstant: typing.ClassVar[DiagCode]
+    ConstEvalTaggedUnion: typing.ClassVar[DiagCode]
+    ConstEvalTaskNotConstant: typing.ClassVar[DiagCode]
+    ConstEvalTimedStmtNotConst: typing.ClassVar[DiagCode]
+    ConstEvalVoidNotConstant: typing.ClassVar[DiagCode]
+    ConstFunctionPortRequiresRef: typing.ClassVar[DiagCode]
+    ConstPortNotAllowed: typing.ClassVar[DiagCode]
+    ConstSysTaskIgnored: typing.ClassVar[DiagCode]
+    ConstVarNoInitializer: typing.ClassVar[DiagCode]
+    ConstVarToRef: typing.ClassVar[DiagCode]
+    ConstantConversion: typing.ClassVar[DiagCode]
+    ConstraintNotInClass: typing.ClassVar[DiagCode]
+    ConstraintQualOutOfBlock: typing.ClassVar[DiagCode]
+    ConstructorOutsideClass: typing.ClassVar[DiagCode]
+    ConstructorReturnType: typing.ClassVar[DiagCode]
+    CopyClassTarget: typing.ClassVar[DiagCode]
+    CouldNotOpenIncludeFile: typing.ClassVar[DiagCode]
+    CouldNotResolveHierarchicalPath: typing.ClassVar[DiagCode]
+    CoverCrossItems: typing.ClassVar[DiagCode]
+    CoverOptionImmutable: typing.ClassVar[DiagCode]
+    CoverStmtNoFail: typing.ClassVar[DiagCode]
+    CoverageBinDefSeqSize: typing.ClassVar[DiagCode]
+    CoverageBinDefaultIgnore: typing.ClassVar[DiagCode]
+    CoverageBinDefaultWildcard: typing.ClassVar[DiagCode]
+    CoverageBinTargetName: typing.ClassVar[DiagCode]
+    CoverageBinTransSize: typing.ClassVar[DiagCode]
+    CoverageExprVar: typing.ClassVar[DiagCode]
+    CoverageOptionDup: typing.ClassVar[DiagCode]
+    CoverageSampleFormal: typing.ClassVar[DiagCode]
+    CoverageSetType: typing.ClassVar[DiagCode]
+    CovergroupOutArg: typing.ClassVar[DiagCode]
+    CycleDelayNonClock: typing.ClassVar[DiagCode]
+    DPIExportDifferentScope: typing.ClassVar[DiagCode]
+    DPIExportDuplicate: typing.ClassVar[DiagCode]
+    DPIExportDuplicateCId: typing.ClassVar[DiagCode]
+    DPIExportImportedFunc: typing.ClassVar[DiagCode]
+    DPIExportKindMismatch: typing.ClassVar[DiagCode]
+    DPIPureArg: typing.ClassVar[DiagCode]
+    DPIPureReturn: typing.ClassVar[DiagCode]
+    DPIPureTask: typing.ClassVar[DiagCode]
+    DPIRefArg: typing.ClassVar[DiagCode]
+    DPISignatureMismatch: typing.ClassVar[DiagCode]
+    DPISpecDisallowed: typing.ClassVar[DiagCode]
+    DecimalDigitMultipleUnknown: typing.ClassVar[DiagCode]
+    DeclModifierConflict: typing.ClassVar[DiagCode]
+    DeclModifierOrdering: typing.ClassVar[DiagCode]
+    DeclarationsAtStart: typing.ClassVar[DiagCode]
+    DefParamCycle: typing.ClassVar[DiagCode]
+    DefParamLocal: typing.ClassVar[DiagCode]
+    DefParamTarget: typing.ClassVar[DiagCode]
+    DefParamTargetChange: typing.ClassVar[DiagCode]
+    DefaultArgNotAllowed: typing.ClassVar[DiagCode]
+    DefaultSuperArgLocalReference: typing.ClassVar[DiagCode]
+    DeferredAssertAutoRefArg: typing.ClassVar[DiagCode]
+    DeferredAssertNonVoid: typing.ClassVar[DiagCode]
+    DeferredAssertOutArg: typing.ClassVar[DiagCode]
+    DeferredDelayMustBeZero: typing.ClassVar[DiagCode]
+    DefinitionUsedAsType: typing.ClassVar[DiagCode]
+    DefinitionUsedAsValue: typing.ClassVar[DiagCode]
+    DefparamBadHierarchy: typing.ClassVar[DiagCode]
+    Delay3NotAllowed: typing.ClassVar[DiagCode]
+    Delay3OnVar: typing.ClassVar[DiagCode]
+    Delay3UdpNotAllowed: typing.ClassVar[DiagCode]
+    DelayNotNumeric: typing.ClassVar[DiagCode]
+    DelaysNotAllowed: typing.ClassVar[DiagCode]
+    DerivedCovergroupNoBase: typing.ClassVar[DiagCode]
+    DerivedCovergroupNotInClass: typing.ClassVar[DiagCode]
+    DifferentClockInClockingBlock: typing.ClassVar[DiagCode]
+    DigitsLeadingUnderscore: typing.ClassVar[DiagCode]
+    DimensionIndexInvalid: typing.ClassVar[DiagCode]
+    DimensionRequiresConstRange: typing.ClassVar[DiagCode]
+    DirectionOnInterfacePort: typing.ClassVar[DiagCode]
+    DirectionWithInterfacePort: typing.ClassVar[DiagCode]
+    DirectiveInsideDesignElement: typing.ClassVar[DiagCode]
+    DisableIffLocalVar: typing.ClassVar[DiagCode]
+    DisableIffMatched: typing.ClassVar[DiagCode]
+    DisallowedPortDefault: typing.ClassVar[DiagCode]
+    DistRealRangeWeight: typing.ClassVar[DiagCode]
+    DotIntoInstArray: typing.ClassVar[DiagCode]
+    DotOnType: typing.ClassVar[DiagCode]
+    DriveStrengthHighZ: typing.ClassVar[DiagCode]
+    DriveStrengthInvalid: typing.ClassVar[DiagCode]
+    DriveStrengthNotAllowed: typing.ClassVar[DiagCode]
+    DupConfigRule: typing.ClassVar[DiagCode]
+    DupInterfaceExternMethod: typing.ClassVar[DiagCode]
+    DupTimingPath: typing.ClassVar[DiagCode]
+    DuplicateArgAssignment: typing.ClassVar[DiagCode]
+    DuplicateAttribute: typing.ClassVar[DiagCode]
+    DuplicateBind: typing.ClassVar[DiagCode]
+    DuplicateClassSpecifier: typing.ClassVar[DiagCode]
+    DuplicateDeclModifier: typing.ClassVar[DiagCode]
+    DuplicateDefinition: typing.ClassVar[DiagCode]
+    DuplicateDefparam: typing.ClassVar[DiagCode]
+    DuplicateImport: typing.ClassVar[DiagCode]
+    DuplicateParamAssignment: typing.ClassVar[DiagCode]
+    DuplicatePortConnection: typing.ClassVar[DiagCode]
+    DuplicateQualifier: typing.ClassVar[DiagCode]
+    DuplicateWildcardPortConnection: typing.ClassVar[DiagCode]
+    DynamicDimensionIndex: typing.ClassVar[DiagCode]
+    DynamicFromChecker: typing.ClassVar[DiagCode]
+    DynamicNotProcedural: typing.ClassVar[DiagCode]
+    EdgeDescWrongKeyword: typing.ClassVar[DiagCode]
+    EmbeddedNull: typing.ClassVar[DiagCode]
+    EmptyArgNotAllowed: typing.ClassVar[DiagCode]
+    EmptyAssignmentPattern: typing.ClassVar[DiagCode]
+    EmptyBody: typing.ClassVar[DiagCode]
+    EmptyConcatNotAllowed: typing.ClassVar[DiagCode]
+    EmptyMember: typing.ClassVar[DiagCode]
+    EmptyStatement: typing.ClassVar[DiagCode]
+    EmptyUdpPort: typing.ClassVar[DiagCode]
+    EndNameMismatch: typing.ClassVar[DiagCode]
+    EndNameNotEmpty: typing.ClassVar[DiagCode]
+    EnumIncrementUnknown: typing.ClassVar[DiagCode]
+    EnumRangeLiteral: typing.ClassVar[DiagCode]
+    EnumRangeMultiDimensional: typing.ClassVar[DiagCode]
+    EnumValueDuplicate: typing.ClassVar[DiagCode]
+    EnumValueOutOfRange: typing.ClassVar[DiagCode]
+    EnumValueOverflow: typing.ClassVar[DiagCode]
+    EnumValueSizeMismatch: typing.ClassVar[DiagCode]
+    EnumValueUnknownBits: typing.ClassVar[DiagCode]
+    ErrorTask: typing.ClassVar[DiagCode]
+    EscapedWhitespace: typing.ClassVar[DiagCode]
+    EventExprAssertionArg: typing.ClassVar[DiagCode]
+    EventExpressionConstant: typing.ClassVar[DiagCode]
+    EventExpressionFuncArg: typing.ClassVar[DiagCode]
+    EventTriggerCycleDelay: typing.ClassVar[DiagCode]
+    ExceededMaxIncludeDepth: typing.ClassVar[DiagCode]
+    ExpectedAnsiPort: typing.ClassVar[DiagCode]
+    ExpectedArgument: typing.ClassVar[DiagCode]
+    ExpectedAssertionItemPort: typing.ClassVar[DiagCode]
+    ExpectedAssignmentKey: typing.ClassVar[DiagCode]
+    ExpectedAttribute: typing.ClassVar[DiagCode]
+    ExpectedCaseItem: typing.ClassVar[DiagCode]
+    ExpectedClassPropertyName: typing.ClassVar[DiagCode]
+    ExpectedClassSpecifier: typing.ClassVar[DiagCode]
+    ExpectedClockingSkew: typing.ClassVar[DiagCode]
+    ExpectedClosingQuote: typing.ClassVar[DiagCode]
+    ExpectedConditionalPattern: typing.ClassVar[DiagCode]
+    ExpectedConstraintName: typing.ClassVar[DiagCode]
+    ExpectedContinuousAssignment: typing.ClassVar[DiagCode]
+    ExpectedDPISpecString: typing.ClassVar[DiagCode]
+    ExpectedDeclarator: typing.ClassVar[DiagCode]
+    ExpectedDiagPragmaArg: typing.ClassVar[DiagCode]
+    ExpectedDiagPragmaLevel: typing.ClassVar[DiagCode]
+    ExpectedDistItem: typing.ClassVar[DiagCode]
+    ExpectedDriveStrength: typing.ClassVar[DiagCode]
+    ExpectedEdgeDescriptor: typing.ClassVar[DiagCode]
+    ExpectedEnumBase: typing.ClassVar[DiagCode]
+    ExpectedExpression: typing.ClassVar[DiagCode]
+    ExpectedForInitializer: typing.ClassVar[DiagCode]
+    ExpectedFunctionPort: typing.ClassVar[DiagCode]
+    ExpectedFunctionPortList: typing.ClassVar[DiagCode]
+    ExpectedGenvarIterVar: typing.ClassVar[DiagCode]
+    ExpectedHierarchicalInstantiation: typing.ClassVar[DiagCode]
+    ExpectedIdentifier: typing.ClassVar[DiagCode]
+    ExpectedIfOrCase: typing.ClassVar[DiagCode]
+    ExpectedImportExport: typing.ClassVar[DiagCode]
+    ExpectedIncludeFileName: typing.ClassVar[DiagCode]
+    ExpectedIntegerBaseAfterSigned: typing.ClassVar[DiagCode]
+    ExpectedIntegerLiteral: typing.ClassVar[DiagCode]
+    ExpectedInterfaceClassName: typing.ClassVar[DiagCode]
+    ExpectedIterationExpression: typing.ClassVar[DiagCode]
+    ExpectedIteratorName: typing.ClassVar[DiagCode]
+    ExpectedMacroArgs: typing.ClassVar[DiagCode]
+    ExpectedMacroStringifyEnd: typing.ClassVar[DiagCode]
+    ExpectedMember: typing.ClassVar[DiagCode]
+    ExpectedModOrVarName: typing.ClassVar[DiagCode]
+    ExpectedModportPort: typing.ClassVar[DiagCode]
+    ExpectedModuleInstance: typing.ClassVar[DiagCode]
+    ExpectedModuleName: typing.ClassVar[DiagCode]
+    ExpectedNetDelay: typing.ClassVar[DiagCode]
+    ExpectedNetRef: typing.ClassVar[DiagCode]
+    ExpectedNetStrength: typing.ClassVar[DiagCode]
+    ExpectedNetType: typing.ClassVar[DiagCode]
+    ExpectedNonAnsiPort: typing.ClassVar[DiagCode]
+    ExpectedPackageImport: typing.ClassVar[DiagCode]
+    ExpectedParameterPort: typing.ClassVar[DiagCode]
+    ExpectedPathOp: typing.ClassVar[DiagCode]
+    ExpectedPattern: typing.ClassVar[DiagCode]
+    ExpectedPortConnection: typing.ClassVar[DiagCode]
+    ExpectedPortList: typing.ClassVar[DiagCode]
+    ExpectedPragmaExpression: typing.ClassVar[DiagCode]
+    ExpectedPragmaName: typing.ClassVar[DiagCode]
+    ExpectedProtectArg: typing.ClassVar[DiagCode]
+    ExpectedProtectKeyword: typing.ClassVar[DiagCode]
+    ExpectedRsRule: typing.ClassVar[DiagCode]
+    ExpectedSampleKeyword: typing.ClassVar[DiagCode]
+    ExpectedScopeName: typing.ClassVar[DiagCode]
+    ExpectedScopeOrAssert: typing.ClassVar[DiagCode]
+    ExpectedStatement: typing.ClassVar[DiagCode]
+    ExpectedStreamExpression: typing.ClassVar[DiagCode]
+    ExpectedStringLiteral: typing.ClassVar[DiagCode]
+    ExpectedSubroutineName: typing.ClassVar[DiagCode]
+    ExpectedTimeLiteral: typing.ClassVar[DiagCode]
+    ExpectedToken: typing.ClassVar[DiagCode]
+    ExpectedUdpPort: typing.ClassVar[DiagCode]
+    ExpectedUdpSymbol: typing.ClassVar[DiagCode]
+    ExpectedValueRangeElement: typing.ClassVar[DiagCode]
+    ExpectedVariableAssignment: typing.ClassVar[DiagCode]
+    ExpectedVariableName: typing.ClassVar[DiagCode]
+    ExpectedVectorDigits: typing.ClassVar[DiagCode]
+    ExplicitClockInClockingBlock: typing.ClassVar[DiagCode]
+    ExprMustBeIntegral: typing.ClassVar[DiagCode]
+    ExprNotConstraint: typing.ClassVar[DiagCode]
+    ExprNotStatement: typing.ClassVar[DiagCode]
+    ExpressionNotAssignable: typing.ClassVar[DiagCode]
+    ExpressionNotCallable: typing.ClassVar[DiagCode]
+    ExtendClassFromIface: typing.ClassVar[DiagCode]
+    ExtendFromFinal: typing.ClassVar[DiagCode]
+    ExtendIfaceFromClass: typing.ClassVar[DiagCode]
+    ExternDeclMismatchImpl: typing.ClassVar[DiagCode]
+    ExternDeclMismatchPrev: typing.ClassVar[DiagCode]
+    ExternFuncForkJoin: typing.ClassVar[DiagCode]
+    ExternIfaceArrayMethod: typing.ClassVar[DiagCode]
+    ExternWildcardPortList: typing.ClassVar[DiagCode]
+    ExtraPragmaArgs: typing.ClassVar[DiagCode]
+    ExtraProtectEnd: typing.ClassVar[DiagCode]
+    FatalTask: typing.ClassVar[DiagCode]
+    FinalSpecifierLast: typing.ClassVar[DiagCode]
+    FinalWithPure: typing.ClassVar[DiagCode]
+    FloatBoolConv: typing.ClassVar[DiagCode]
+    FloatIntConv: typing.ClassVar[DiagCode]
+    FloatNarrow: typing.ClassVar[DiagCode]
+    FloatWiden: typing.ClassVar[DiagCode]
+    ForeachDynamicDimAfterSkipped: typing.ClassVar[DiagCode]
+    ForeachWildcardIndex: typing.ClassVar[DiagCode]
+    ForkJoinAlwaysComb: typing.ClassVar[DiagCode]
+    FormatEmptyArg: typing.ClassVar[DiagCode]
+    FormatMismatchedType: typing.ClassVar[DiagCode]
+    FormatMultibitStrength: typing.ClassVar[DiagCode]
+    FormatNoArgument: typing.ClassVar[DiagCode]
+    FormatRealInt: typing.ClassVar[DiagCode]
+    FormatSpecifierInvalidWidth: typing.ClassVar[DiagCode]
+    FormatSpecifierNotFloat: typing.ClassVar[DiagCode]
+    FormatSpecifierWidthNotAllowed: typing.ClassVar[DiagCode]
+    FormatTooManyArgs: typing.ClassVar[DiagCode]
+    FormatUnspecifiedType: typing.ClassVar[DiagCode]
+    ForwardTypedefDoesNotMatch: typing.ClassVar[DiagCode]
+    ForwardTypedefVisibility: typing.ClassVar[DiagCode]
+    GFSVMatchItems: typing.ClassVar[DiagCode]
+    GateUDNTConn: typing.ClassVar[DiagCode]
+    GenericClassScopeResolution: typing.ClassVar[DiagCode]
+    GenvarDuplicate: typing.ClassVar[DiagCode]
+    GenvarUnknownBits: typing.ClassVar[DiagCode]
+    GlobalClockEventExpr: typing.ClassVar[DiagCode]
+    GlobalClockingEmpty: typing.ClassVar[DiagCode]
+    GlobalClockingGenerate: typing.ClassVar[DiagCode]
+    GlobalSampledValueAssertionExpr: typing.ClassVar[DiagCode]
+    GlobalSampledValueNested: typing.ClassVar[DiagCode]
+    HierarchicalFromPackage: typing.ClassVar[DiagCode]
+    HierarchicalRefUnknownModule: typing.ClassVar[DiagCode]
+    IfNoneEdgeSensitive: typing.ClassVar[DiagCode]
+    IfaceExtendIncomplete: typing.ClassVar[DiagCode]
+    IfaceExtendTypeParam: typing.ClassVar[DiagCode]
+    IfaceImportExportTarget: typing.ClassVar[DiagCode]
+    IfaceMethodHidden: typing.ClassVar[DiagCode]
+    IfaceMethodNoImpl: typing.ClassVar[DiagCode]
+    IfaceMethodNotExtern: typing.ClassVar[DiagCode]
+    IfaceMethodNotVirtual: typing.ClassVar[DiagCode]
+    IfaceMethodPure: typing.ClassVar[DiagCode]
+    IfaceNameConflict: typing.ClassVar[DiagCode]
+    IfacePortInExpr: typing.ClassVar[DiagCode]
+    IgnoredMacroPaste: typing.ClassVar[DiagCode]
+    IgnoredSlice: typing.ClassVar[DiagCode]
+    IllegalReferenceToProgramItem: typing.ClassVar[DiagCode]
+    ImplementNonIface: typing.ClassVar[DiagCode]
+    ImplicitConnNetInconsistent: typing.ClassVar[DiagCode]
+    ImplicitConvert: typing.ClassVar[DiagCode]
+    ImplicitEventInAssertion: typing.ClassVar[DiagCode]
+    ImplicitNamedPortNotFound: typing.ClassVar[DiagCode]
+    ImplicitNamedPortTypeMismatch: typing.ClassVar[DiagCode]
+    ImplicitNetPortNoDefault: typing.ClassVar[DiagCode]
+    ImplicitNotAllowed: typing.ClassVar[DiagCode]
+    ImportNameCollision: typing.ClassVar[DiagCode]
+    InOutDefaultSkew: typing.ClassVar[DiagCode]
+    InOutPortCannotBeVariable: typing.ClassVar[DiagCode]
+    InOutUWireConn: typing.ClassVar[DiagCode]
+    InOutUWirePort: typing.ClassVar[DiagCode]
+    InOutVarPortConn: typing.ClassVar[DiagCode]
+    IncDecNotAllowed: typing.ClassVar[DiagCode]
+    IncompleteReturn: typing.ClassVar[DiagCode]
+    IndexOOB: typing.ClassVar[DiagCode]
+    IndexValueInvalid: typing.ClassVar[DiagCode]
+    InequivalentUniquenessTypes: typing.ClassVar[DiagCode]
+    InferredComb: typing.ClassVar[DiagCode]
+    InferredLatch: typing.ClassVar[DiagCode]
+    InferredValDefArg: typing.ClassVar[DiagCode]
+    InfinitelyRecursiveHierarchy: typing.ClassVar[DiagCode]
+    InfoTask: typing.ClassVar[DiagCode]
+    InheritFromAbstract: typing.ClassVar[DiagCode]
+    InheritFromAbstractConstraint: typing.ClassVar[DiagCode]
+    InitializerRequired: typing.ClassVar[DiagCode]
+    InputPortAssign: typing.ClassVar[DiagCode]
+    InputPortCoercion: typing.ClassVar[DiagCode]
+    InstanceArrayEndianMismatch: typing.ClassVar[DiagCode]
+    InstanceMissingParens: typing.ClassVar[DiagCode]
+    InstanceNameRequired: typing.ClassVar[DiagCode]
+    InstanceWithDelay: typing.ClassVar[DiagCode]
+    InstanceWithStrength: typing.ClassVar[DiagCode]
+    IntBoolConv: typing.ClassVar[DiagCode]
+    IntFloatConv: typing.ClassVar[DiagCode]
+    InterconnectDelaySyntax: typing.ClassVar[DiagCode]
+    InterconnectInitializer: typing.ClassVar[DiagCode]
+    InterconnectMultiPort: typing.ClassVar[DiagCode]
+    InterconnectPortVar: typing.ClassVar[DiagCode]
+    InterconnectReference: typing.ClassVar[DiagCode]
+    InterconnectTypeSyntax: typing.ClassVar[DiagCode]
+    InterfacePortInvalidExpression: typing.ClassVar[DiagCode]
+    InterfacePortNotConnected: typing.ClassVar[DiagCode]
+    InterfacePortTypeMismatch: typing.ClassVar[DiagCode]
+    InvalidAccessDotColon: typing.ClassVar[DiagCode]
+    InvalidArgumentExpr: typing.ClassVar[DiagCode]
+    InvalidArrayElemType: typing.ClassVar[DiagCode]
+    InvalidArraySize: typing.ClassVar[DiagCode]
+    InvalidAssociativeIndexType: typing.ClassVar[DiagCode]
+    InvalidBindTarget: typing.ClassVar[DiagCode]
+    InvalidBinsMatches: typing.ClassVar[DiagCode]
+    InvalidBinsTarget: typing.ClassVar[DiagCode]
+    InvalidBlockEventTarget: typing.ClassVar[DiagCode]
+    InvalidClassAccess: typing.ClassVar[DiagCode]
+    InvalidClockingSignal: typing.ClassVar[DiagCode]
+    InvalidCommaInPropExpr: typing.ClassVar[DiagCode]
+    InvalidConstraintExpr: typing.ClassVar[DiagCode]
+    InvalidConstraintQualifier: typing.ClassVar[DiagCode]
+    InvalidConstructorAccess: typing.ClassVar[DiagCode]
+    InvalidCoverageExpr: typing.ClassVar[DiagCode]
+    InvalidCoverageOption: typing.ClassVar[DiagCode]
+    InvalidDPIArgType: typing.ClassVar[DiagCode]
+    InvalidDPICIdentifier: typing.ClassVar[DiagCode]
+    InvalidDPIReturnType: typing.ClassVar[DiagCode]
+    InvalidDeferredAssertAction: typing.ClassVar[DiagCode]
+    InvalidDelayValue: typing.ClassVar[DiagCode]
+    InvalidDimensionRange: typing.ClassVar[DiagCode]
+    InvalidDisableTarget: typing.ClassVar[DiagCode]
+    InvalidDistExpression: typing.ClassVar[DiagCode]
+    InvalidEdgeDescriptor: typing.ClassVar[DiagCode]
+    InvalidEncodingByte: typing.ClassVar[DiagCode]
+    InvalidEnumBase: typing.ClassVar[DiagCode]
+    InvalidEventExpression: typing.ClassVar[DiagCode]
+    InvalidExtendsDefault: typing.ClassVar[DiagCode]
+    InvalidForInitializer: typing.ClassVar[DiagCode]
+    InvalidForStepExpression: typing.ClassVar[DiagCode]
+    InvalidGenvarIterExpression: typing.ClassVar[DiagCode]
+    InvalidHexEscapeCode: typing.ClassVar[DiagCode]
+    InvalidHierarchicalIfacePortConn: typing.ClassVar[DiagCode]
+    InvalidInferredTimeScale: typing.ClassVar[DiagCode]
+    InvalidInstanceForParent: typing.ClassVar[DiagCode]
+    InvalidLineDirectiveLevel: typing.ClassVar[DiagCode]
+    InvalidMacroName: typing.ClassVar[DiagCode]
+    InvalidMatchItem: typing.ClassVar[DiagCode]
+    InvalidMemberAccess: typing.ClassVar[DiagCode]
+    InvalidMethodOverride: typing.ClassVar[DiagCode]
+    InvalidMethodQualifier: typing.ClassVar[DiagCode]
+    InvalidModportAccess: typing.ClassVar[DiagCode]
+    InvalidMulticlockedSeqOp: typing.ClassVar[DiagCode]
+    InvalidNGateCount: typing.ClassVar[DiagCode]
+    InvalidNetType: typing.ClassVar[DiagCode]
+    InvalidPackageDecl: typing.ClassVar[DiagCode]
+    InvalidParamOverrideOpt: typing.ClassVar[DiagCode]
+    InvalidPortSubType: typing.ClassVar[DiagCode]
+    InvalidPortType: typing.ClassVar[DiagCode]
+    InvalidPragmaNumber: typing.ClassVar[DiagCode]
+    InvalidPragmaViewport: typing.ClassVar[DiagCode]
+    InvalidPrimInstanceForParent: typing.ClassVar[DiagCode]
+    InvalidPrimitivePortConn: typing.ClassVar[DiagCode]
+    InvalidPropertyIndex: typing.ClassVar[DiagCode]
+    InvalidPropertyQualifier: typing.ClassVar[DiagCode]
+    InvalidPropertyRange: typing.ClassVar[DiagCode]
+    InvalidPullStrength: typing.ClassVar[DiagCode]
+    InvalidPulseStyle: typing.ClassVar[DiagCode]
+    InvalidQualifierForConstructor: typing.ClassVar[DiagCode]
+    InvalidQualifierForIfaceMember: typing.ClassVar[DiagCode]
+    InvalidQualifierForMember: typing.ClassVar[DiagCode]
+    InvalidRandType: typing.ClassVar[DiagCode]
+    InvalidRandomizeOverride: typing.ClassVar[DiagCode]
+    InvalidRefArg: typing.ClassVar[DiagCode]
+    InvalidRepeatRange: typing.ClassVar[DiagCode]
+    InvalidScopeIndexExpression: typing.ClassVar[DiagCode]
+    InvalidSelectExpression: typing.ClassVar[DiagCode]
+    InvalidSignalEventInSeq: typing.ClassVar[DiagCode]
+    InvalidSpecifyDest: typing.ClassVar[DiagCode]
+    InvalidSpecifyPath: typing.ClassVar[DiagCode]
+    InvalidSpecifySource: typing.ClassVar[DiagCode]
+    InvalidSpecifyType: typing.ClassVar[DiagCode]
+    InvalidStmtInChecker: typing.ClassVar[DiagCode]
+    InvalidStringArg: typing.ClassVar[DiagCode]
+    InvalidSuperNew: typing.ClassVar[DiagCode]
+    InvalidSuperNewDefault: typing.ClassVar[DiagCode]
+    InvalidSyntaxInEventExpr: typing.ClassVar[DiagCode]
+    InvalidThisHandle: typing.ClassVar[DiagCode]
+    InvalidTimeScalePrecision: typing.ClassVar[DiagCode]
+    InvalidTimeScaleSpecifier: typing.ClassVar[DiagCode]
+    InvalidTimingCheckNotifierArg: typing.ClassVar[DiagCode]
+    InvalidTopModule: typing.ClassVar[DiagCode]
+    InvalidUTF8Seq: typing.ClassVar[DiagCode]
+    InvalidUnionMember: typing.ClassVar[DiagCode]
+    InvalidUniquenessExpr: typing.ClassVar[DiagCode]
+    InvalidUserDefinedNetType: typing.ClassVar[DiagCode]
+    IsUnboundedParamArg: typing.ClassVar[DiagCode]
+    IteratorArgsWithoutWithClause: typing.ClassVar[DiagCode]
+    LabelAndName: typing.ClassVar[DiagCode]
+    LetHierarchical: typing.ClassVar[DiagCode]
+    LifetimeForPrototype: typing.ClassVar[DiagCode]
+    LiteralSizeIsZero: typing.ClassVar[DiagCode]
+    LiteralSizeTooLarge: typing.ClassVar[DiagCode]
+    LocalFormalVarMultiAssign: typing.ClassVar[DiagCode]
+    LocalMemberAccess: typing.ClassVar[DiagCode]
+    LocalNotAllowed: typing.ClassVar[DiagCode]
+    LocalParamNoInitializer: typing.ClassVar[DiagCode]
+    LocalVarEventExpr: typing.ClassVar[DiagCode]
+    LocalVarMatchItem: typing.ClassVar[DiagCode]
+    LocalVarOutputEmptyMatch: typing.ClassVar[DiagCode]
+    LocalVarTypeRequired: typing.ClassVar[DiagCode]
+    LogicalNotParentheses: typing.ClassVar[DiagCode]
+    LogicalOpParentheses: typing.ClassVar[DiagCode]
+    LoopVarShadowsArray: typing.ClassVar[DiagCode]
+    MacroOpsOutsideDefinition: typing.ClassVar[DiagCode]
+    MacroTokensAfterPragmaProtect: typing.ClassVar[DiagCode]
+    MatchItemsAdmitEmpty: typing.ClassVar[DiagCode]
+    MaxGenerateStepsExceeded: typing.ClassVar[DiagCode]
+    MaxInstanceArrayExceeded: typing.ClassVar[DiagCode]
+    MaxInstanceDepthExceeded: typing.ClassVar[DiagCode]
+    MemberDefinitionBeforeClass: typing.ClassVar[DiagCode]
+    MethodArgCountMismatch: typing.ClassVar[DiagCode]
+    MethodArgDefaultMismatch: typing.ClassVar[DiagCode]
+    MethodArgDirectionMismatch: typing.ClassVar[DiagCode]
+    MethodArgNameMismatch: typing.ClassVar[DiagCode]
+    MethodArgNoDefault: typing.ClassVar[DiagCode]
+    MethodArgTypeMismatch: typing.ClassVar[DiagCode]
+    MethodKindMismatch: typing.ClassVar[DiagCode]
+    MethodReturnMismatch: typing.ClassVar[DiagCode]
+    MethodReturnTypeScoped: typing.ClassVar[DiagCode]
+    MethodStaticLifetime: typing.ClassVar[DiagCode]
+    MismatchConstraintSpecifiers: typing.ClassVar[DiagCode]
+    MismatchStaticConstraint: typing.ClassVar[DiagCode]
+    MismatchedEndKeywordsDirective: typing.ClassVar[DiagCode]
+    MismatchedTimeScales: typing.ClassVar[DiagCode]
+    MismatchedUserDefPortConn: typing.ClassVar[DiagCode]
+    MismatchedUserDefPortDir: typing.ClassVar[DiagCode]
+    MisplacedDirectiveChar: typing.ClassVar[DiagCode]
+    MisplacedTrailingSeparator: typing.ClassVar[DiagCode]
+    MissingConstraintBlock: typing.ClassVar[DiagCode]
+    MissingEndIfDirective: typing.ClassVar[DiagCode]
+    MissingExponentDigits: typing.ClassVar[DiagCode]
+    MissingExportImpl: typing.ClassVar[DiagCode]
+    MissingExternImpl: typing.ClassVar[DiagCode]
+    MissingExternModuleImpl: typing.ClassVar[DiagCode]
+    MissingExternWildcardPorts: typing.ClassVar[DiagCode]
+    MissingFormatSpecifier: typing.ClassVar[DiagCode]
+    MissingFractionalDigits: typing.ClassVar[DiagCode]
+    MissingInvocationParens: typing.ClassVar[DiagCode]
+    MissingModportPortDirection: typing.ClassVar[DiagCode]
+    MissingPortIODeclaration: typing.ClassVar[DiagCode]
+    MissingReturn: typing.ClassVar[DiagCode]
+    MissingReturnValue: typing.ClassVar[DiagCode]
+    MissingReturnValueProd: typing.ClassVar[DiagCode]
+    MissingTimeScale: typing.ClassVar[DiagCode]
+    MixedVarAssigns: typing.ClassVar[DiagCode]
+    MixingOrderedAndNamedArgs: typing.ClassVar[DiagCode]
+    MixingOrderedAndNamedParams: typing.ClassVar[DiagCode]
+    MixingOrderedAndNamedPorts: typing.ClassVar[DiagCode]
+    MixingSubroutinePortKinds: typing.ClassVar[DiagCode]
+    ModportConnMismatch: typing.ClassVar[DiagCode]
+    MultiBitEdge: typing.ClassVar[DiagCode]
+    MulticlockedInClockingBlock: typing.ClassVar[DiagCode]
+    MulticlockedSeqEmptyMatch: typing.ClassVar[DiagCode]
+    MultipleAlwaysAssigns: typing.ClassVar[DiagCode]
+    MultipleContAssigns: typing.ClassVar[DiagCode]
+    MultipleDefaultCases: typing.ClassVar[DiagCode]
+    MultipleDefaultClocking: typing.ClassVar[DiagCode]
+    MultipleDefaultConstructorArg: typing.ClassVar[DiagCode]
+    MultipleDefaultDisable: typing.ClassVar[DiagCode]
+    MultipleDefaultDistWeight: typing.ClassVar[DiagCode]
+    MultipleDefaultInputSkew: typing.ClassVar[DiagCode]
+    MultipleDefaultOutputSkew: typing.ClassVar[DiagCode]
+    MultipleDefaultRules: typing.ClassVar[DiagCode]
+    MultipleGenerateDefaultCases: typing.ClassVar[DiagCode]
+    MultipleGlobalClocking: typing.ClassVar[DiagCode]
+    MultipleNetAlias: typing.ClassVar[DiagCode]
+    MultiplePackedOpenArrays: typing.ClassVar[DiagCode]
+    MultipleParallelTerminals: typing.ClassVar[DiagCode]
+    MultipleTopDupName: typing.ClassVar[DiagCode]
+    MultipleUDNTDrivers: typing.ClassVar[DiagCode]
+    MultipleUWireDrivers: typing.ClassVar[DiagCode]
+    NTResolveArgModify: typing.ClassVar[DiagCode]
+    NTResolveClass: typing.ClassVar[DiagCode]
+    NTResolveReturn: typing.ClassVar[DiagCode]
+    NTResolveSingleArg: typing.ClassVar[DiagCode]
+    NTResolveTask: typing.ClassVar[DiagCode]
+    NTResolveUserDef: typing.ClassVar[DiagCode]
+    NameListWithScopeRandomize: typing.ClassVar[DiagCode]
+    NamedArgNotAllowed: typing.ClassVar[DiagCode]
+    NegativeTimingLimit: typing.ClassVar[DiagCode]
+    NestedBlockComment: typing.ClassVar[DiagCode]
+    NestedConfigMultipleTops: typing.ClassVar[DiagCode]
+    NestedDisableIff: typing.ClassVar[DiagCode]
+    NestedIface: typing.ClassVar[DiagCode]
+    NestedNonStaticClassMethod: typing.ClassVar[DiagCode]
+    NestedNonStaticClassProperty: typing.ClassVar[DiagCode]
+    NestedProtectBegin: typing.ClassVar[DiagCode]
+    NetAliasCommonNetType: typing.ClassVar[DiagCode]
+    NetAliasHierarchical: typing.ClassVar[DiagCode]
+    NetAliasNotANet: typing.ClassVar[DiagCode]
+    NetAliasSelf: typing.ClassVar[DiagCode]
+    NetAliasWidthMismatch: typing.ClassVar[DiagCode]
+    NetInconsistent: typing.ClassVar[DiagCode]
+    NetRangeInconsistent: typing.ClassVar[DiagCode]
+    NewArrayTarget: typing.ClassVar[DiagCode]
+    NewClassTarget: typing.ClassVar[DiagCode]
+    NewInterfaceClass: typing.ClassVar[DiagCode]
+    NewKeywordQualified: typing.ClassVar[DiagCode]
+    NewVirtualClass: typing.ClassVar[DiagCode]
+    NoChangeEdgeRequired: typing.ClassVar[DiagCode]
+    NoCommaInList: typing.ClassVar[DiagCode]
+    NoCommonComparisonType: typing.ClassVar[DiagCode]
+    NoConstraintBody: typing.ClassVar[DiagCode]
+    NoDeclInClass: typing.ClassVar[DiagCode]
+    NoDefaultClocking: typing.ClassVar[DiagCode]
+    NoDefaultSpecialization: typing.ClassVar[DiagCode]
+    NoGlobalClocking: typing.ClassVar[DiagCode]
+    NoImplicitConversion: typing.ClassVar[DiagCode]
+    NoInferredClock: typing.ClassVar[DiagCode]
+    NoLabelOnSemicolon: typing.ClassVar[DiagCode]
+    NoMemberImplFound: typing.ClassVar[DiagCode]
+    NoTopModules: typing.ClassVar[DiagCode]
+    NoUniqueClock: typing.ClassVar[DiagCode]
+    NonIntegralConstraintLiteral: typing.ClassVar[DiagCode]
+    NonPrintableChar: typing.ClassVar[DiagCode]
+    NonProceduralFuncArg: typing.ClassVar[DiagCode]
+    NonStandardGenBlock: typing.ClassVar[DiagCode]
+    NonStaticClassMethod: typing.ClassVar[DiagCode]
+    NonStaticClassProperty: typing.ClassVar[DiagCode]
+    NonblockingAssignmentToAuto: typing.ClassVar[DiagCode]
+    NonblockingDynamicAssign: typing.ClassVar[DiagCode]
+    NonblockingInFinal: typing.ClassVar[DiagCode]
+    NonstandardDist: typing.ClassVar[DiagCode]
+    NonstandardEscapeCode: typing.ClassVar[DiagCode]
+    NonstandardForeach: typing.ClassVar[DiagCode]
+    NonstandardSysFunc: typing.ClassVar[DiagCode]
+    NotAChecker: typing.ClassVar[DiagCode]
+    NotAClass: typing.ClassVar[DiagCode]
+    NotAClockingBlock: typing.ClassVar[DiagCode]
+    NotAGenericClass: typing.ClassVar[DiagCode]
+    NotAGenvar: typing.ClassVar[DiagCode]
+    NotAHierarchicalScope: typing.ClassVar[DiagCode]
+    NotAModport: typing.ClassVar[DiagCode]
+    NotAProduction: typing.ClassVar[DiagCode]
+    NotASubroutine: typing.ClassVar[DiagCode]
+    NotAType: typing.ClassVar[DiagCode]
+    NotAValue: typing.ClassVar[DiagCode]
+    NotAllowedInAnonymousProgram: typing.ClassVar[DiagCode]
+    NotAllowedInCU: typing.ClassVar[DiagCode]
+    NotAllowedInChecker: typing.ClassVar[DiagCode]
+    NotAllowedInClass: typing.ClassVar[DiagCode]
+    NotAllowedInClocking: typing.ClassVar[DiagCode]
+    NotAllowedInGenerate: typing.ClassVar[DiagCode]
+    NotAllowedInIfaceClass: typing.ClassVar[DiagCode]
+    NotAllowedInInterface: typing.ClassVar[DiagCode]
+    NotAllowedInModport: typing.ClassVar[DiagCode]
+    NotAllowedInModule: typing.ClassVar[DiagCode]
+    NotAllowedInPackage: typing.ClassVar[DiagCode]
+    NotAllowedInProgram: typing.ClassVar[DiagCode]
+    NotAnArray: typing.ClassVar[DiagCode]
+    NotAnEvent: typing.ClassVar[DiagCode]
+    NotAnInterface: typing.ClassVar[DiagCode]
+    NotAnInterfaceOrPort: typing.ClassVar[DiagCode]
+    NotBooleanConvertible: typing.ClassVar[DiagCode]
+    NotEnoughMacroArgs: typing.ClassVar[DiagCode]
+    NoteAliasDeclaration: typing.ClassVar[DiagCode]
+    NoteAliasedTo: typing.ClassVar[DiagCode]
+    NoteAlwaysFalse: typing.ClassVar[DiagCode]
+    NoteAssignedHere: typing.ClassVar[DiagCode]
+    NoteClockHere: typing.ClassVar[DiagCode]
+    NoteCommonAncestor: typing.ClassVar[DiagCode]
+    NoteComparisonReduces: typing.ClassVar[DiagCode]
+    NoteConditionalPrecedenceFix: typing.ClassVar[DiagCode]
+    NoteConfigRule: typing.ClassVar[DiagCode]
+    NoteDeclarationHere: typing.ClassVar[DiagCode]
+    NoteDirectiveHere: typing.ClassVar[DiagCode]
+    NoteDrivenHere: typing.ClassVar[DiagCode]
+    NoteExpandedHere: typing.ClassVar[DiagCode]
+    NoteFromHere2: typing.ClassVar[DiagCode]
+    NoteHierarchicalRef: typing.ClassVar[DiagCode]
+    NoteImportedFrom: typing.ClassVar[DiagCode]
+    NoteInCallTo: typing.ClassVar[DiagCode]
+    NoteLastBlockEnded: typing.ClassVar[DiagCode]
+    NoteLastBlockStarted: typing.ClassVar[DiagCode]
+    NoteLogicalNotFix: typing.ClassVar[DiagCode]
+    NoteLogicalNotSilence: typing.ClassVar[DiagCode]
+    NoteOriginalAssign: typing.ClassVar[DiagCode]
+    NotePrecedenceBitwiseFirst: typing.ClassVar[DiagCode]
+    NotePrecedenceSilence: typing.ClassVar[DiagCode]
+    NotePreviousDefinition: typing.ClassVar[DiagCode]
+    NotePreviousMatch: typing.ClassVar[DiagCode]
+    NotePreviousUsage: typing.ClassVar[DiagCode]
+    NoteReferencedHere: typing.ClassVar[DiagCode]
+    NoteRequiredHere: typing.ClassVar[DiagCode]
+    NoteSkippingFrames: typing.ClassVar[DiagCode]
+    NoteToMatchThis: typing.ClassVar[DiagCode]
+    NoteUdpCoverage: typing.ClassVar[DiagCode]
+    NoteWhileExpanding: typing.ClassVar[DiagCode]
+    NullPortExpression: typing.ClassVar[DiagCode]
+    ObjectTooLarge: typing.ClassVar[DiagCode]
+    OctalEscapeCodeTooBig: typing.ClassVar[DiagCode]
+    OutRefFuncConstraint: typing.ClassVar[DiagCode]
+    OutputPortCoercion: typing.ClassVar[DiagCode]
+    OverridingExtends: typing.ClassVar[DiagCode]
+    OverridingFinal: typing.ClassVar[DiagCode]
+    OverridingInitial: typing.ClassVar[DiagCode]
+    PackageExportSelf: typing.ClassVar[DiagCode]
+    PackageImportSelf: typing.ClassVar[DiagCode]
+    PackageNetInit: typing.ClassVar[DiagCode]
+    PackedArrayConv: typing.ClassVar[DiagCode]
+    PackedArrayNotIntegral: typing.ClassVar[DiagCode]
+    PackedDimsOnPredefinedType: typing.ClassVar[DiagCode]
+    PackedDimsOnUnpacked: typing.ClassVar[DiagCode]
+    PackedDimsRequireFullRange: typing.ClassVar[DiagCode]
+    PackedMemberHasInitializer: typing.ClassVar[DiagCode]
+    PackedMemberNotIntegral: typing.ClassVar[DiagCode]
+    PackedTypeTooLarge: typing.ClassVar[DiagCode]
+    PackedUnionWidthMismatch: typing.ClassVar[DiagCode]
+    ParallelPathWidth: typing.ClassVar[DiagCode]
+    ParamHasNoValue: typing.ClassVar[DiagCode]
+    ParameterDoesNotExist: typing.ClassVar[DiagCode]
+    ParseTreeTooDeep: typing.ClassVar[DiagCode]
+    PastNumTicksInvalid: typing.ClassVar[DiagCode]
+    PathPulseInExpr: typing.ClassVar[DiagCode]
+    PathPulseInvalidPathName: typing.ClassVar[DiagCode]
+    PatternStructTooFew: typing.ClassVar[DiagCode]
+    PatternStructTooMany: typing.ClassVar[DiagCode]
+    PatternStructType: typing.ClassVar[DiagCode]
+    PatternTaggedType: typing.ClassVar[DiagCode]
+    PlaRangeInAscendingOrder: typing.ClassVar[DiagCode]
+    PointlessVoidCast: typing.ClassVar[DiagCode]
+    PortConcatInOut: typing.ClassVar[DiagCode]
+    PortConcatRef: typing.ClassVar[DiagCode]
+    PortConnArrayMismatch: typing.ClassVar[DiagCode]
+    PortConnDimensionsMismatch: typing.ClassVar[DiagCode]
+    PortDeclDimensionsMismatch: typing.ClassVar[DiagCode]
+    PortDeclInANSIModule: typing.ClassVar[DiagCode]
+    PortDoesNotExist: typing.ClassVar[DiagCode]
+    PortTypeNotInterfaceOrData: typing.ClassVar[DiagCode]
+    PortWidthExpand: typing.ClassVar[DiagCode]
+    PortWidthTruncate: typing.ClassVar[DiagCode]
+    PrimitiveAnsiMix: typing.ClassVar[DiagCode]
+    PrimitiveDupInitial: typing.ClassVar[DiagCode]
+    PrimitiveDupOutput: typing.ClassVar[DiagCode]
+    PrimitiveInitVal: typing.ClassVar[DiagCode]
+    PrimitiveInitialInComb: typing.ClassVar[DiagCode]
+    PrimitiveOutputFirst: typing.ClassVar[DiagCode]
+    PrimitivePortCountWrong: typing.ClassVar[DiagCode]
+    PrimitivePortDup: typing.ClassVar[DiagCode]
+    PrimitivePortMissing: typing.ClassVar[DiagCode]
+    PrimitivePortUnknown: typing.ClassVar[DiagCode]
+    PrimitiveRegDup: typing.ClassVar[DiagCode]
+    PrimitiveRegInput: typing.ClassVar[DiagCode]
+    PrimitiveTwoPorts: typing.ClassVar[DiagCode]
+    PrimitiveWrongInitial: typing.ClassVar[DiagCode]
+    PropAbortLocalVar: typing.ClassVar[DiagCode]
+    PropAbortMatched: typing.ClassVar[DiagCode]
+    PropExprInSequence: typing.ClassVar[DiagCode]
+    PropInstanceRepetition: typing.ClassVar[DiagCode]
+    PropertyLhsInvalid: typing.ClassVar[DiagCode]
+    PropertyPortInLet: typing.ClassVar[DiagCode]
+    PropertyPortInSeq: typing.ClassVar[DiagCode]
+    ProtectArgList: typing.ClassVar[DiagCode]
+    ProtectEncodingBytes: typing.ClassVar[DiagCode]
+    ProtectedEnvelope: typing.ClassVar[DiagCode]
+    ProtectedMemberAccess: typing.ClassVar[DiagCode]
+    PullStrengthHighZ: typing.ClassVar[DiagCode]
+    PulseControlPATHPULSE: typing.ClassVar[DiagCode]
+    PulseControlSpecifyParent: typing.ClassVar[DiagCode]
+    PureConstraintInAbstract: typing.ClassVar[DiagCode]
+    PureInAbstract: typing.ClassVar[DiagCode]
+    PureRequiresVirtual: typing.ClassVar[DiagCode]
+    QualifierConflict: typing.ClassVar[DiagCode]
+    QualifierNotFirst: typing.ClassVar[DiagCode]
+    QualifiersOnOutOfBlock: typing.ClassVar[DiagCode]
+    QueryOnAssociativeNonIntegral: typing.ClassVar[DiagCode]
+    QueryOnAssociativeWildcard: typing.ClassVar[DiagCode]
+    QueryOnDynamicType: typing.ClassVar[DiagCode]
+    RandCInDist: typing.ClassVar[DiagCode]
+    RandCInSoft: typing.ClassVar[DiagCode]
+    RandCInSolveBefore: typing.ClassVar[DiagCode]
+    RandCInUnique: typing.ClassVar[DiagCode]
+    RandJoinNotEnough: typing.ClassVar[DiagCode]
+    RandJoinNotNumeric: typing.ClassVar[DiagCode]
+    RandJoinProdItem: typing.ClassVar[DiagCode]
+    RandNeededInDist: typing.ClassVar[DiagCode]
+    RandOnPackedMember: typing.ClassVar[DiagCode]
+    RandOnUnionMember: typing.ClassVar[DiagCode]
+    RangeOOB: typing.ClassVar[DiagCode]
+    RangeSelectAssociative: typing.ClassVar[DiagCode]
+    RangeWidthOOB: typing.ClassVar[DiagCode]
+    RangeWidthOverflow: typing.ClassVar[DiagCode]
+    RawProtectEOF: typing.ClassVar[DiagCode]
+    RealCoverpointBins: typing.ClassVar[DiagCode]
+    RealCoverpointDefaultArray: typing.ClassVar[DiagCode]
+    RealCoverpointImplicit: typing.ClassVar[DiagCode]
+    RealCoverpointTransBins: typing.ClassVar[DiagCode]
+    RealCoverpointWildcardBins: typing.ClassVar[DiagCode]
+    RealCoverpointWithExpr: typing.ClassVar[DiagCode]
+    RealLiteralOverflow: typing.ClassVar[DiagCode]
+    RealLiteralUnderflow: typing.ClassVar[DiagCode]
+    RecursiveClassSpecialization: typing.ClassVar[DiagCode]
+    RecursiveDefinition: typing.ClassVar[DiagCode]
+    RecursiveLet: typing.ClassVar[DiagCode]
+    RecursiveMacro: typing.ClassVar[DiagCode]
+    RecursivePropArgExpr: typing.ClassVar[DiagCode]
+    RecursivePropDisableIff: typing.ClassVar[DiagCode]
+    RecursivePropNegation: typing.ClassVar[DiagCode]
+    RecursivePropTimeAdvance: typing.ClassVar[DiagCode]
+    RecursiveSequence: typing.ClassVar[DiagCode]
+    RedefiningMacro: typing.ClassVar[DiagCode]
+    Redefinition: typing.ClassVar[DiagCode]
+    RedefinitionDifferentType: typing.ClassVar[DiagCode]
+    RefArgAutomaticFunc: typing.ClassVar[DiagCode]
+    RefArgForkJoin: typing.ClassVar[DiagCode]
+    RefPortMustBeVariable: typing.ClassVar[DiagCode]
+    RefPortUnconnected: typing.ClassVar[DiagCode]
+    RefPortUnnamedUnconnected: typing.ClassVar[DiagCode]
+    RefTypeMismatch: typing.ClassVar[DiagCode]
+    RegAfterNettype: typing.ClassVar[DiagCode]
+    RepeatControlNotEvent: typing.ClassVar[DiagCode]
+    RepeatNotNumeric: typing.ClassVar[DiagCode]
+    ReplicationZeroOutsideConcat: typing.ClassVar[DiagCode]
+    RestrictStmtNoFail: typing.ClassVar[DiagCode]
+    ReturnInParallel: typing.ClassVar[DiagCode]
+    ReturnNotInSubroutine: typing.ClassVar[DiagCode]
+    ReversedValueRange: typing.ClassVar[DiagCode]
+    SampledValueFuncClock: typing.ClassVar[DiagCode]
+    SampledValueLocalVar: typing.ClassVar[DiagCode]
+    SampledValueMatched: typing.ClassVar[DiagCode]
+    ScopeIncompleteTypedef: typing.ClassVar[DiagCode]
+    ScopeIndexOutOfRange: typing.ClassVar[DiagCode]
+    ScopeNotIndexable: typing.ClassVar[DiagCode]
+    ScopedClassCopy: typing.ClassVar[DiagCode]
+    SelectAfterRangeSelect: typing.ClassVar[DiagCode]
+    SelectEndianDynamic: typing.ClassVar[DiagCode]
+    SelectEndianMismatch: typing.ClassVar[DiagCode]
+    SelectOfVectoredNet: typing.ClassVar[DiagCode]
+    SeqEmptyMatch: typing.ClassVar[DiagCode]
+    SeqInstanceRepetition: typing.ClassVar[DiagCode]
+    SeqMethodEndClock: typing.ClassVar[DiagCode]
+    SeqMethodInputLocalVar: typing.ClassVar[DiagCode]
+    SeqNoMatch: typing.ClassVar[DiagCode]
+    SeqOnlyEmpty: typing.ClassVar[DiagCode]
+    SeqRangeMinMax: typing.ClassVar[DiagCode]
+    SequenceMatchedOutsideAssertion: typing.ClassVar[DiagCode]
+    SequenceMethodLocalVar: typing.ClassVar[DiagCode]
+    SignCompare: typing.ClassVar[DiagCode]
+    SignConversion: typing.ClassVar[DiagCode]
+    SignedIntegerOverflow: typing.ClassVar[DiagCode]
+    SignednessNoEffect: typing.ClassVar[DiagCode]
+    SingleBitVectored: typing.ClassVar[DiagCode]
+    SolveBeforeDisallowed: typing.ClassVar[DiagCode]
+    SpecifiersNotAllowed: typing.ClassVar[DiagCode]
+    SpecifyBlockParam: typing.ClassVar[DiagCode]
+    SpecifyPathBadReference: typing.ClassVar[DiagCode]
+    SpecifyPathConditionExpr: typing.ClassVar[DiagCode]
+    SpecifyPathMultiDim: typing.ClassVar[DiagCode]
+    SpecparamInConstant: typing.ClassVar[DiagCode]
+    SplitDistWeightOp: typing.ClassVar[DiagCode]
+    StatementNotInLoop: typing.ClassVar[DiagCode]
+    StaticAssert: typing.ClassVar[DiagCode]
+    StaticConstNoInitializer: typing.ClassVar[DiagCode]
+    StaticFuncSpecifier: typing.ClassVar[DiagCode]
+    StaticInitOrder: typing.ClassVar[DiagCode]
+    StaticInitValue: typing.ClassVar[DiagCode]
+    StaticInitializerMustBeExplicit: typing.ClassVar[DiagCode]
+    SubroutineMatchAutoRefArg: typing.ClassVar[DiagCode]
+    SubroutineMatchNonVoid: typing.ClassVar[DiagCode]
+    SubroutineMatchOutArg: typing.ClassVar[DiagCode]
+    SubroutinePortInitializer: typing.ClassVar[DiagCode]
+    SubroutinePrototypeScoped: typing.ClassVar[DiagCode]
+    SuperNoBase: typing.ClassVar[DiagCode]
+    SuperOutsideClass: typing.ClassVar[DiagCode]
+    SysFuncHierarchicalNotAllowed: typing.ClassVar[DiagCode]
+    SysFuncNotConst: typing.ClassVar[DiagCode]
+    TaggedStruct: typing.ClassVar[DiagCode]
+    TaggedUnionMissingInit: typing.ClassVar[DiagCode]
+    TaggedUnionTarget: typing.ClassVar[DiagCode]
+    TaskConstructor: typing.ClassVar[DiagCode]
+    TaskFromFinal: typing.ClassVar[DiagCode]
+    TaskFromFunction: typing.ClassVar[DiagCode]
+    TaskInConstraint: typing.ClassVar[DiagCode]
+    TaskReturnType: typing.ClassVar[DiagCode]
+    ThroughoutLhsInvalid: typing.ClassVar[DiagCode]
+    TimeScaleFirstInScope: typing.ClassVar[DiagCode]
+    TimingCheckEventEdgeRequired: typing.ClassVar[DiagCode]
+    TimingCheckEventNotAllowed: typing.ClassVar[DiagCode]
+    TimingControlNotAllowed: typing.ClassVar[DiagCode]
+    TimingInFuncNotAllowed: typing.ClassVar[DiagCode]
+    TooFewArguments: typing.ClassVar[DiagCode]
+    TooManyActualMacroArgs: typing.ClassVar[DiagCode]
+    TooManyArguments: typing.ClassVar[DiagCode]
+    TooManyEdgeDescriptors: typing.ClassVar[DiagCode]
+    TooManyErrors: typing.ClassVar[DiagCode]
+    TooManyForeachVars: typing.ClassVar[DiagCode]
+    TooManyLexerErrors: typing.ClassVar[DiagCode]
+    TooManyParamAssignments: typing.ClassVar[DiagCode]
+    TooManyPortConnections: typing.ClassVar[DiagCode]
+    TopModuleIfacePort: typing.ClassVar[DiagCode]
+    TopModuleRefPort: typing.ClassVar[DiagCode]
+    TopModuleUnnamedRefPort: typing.ClassVar[DiagCode]
+    TypeHierarchical: typing.ClassVar[DiagCode]
+    TypeIsNotAClass: typing.ClassVar[DiagCode]
+    TypeRefDeclVar: typing.ClassVar[DiagCode]
+    TypeRefHierarchical: typing.ClassVar[DiagCode]
+    TypeRefVoid: typing.ClassVar[DiagCode]
+    TypeRestrictionMismatch: typing.ClassVar[DiagCode]
+    TypoIdentifier: typing.ClassVar[DiagCode]
+    UTF8Char: typing.ClassVar[DiagCode]
+    UdpAllX: typing.ClassVar[DiagCode]
+    UdpCombState: typing.ClassVar[DiagCode]
+    UdpCoverage: typing.ClassVar[DiagCode]
+    UdpDupDiffOutput: typing.ClassVar[DiagCode]
+    UdpDupTransition: typing.ClassVar[DiagCode]
+    UdpEdgeInComb: typing.ClassVar[DiagCode]
+    UdpInvalidEdgeSymbol: typing.ClassVar[DiagCode]
+    UdpInvalidInputOnly: typing.ClassVar[DiagCode]
+    UdpInvalidMinus: typing.ClassVar[DiagCode]
+    UdpInvalidOutput: typing.ClassVar[DiagCode]
+    UdpInvalidSymbol: typing.ClassVar[DiagCode]
+    UdpInvalidTransition: typing.ClassVar[DiagCode]
+    UdpSequentialState: typing.ClassVar[DiagCode]
+    UdpSingleChar: typing.ClassVar[DiagCode]
+    UdpTransSameChar: typing.ClassVar[DiagCode]
+    UdpTransitionLength: typing.ClassVar[DiagCode]
+    UdpWrongInputCount: typing.ClassVar[DiagCode]
+    UnassignedVariable: typing.ClassVar[DiagCode]
+    UnbalancedMacroArgDims: typing.ClassVar[DiagCode]
+    UnboundedNotAllowed: typing.ClassVar[DiagCode]
+    UnclosedTranslateOff: typing.ClassVar[DiagCode]
+    UnconnectedArg: typing.ClassVar[DiagCode]
+    UnconnectedNamedPort: typing.ClassVar[DiagCode]
+    UnconnectedUnnamedPort: typing.ClassVar[DiagCode]
+    UndeclaredButFoundPackage: typing.ClassVar[DiagCode]
+    UndeclaredIdentifier: typing.ClassVar[DiagCode]
+    UndefineBuiltinDirective: typing.ClassVar[DiagCode]
+    UndrivenNet: typing.ClassVar[DiagCode]
+    UndrivenPort: typing.ClassVar[DiagCode]
+    UnexpectedClockingExpr: typing.ClassVar[DiagCode]
+    UnexpectedConditionalDirective: typing.ClassVar[DiagCode]
+    UnexpectedConstraintBlock: typing.ClassVar[DiagCode]
+    UnexpectedEndDelim: typing.ClassVar[DiagCode]
+    UnexpectedLetPortKeyword: typing.ClassVar[DiagCode]
+    UnexpectedNameToken: typing.ClassVar[DiagCode]
+    UnexpectedPortDecl: typing.ClassVar[DiagCode]
+    UnexpectedQualifiers: typing.ClassVar[DiagCode]
+    UnexpectedSelection: typing.ClassVar[DiagCode]
+    UnexpectedWithClause: typing.ClassVar[DiagCode]
+    UnicodeBOM: typing.ClassVar[DiagCode]
+    UniquePriorityAfterElse: typing.ClassVar[DiagCode]
+    UnknownClassMember: typing.ClassVar[DiagCode]
+    UnknownClassOrPackage: typing.ClassVar[DiagCode]
+    UnknownConstraintLiteral: typing.ClassVar[DiagCode]
+    UnknownCovergroupBase: typing.ClassVar[DiagCode]
+    UnknownCovergroupMember: typing.ClassVar[DiagCode]
+    UnknownDiagPragmaArg: typing.ClassVar[DiagCode]
+    UnknownDirective: typing.ClassVar[DiagCode]
+    UnknownEscapeCode: typing.ClassVar[DiagCode]
+    UnknownFormatSpecifier: typing.ClassVar[DiagCode]
+    UnknownInterface: typing.ClassVar[DiagCode]
+    UnknownLibrary: typing.ClassVar[DiagCode]
+    UnknownMember: typing.ClassVar[DiagCode]
+    UnknownModule: typing.ClassVar[DiagCode]
+    UnknownPackage: typing.ClassVar[DiagCode]
+    UnknownPackageMember: typing.ClassVar[DiagCode]
+    UnknownPragma: typing.ClassVar[DiagCode]
+    UnknownPrimitive: typing.ClassVar[DiagCode]
+    UnknownProtectEncoding: typing.ClassVar[DiagCode]
+    UnknownProtectKeyword: typing.ClassVar[DiagCode]
+    UnknownProtectOption: typing.ClassVar[DiagCode]
+    UnknownSystemMethod: typing.ClassVar[DiagCode]
+    UnknownSystemName: typing.ClassVar[DiagCode]
+    UnknownSystemTimingCheck: typing.ClassVar[DiagCode]
+    UnknownWarningOption: typing.ClassVar[DiagCode]
+    UnpackedArrayParamType: typing.ClassVar[DiagCode]
+    UnpackedConcatAssociative: typing.ClassVar[DiagCode]
+    UnpackedConcatSize: typing.ClassVar[DiagCode]
+    UnpackedSigned: typing.ClassVar[DiagCode]
+    UnrecognizedKeywordVersion: typing.ClassVar[DiagCode]
+    UnresolvedForwardTypedef: typing.ClassVar[DiagCode]
+    UnsignedArithShift: typing.ClassVar[DiagCode]
+    UnsizedInConcat: typing.ClassVar[DiagCode]
+    UnterminatedBlockComment: typing.ClassVar[DiagCode]
+    UnusedArgument: typing.ClassVar[DiagCode]
+    UnusedAssertionDecl: typing.ClassVar[DiagCode]
+    UnusedButSetNet: typing.ClassVar[DiagCode]
+    UnusedButSetPort: typing.ClassVar[DiagCode]
+    UnusedButSetVariable: typing.ClassVar[DiagCode]
+    UnusedConfigCell: typing.ClassVar[DiagCode]
+    UnusedConfigInstance: typing.ClassVar[DiagCode]
+    UnusedDefinition: typing.ClassVar[DiagCode]
+    UnusedGenvar: typing.ClassVar[DiagCode]
+    UnusedImplicitNet: typing.ClassVar[DiagCode]
+    UnusedImport: typing.ClassVar[DiagCode]
+    UnusedNet: typing.ClassVar[DiagCode]
+    UnusedParameter: typing.ClassVar[DiagCode]
+    UnusedPort: typing.ClassVar[DiagCode]
+    UnusedPortDecl: typing.ClassVar[DiagCode]
+    UnusedResult: typing.ClassVar[DiagCode]
+    UnusedTypeParameter: typing.ClassVar[DiagCode]
+    UnusedTypedef: typing.ClassVar[DiagCode]
+    UnusedVariable: typing.ClassVar[DiagCode]
+    UnusedWildcardImport: typing.ClassVar[DiagCode]
+    UsedBeforeDeclared: typing.ClassVar[DiagCode]
+    UselessCast: typing.ClassVar[DiagCode]
+    UserDefPartialDriver: typing.ClassVar[DiagCode]
+    UserDefPortMixedConcat: typing.ClassVar[DiagCode]
+    UserDefPortTwoSided: typing.ClassVar[DiagCode]
+    ValueExceedsMaxBitWidth: typing.ClassVar[DiagCode]
+    ValueMustBeIntegral: typing.ClassVar[DiagCode]
+    ValueMustBePositive: typing.ClassVar[DiagCode]
+    ValueMustNotBeUnknown: typing.ClassVar[DiagCode]
+    ValueOutOfRange: typing.ClassVar[DiagCode]
+    ValueRangeUnbounded: typing.ClassVar[DiagCode]
+    VarDeclWithDelay: typing.ClassVar[DiagCode]
+    VarWithInterfacePort: typing.ClassVar[DiagCode]
+    VectorLiteralOverflow: typing.ClassVar[DiagCode]
+    VirtualArgCountMismatch: typing.ClassVar[DiagCode]
+    VirtualArgDirectionMismatch: typing.ClassVar[DiagCode]
+    VirtualArgNameMismatch: typing.ClassVar[DiagCode]
+    VirtualArgNoDerivedDefault: typing.ClassVar[DiagCode]
+    VirtualArgNoParentDefault: typing.ClassVar[DiagCode]
+    VirtualArgTypeMismatch: typing.ClassVar[DiagCode]
+    VirtualIfaceConfigRule: typing.ClassVar[DiagCode]
+    VirtualIfaceDefparam: typing.ClassVar[DiagCode]
+    VirtualIfaceHierRef: typing.ClassVar[DiagCode]
+    VirtualIfaceIfacePort: typing.ClassVar[DiagCode]
+    VirtualInterfaceIfaceMember: typing.ClassVar[DiagCode]
+    VirtualInterfaceUnionMember: typing.ClassVar[DiagCode]
+    VirtualKindMismatch: typing.ClassVar[DiagCode]
+    VirtualReturnMismatch: typing.ClassVar[DiagCode]
+    VirtualVisibilityMismatch: typing.ClassVar[DiagCode]
+    VoidAssignment: typing.ClassVar[DiagCode]
+    VoidCastFuncCall: typing.ClassVar[DiagCode]
+    VoidNotAllowed: typing.ClassVar[DiagCode]
+    WarnUnknownLibrary: typing.ClassVar[DiagCode]
+    WarningTask: typing.ClassVar[DiagCode]
+    WidthExpand: typing.ClassVar[DiagCode]
+    WidthTruncate: typing.ClassVar[DiagCode]
+    WildcardPortGenericIface: typing.ClassVar[DiagCode]
+    WireDataType: typing.ClassVar[DiagCode]
+    WithClauseNotAllowed: typing.ClassVar[DiagCode]
+    WriteToInputClockVar: typing.ClassVar[DiagCode]
+    WrongBindTargetDef: typing.ClassVar[DiagCode]
+    WrongLanguageVersion: typing.ClassVar[DiagCode]
+    WrongNumberAssignmentPatterns: typing.ClassVar[DiagCode]
+    WrongSpecifyDelayCount: typing.ClassVar[DiagCode]
 
-      Range
+class DimensionKind(metaclass=_metaclass):
+    AbbreviatedRange: ClassVar[DimensionKind]
+    """Value = 2"""
+    Associative: ClassVar[DimensionKind]
+    """Value = 4"""
+    DPIOpenArray: ClassVar[DimensionKind]
+    """Value = 6"""
+    Dynamic: ClassVar[DimensionKind]
+    """Value = 3"""
+    Queue: ClassVar[DimensionKind]
+    """Value = 5"""
+    Range: ClassVar[DimensionKind]
+    """Value = 1"""
+    Unknown: ClassVar[DimensionKind]
+    """Value = 0"""
 
-      AbbreviatedRange
+    __members__: dict[str, Self]
 
-      Dynamic
-
-      Associative
-
-      Queue
-
-      DPIOpenArray
-    """
-    AbbreviatedRange: typing.ClassVar[DimensionKind]  # value = <DimensionKind.AbbreviatedRange: 2>
-    Associative: typing.ClassVar[DimensionKind]  # value = <DimensionKind.Associative: 4>
-    DPIOpenArray: typing.ClassVar[DimensionKind]  # value = <DimensionKind.DPIOpenArray: 6>
-    Dynamic: typing.ClassVar[DimensionKind]  # value = <DimensionKind.Dynamic: 3>
-    Queue: typing.ClassVar[DimensionKind]  # value = <DimensionKind.Queue: 5>
-    Range: typing.ClassVar[DimensionKind]  # value = <DimensionKind.Range: 1>
-    Unknown: typing.ClassVar[DimensionKind]  # value = <DimensionKind.Unknown: 0>
-    __members__: typing.ClassVar[dict[str, DimensionKind]]  # value = {'Unknown': <DimensionKind.Unknown: 0>, 'Range': <DimensionKind.Range: 1>, 'AbbreviatedRange': <DimensionKind.AbbreviatedRange: 2>, 'Dynamic': <DimensionKind.Dynamic: 3>, 'Associative': <DimensionKind.Associative: 4>, 'Queue': <DimensionKind.Queue: 5>, 'DPIOpenArray': <DimensionKind.DPIOpenArray: 6>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class DimensionSpecifierSyntax(SyntaxNode):
     pass
+
 class DirectiveSyntax(SyntaxNode):
     directive: Token
+
 class DisableConstraintSyntax(ConstraintItemSyntax):
     disable: Token
     name: ExpressionSyntax
     semi: Token
     soft: Token
+
 class DisableForkStatement(Statement):
     pass
+
 class DisableForkStatementSyntax(StatementSyntax):
     disable: Token
     fork: Token
     semi: Token
+
 class DisableIffAssertionExpr(AssertionExpr):
     @property
-    def condition(self) -> Any:
-        ...
+    def condition(self) -> Any: ...
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
+
 class DisableIffSyntax(SyntaxNode):
     closeParen: Token
     disable: Token
     expr: ExpressionSyntax
     iff: Token
     openParen: Token
+
 class DisableSoftConstraint(Constraint):
     @property
-    def target(self) -> Any:
-        ...
+    def target(self) -> Any: ...
+
 class DisableStatement(Statement):
     @property
-    def target(self) -> Expression:
-        ...
+    def target(self) -> Expression: ...
+
 class DisableStatementSyntax(StatementSyntax):
     disable: Token
     name: NameSyntax
     semi: Token
+
 class DistConstraintListSyntax(SyntaxNode):
     closeBrace: Token
     dist: Token
     items: Any
     openBrace: Token
+
 class DistExpression(Expression):
-    class DistItem:
+    class DistItem(metaclass=_metaclass):
         @property
-        def value(self) -> Expression:
-            ...
+        def value(self) -> Expression: ...
         @property
-        def weight(self) -> DistExpression.DistWeight | None:
-            ...
-    class DistWeight:
-        class Kind:
-            """
-            Members:
+        def weight(self) -> DistExpression.DistWeight | None: ...
 
-              PerValue
+    class DistWeight(metaclass=_metaclass):
+        class Kind(metaclass=_metaclass):
+            PerRange: ClassVar[Self]
+            """Value = 1"""
+            PerValue: ClassVar[Self]
+            """Value = 0"""
 
-              PerRange
-            """
-            PerRange: typing.ClassVar[DistExpression.DistWeight.Kind]  # value = <Kind.PerRange: 1>
-            PerValue: typing.ClassVar[DistExpression.DistWeight.Kind]  # value = <Kind.PerValue: 0>
-            __members__: typing.ClassVar[dict[str, DistExpression.DistWeight.Kind]]  # value = {'PerValue': <Kind.PerValue: 0>, 'PerRange': <Kind.PerRange: 1>}
-            def __eq__(self, other: typing.Any) -> bool:
-                ...
-            def __getstate__(self) -> int:
-                ...
-            def __hash__(self) -> int:
-                ...
-            def __index__(self) -> int:
-                ...
-            def __init__(self, value: int) -> None:
-                ...
-            def __int__(self) -> int:
-                ...
-            def __ne__(self, other: typing.Any) -> bool:
-                ...
-            def __repr__(self) -> str:
-                ...
-            def __setstate__(self, state: int) -> None:
-                ...
-            def __str__(self) -> str:
-                ...
+            __members__: dict[str, Self]
+
+            def __int__(self) -> int: ...
+            def __index__(self, index: int) -> Self: ...
             @property
-            def name(self) -> str:
-                ...
+            def name(self) -> str: ...
             @property
-            def value(self) -> int:
-                ...
-        PerRange: typing.ClassVar[DistExpression.DistWeight.Kind]  # value = <Kind.PerRange: 1>
-        PerValue: typing.ClassVar[DistExpression.DistWeight.Kind]  # value = <Kind.PerValue: 0>
+            def value(self) -> int: ...
+
+        PerRange: Final = Kind.PerRange
+        PerValue: Final = Kind.PerValue
+
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def kind(self) -> Any:
-            ...
+        def kind(self) -> Any: ...
+
     @property
-    def defaultWeight(self) -> Any:
-        ...
+    def defaultWeight(self) -> Any: ...
     @property
-    def items(self) -> List[Any]:
-        ...
+    def items(self) -> list[Any]: ...
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
+
 class DistItemBaseSyntax(SyntaxNode):
     pass
+
 class DistItemSyntax(DistItemBaseSyntax):
     range: ExpressionSyntax
     weight: DistWeightSyntax
+
 class DistWeightSyntax(SyntaxNode):
     expr: ExpressionSyntax
     extraOp: Token
     op: Token
+
 class DividerClauseSyntax(SyntaxNode):
     divide: Token
     value: Token
+
 class DoWhileLoopStatement(Statement):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def cond(self) -> Expression:
-        ...
+    def cond(self) -> Expression: ...
+
 class DoWhileStatementSyntax(StatementSyntax):
     closeParen: Token
     doKeyword: Token
@@ -4453,120 +3631,90 @@ class DoWhileStatementSyntax(StatementSyntax):
     semi: Token
     statement: StatementSyntax
     whileKeyword: Token
+
 class DotMemberClauseSyntax(SyntaxNode):
     dot: Token
     member: Token
+
 class DriveStrengthSyntax(NetStrengthSyntax):
     closeParen: Token
     comma: Token
     openParen: Token
     strength0: Token
     strength1: Token
-class Driver:
+
+class Driver(metaclass=_metaclass):
     languageVersion: LanguageVersion
-    def __init__(self) -> None:
-        ...
-    def addStandardArgs(self) -> None:
-        ...
-    def createCompilation(self) -> Compilation:
-        ...
-    def createOptionBag(self) -> Any:
-        ...
-    def getDepfiles(self, includesOnly: bool = False) -> list[os.PathLike]:
-        ...
-    def parseAllSources(self) -> bool:
-        ...
-    def parseCommandLine(self, arg: str, parseOptions: CommandLineOptions = ...) -> bool:
-        ...
-    def processCommandFiles(self, fileName: str, makeRelative: bool, separateUnit: bool) -> bool:
-        ...
-    def processOptions(self) -> bool:
-        ...
-    def reportCompilation(self, compilation: Compilation, quiet: bool) -> None:
-        ...
-    def reportDiagnostics(self, quiet: bool) -> bool:
-        ...
-    def reportMacros(self) -> None:
-        ...
-    def reportParseDiags(self) -> bool:
-        ...
-    def runAnalysis(self, compilation: Compilation) -> AnalysisManager:
-        ...
-    def runFullCompilation(self, quiet: bool = False) -> bool:
-        ...
-    def runPreprocessor(self, includeComments: bool, includeDirectives: bool, obfuscateIds: bool, useFixedObfuscationSeed: bool = False) -> bool:
-        ...
-    def serializeDepfiles(self, files: list[os.PathLike], depfileTarget: str | None = None) -> str:
-        ...
+    def __init__(self) -> None: ...
+    def addStandardArgs(self) -> None: ...
+    def createCompilation(self) -> Compilation: ...
+    def createOptionBag(self) -> Any: ...
+    def getDepfiles(self, includesOnly: bool = False) -> list[os.PathLike]: ...
+    def parseAllSources(self) -> bool: ...
+    def parseCommandLine(self, arg: str, parseOptions: CommandLineOptions = ...) -> bool: ...
+    def processCommandFiles(
+        self, fileName: str, makeRelative: bool, separateUnit: bool
+    ) -> bool: ...
+    def processOptions(self) -> bool: ...
+    def reportCompilation(self, compilation: Compilation, quiet: bool) -> None: ...
+    def reportDiagnostics(self, quiet: bool) -> bool: ...
+    def reportMacros(self) -> None: ...
+    def reportParseDiags(self) -> bool: ...
+    def runAnalysis(self, compilation: Compilation) -> AnalysisManager: ...
+    def runFullCompilation(self, quiet: bool = False) -> bool: ...
+    def runPreprocessor(
+        self,
+        includeComments: bool,
+        includeDirectives: bool,
+        obfuscateIds: bool,
+        useFixedObfuscationSeed: bool = False,
+    ) -> bool: ...
+    def serializeDepfiles(
+        self, files: list[os.PathLike], depfileTarget: str | None = None
+    ) -> str: ...
     @property
-    def diagEngine(self) -> Any:
-        ...
+    def diagEngine(self) -> Any: ...
     @property
-    def sourceLoader(self) -> Any:
-        ...
+    def sourceLoader(self) -> Any: ...
     @property
-    def sourceManager(self) -> Any:
-        ...
+    def sourceManager(self) -> Any: ...
     @property
-    def syntaxTrees(self) -> list[Any]:
-        ...
+    def syntaxTrees(self) -> list[Any]: ...
     @property
-    def textDiagClient(self) -> Any:
-        ...
+    def textDiagClient(self) -> Any: ...
+
 class DynamicArrayType(Type):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
+
 class EdgeControlSpecifierSyntax(SyntaxNode):
     closeBracket: Token
     descriptors: Any
     openBracket: Token
+
 class EdgeDescriptorSyntax(SyntaxNode):
     t1: Token
     t2: Token
-class EdgeKind:
-    """
-    Members:
 
-      None_
+class EdgeKind(metaclass=_metaclass):
+    BothEdges: ClassVar[EdgeKind]
+    """Value = 3"""
+    NegEdge: ClassVar[EdgeKind]
+    """Value = 2"""
+    None_: ClassVar[EdgeKind]
+    """Value = 0"""
+    PosEdge: ClassVar[EdgeKind]
+    """Value = 1"""
 
-      PosEdge
+    __members__: dict[str, Self]
 
-      NegEdge
-
-      BothEdges
-    """
-    BothEdges: typing.ClassVar[EdgeKind]  # value = <EdgeKind.BothEdges: 3>
-    NegEdge: typing.ClassVar[EdgeKind]  # value = <EdgeKind.NegEdge: 2>
-    None_: typing.ClassVar[EdgeKind]  # value = <EdgeKind.None_: 0>
-    PosEdge: typing.ClassVar[EdgeKind]  # value = <EdgeKind.PosEdge: 1>
-    __members__: typing.ClassVar[dict[str, EdgeKind]]  # value = {'None_': <EdgeKind.None_: 0>, 'PosEdge': <EdgeKind.PosEdge: 1>, 'NegEdge': <EdgeKind.NegEdge: 2>, 'BothEdges': <EdgeKind.BothEdges: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class EdgeSensitivePathSuffixSyntax(PathSuffixSyntax):
     closeParen: Token
     colon: Token
@@ -4574,120 +3722,109 @@ class EdgeSensitivePathSuffixSyntax(PathSuffixSyntax):
     openParen: Token
     outputs: Any
     polarityOperator: Token
-class ElabSystemTaskKind:
-    """
-    Members:
 
-      Fatal
+class ElabSystemTaskKind(metaclass=_metaclass):
+    Error: ClassVar[ElabSystemTaskKind]
+    """Value = 1"""
+    Fatal: ClassVar[ElabSystemTaskKind]
+    """Value = 0"""
+    Info: ClassVar[ElabSystemTaskKind]
+    """Value = 3"""
+    StaticAssert: ClassVar[ElabSystemTaskKind]
+    """Value = 4"""
+    Warning: ClassVar[ElabSystemTaskKind]
+    """Value = 2"""
 
-      Error
+    __members__: dict[str, Self]
 
-      Warning
-
-      Info
-
-      StaticAssert
-    """
-    Error: typing.ClassVar[ElabSystemTaskKind]  # value = <ElabSystemTaskKind.Error: 1>
-    Fatal: typing.ClassVar[ElabSystemTaskKind]  # value = <ElabSystemTaskKind.Fatal: 0>
-    Info: typing.ClassVar[ElabSystemTaskKind]  # value = <ElabSystemTaskKind.Info: 3>
-    StaticAssert: typing.ClassVar[ElabSystemTaskKind]  # value = <ElabSystemTaskKind.StaticAssert: 4>
-    Warning: typing.ClassVar[ElabSystemTaskKind]  # value = <ElabSystemTaskKind.Warning: 2>
-    __members__: typing.ClassVar[dict[str, ElabSystemTaskKind]]  # value = {'Fatal': <ElabSystemTaskKind.Fatal: 0>, 'Error': <ElabSystemTaskKind.Error: 1>, 'Warning': <ElabSystemTaskKind.Warning: 2>, 'Info': <ElabSystemTaskKind.Info: 3>, 'StaticAssert': <ElabSystemTaskKind.StaticAssert: 4>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ElabSystemTaskSymbol(Symbol):
     @property
-    def assertCondition(self) -> Expression:
-        ...
+    def assertCondition(self) -> Expression: ...
     @property
-    def message(self) -> str | None:
-        ...
+    def message(self) -> str | None: ...
     @property
-    def taskKind(self) -> ElabSystemTaskKind:
-        ...
+    def taskKind(self) -> ElabSystemTaskKind: ...
+
 class ElabSystemTaskSyntax(MemberSyntax):
     arguments: ArgumentListSyntax
     name: Token
     semi: Token
+
 class ElementSelectExpression(Expression):
     @property
-    def selector(self) -> Expression:
-        ...
+    def selector(self) -> Expression: ...
     @property
-    def value(self) -> Expression:
-        ...
+    def value(self) -> Expression: ...
+
 class ElementSelectExpressionSyntax(ExpressionSyntax):
     left: ExpressionSyntax
     select: ElementSelectSyntax
+
 class ElementSelectSyntax(SyntaxNode):
     closeBracket: Token
     openBracket: Token
     selector: SelectorSyntax
+
 class ElseClauseSyntax(SyntaxNode):
     clause: SyntaxNode
     elseKeyword: Token
+
 class ElseConstraintClauseSyntax(SyntaxNode):
     constraints: ConstraintItemSyntax
     elseKeyword: Token
+
 class ElsePropertyClauseSyntax(SyntaxNode):
     elseKeyword: Token
     expr: PropertyExprSyntax
+
 class EmptyArgumentExpression(Expression):
     pass
+
 class EmptyArgumentSyntax(ArgumentSyntax):
     placeholder: Token
+
 class EmptyIdentifierNameSyntax(NameSyntax):
     placeholder: Token
+
 class EmptyMemberSymbol(Symbol):
     pass
+
 class EmptyMemberSyntax(MemberSyntax):
     qualifiers: Any
     semi: Token
+
 class EmptyNonAnsiPortSyntax(NonAnsiPortSyntax):
     placeholder: Token
+
 class EmptyPortConnectionSyntax(PortConnectionSyntax):
     placeholder: Token
+
 class EmptyQueueExpressionSyntax(PrimaryExpressionSyntax):
     closeBrace: Token
     openBrace: Token
+
 class EmptyStatement(Statement):
     pass
+
 class EmptyStatementSyntax(StatementSyntax):
     semicolon: Token
+
 class EmptyTimingCheckArgSyntax(TimingCheckArgSyntax):
     placeholder: Token
+
 class EnumType(IntegralType, Scope):
     @property
-    def baseType(self) -> Type:
-        ...
+    def baseType(self) -> Type: ...
     @property
-    def systemId(self) -> int:
-        ...
+    def systemId(self) -> int: ...
+
 class EnumTypeSyntax(DataTypeSyntax):
     baseType: DataTypeSyntax
     closeBrace: Token
@@ -4695,202 +3832,134 @@ class EnumTypeSyntax(DataTypeSyntax):
     keyword: Token
     members: Any
     openBrace: Token
+
 class EnumValueSymbol(ValueSymbol):
     @property
-    def value(self) -> ConstantValue:
-        ...
+    def value(self) -> ConstantValue: ...
+
 class EqualsAssertionArgClauseSyntax(SyntaxNode):
     equals: Token
     expr: PropertyExprSyntax
+
 class EqualsTypeClauseSyntax(SyntaxNode):
     equals: Token
     type: DataTypeSyntax
+
 class EqualsValueClauseSyntax(SyntaxNode):
     equals: Token
     expr: ExpressionSyntax
+
 class ErrorType(Type):
     pass
-class EvalContext:
-    class Frame:
+
+class EvalContext(metaclass=_metaclass):
+    class Frame(metaclass=_metaclass):
         @property
-        def callLocation(self) -> Any:
-            ...
+        def callLocation(self) -> Any: ...
         @property
-        def lookupLocation(self) -> Any:
-            ...
+        def lookupLocation(self) -> Any: ...
         @property
-        def subroutine(self) -> Any:
-            ...
+        def subroutine(self) -> Any: ...
         @property
-        def temporaries(self) -> dict[Any, Any]:
-            ...
+        def temporaries(self) -> dict[Any, Any]: ...
+
     queueTarget: Any
-    def __init__(self, astCtx: Any, flags: EvalFlags = ...) -> None:
-        ...
-    def createLocal(self, symbol: Any, value: Any = None) -> Any:
-        ...
-    def deleteLocal(self, symbol: Any) -> None:
-        ...
-    def dumpStack(self) -> str:
-        ...
-    def findLocal(self, symbol: Any) -> Any:
-        ...
-    def popFrame(self) -> None:
-        ...
-    def popLValue(self) -> None:
-        ...
-    def pushEmptyFrame(self) -> None:
-        ...
-    def pushFrame(self, subroutine: Any, callLocation: Any, lookupLocation: Any) -> bool:
-        ...
-    def pushLValue(self, lval: Any) -> None:
-        ...
-    def setDisableTarget(self, arg0: Any, arg1: Any) -> None:
-        ...
-    def step(self, loc: Any) -> bool:
-        ...
+    def __init__(self, astCtx: Any, flags: EvalFlags = ...) -> None: ...
+    def createLocal(self, symbol: Any, value: Any = None) -> Any: ...
+    def deleteLocal(self, symbol: Any) -> None: ...
+    def dumpStack(self) -> str: ...
+    def findLocal(self, symbol: Any) -> Any: ...
+    def popFrame(self) -> None: ...
+    def popLValue(self) -> None: ...
+    def pushEmptyFrame(self) -> None: ...
+    def pushFrame(self, subroutine: Any, callLocation: Any, lookupLocation: Any) -> bool: ...
+    def pushLValue(self, lval: Any) -> None: ...
+    def setDisableTarget(self, arg0: Any, arg1: Any) -> None: ...
+    def step(self, loc: Any) -> bool: ...
     @property
-    def cacheResults(self) -> bool:
-        ...
+    def cacheResults(self) -> bool: ...
     @property
-    def diagnostics(self) -> Any:
-        ...
+    def diagnostics(self) -> Any: ...
     @property
-    def disableRange(self) -> Any:
-        ...
+    def disableRange(self) -> Any: ...
     @property
-    def disableTarget(self) -> Any:
-        ...
+    def disableTarget(self) -> Any: ...
     @property
-    def flags(self) -> EvalFlags:
-        ...
+    def flags(self) -> EvalFlags: ...
     @property
-    def inFunction(self) -> bool:
-        ...
+    def inFunction(self) -> bool: ...
     @property
-    def topFrame(self) -> Any:
-        ...
+    def topFrame(self) -> Any: ...
     @property
-    def topLValue(self) -> Any:
-        ...
+    def topLValue(self) -> Any: ...
 
-class EvalFlags(enum.Flag):
-    """
-    Members:
+class EvalResult(metaclass=_metaclass):
+    Break: ClassVar[EvalResult]
+    """Value = 3"""
+    Continue: ClassVar[EvalResult]
+    """Value = 4"""
+    Disable: ClassVar[EvalResult]
+    """Value = 5"""
+    Fail: ClassVar[EvalResult]
+    """Value = 0"""
+    Return: ClassVar[EvalResult]
+    """Value = 2"""
+    Success: ClassVar[EvalResult]
+    """Value = 1"""
 
-      None_
+    __members__: dict[str, Self]
 
-      IsScript
-
-      CacheResults
-
-      SpecparamsAllowed
-
-      CovergroupExpr
-
-      AllowUnboundedPlaceholder
-    """
-    None_ = 0
-    IsScript = 1
-    CacheResults = 2
-    SpecparamsAllowed = 4
-    CovergroupExpr = 8
-    AllowUnboundedPlaceholder = 16
-
-class EvalResult:
-    """
-    Members:
-
-      Fail
-
-      Success
-
-      Return
-
-      Break
-
-      Continue
-
-      Disable
-    """
-    Break: typing.ClassVar[EvalResult]  # value = <EvalResult.Break: 3>
-    Continue: typing.ClassVar[EvalResult]  # value = <EvalResult.Continue: 4>
-    Disable: typing.ClassVar[EvalResult]  # value = <EvalResult.Disable: 5>
-    Fail: typing.ClassVar[EvalResult]  # value = <EvalResult.Fail: 0>
-    Return: typing.ClassVar[EvalResult]  # value = <EvalResult.Return: 2>
-    Success: typing.ClassVar[EvalResult]  # value = <EvalResult.Success: 1>
-    __members__: typing.ClassVar[dict[str, EvalResult]]  # value = {'Fail': <EvalResult.Fail: 0>, 'Success': <EvalResult.Success: 1>, 'Return': <EvalResult.Return: 2>, 'Break': <EvalResult.Break: 3>, 'Continue': <EvalResult.Continue: 4>, 'Disable': <EvalResult.Disable: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class EvaluatedDimension:
+    def value(self) -> int: ...
+
+class EvaluatedDimension(metaclass=_metaclass):
     @property
-    def associativeType(self) -> Any:
-        ...
+    def associativeType(self) -> Any: ...
     @property
-    def isRange(self) -> bool:
-        ...
+    def isRange(self) -> bool: ...
     @property
-    def kind(self) -> DimensionKind:
-        ...
+    def kind(self) -> DimensionKind: ...
     @property
-    def queueMaxSize(self) -> int:
-        ...
+    def queueMaxSize(self) -> int: ...
     @property
-    def range(self) -> Any:
-        ...
+    def range(self) -> Any: ...
+
 class EventControlSyntax(TimingControlSyntax):
     at: Token
     eventName: ExpressionSyntax
+
 class EventControlWithExpressionSyntax(TimingControlSyntax):
     at: Token
     expr: EventExpressionSyntax
+
 class EventExpressionSyntax(SequenceExprSyntax):
     pass
+
 class EventListControl(TimingControl):
     @property
-    def events(self) -> List[TimingControl]:
-        ...
+    def events(self) -> list[TimingControl]: ...
+
 class EventTriggerStatement(Statement):
     @property
-    def isNonBlocking(self) -> bool:
-        ...
+    def isNonBlocking(self) -> bool: ...
     @property
-    def target(self) -> Expression:
-        ...
+    def target(self) -> Expression: ...
     @property
-    def timing(self) -> TimingControl:
-        ...
+    def timing(self) -> TimingControl: ...
+
 class EventTriggerStatementSyntax(StatementSyntax):
     name: NameSyntax
     semi: Token
     timing: TimingControlSyntax
     trigger: Token
+
 class EventType(Type):
     pass
+
 class ExplicitAnsiPortSyntax(MemberSyntax):
     closeParen: Token
     direction: Token
@@ -4898,375 +3967,283 @@ class ExplicitAnsiPortSyntax(MemberSyntax):
     expr: ExpressionSyntax
     name: Token
     openParen: Token
+
 class ExplicitImportSymbol(Symbol):
     @property
-    def importName(self) -> str:
-        ...
+    def importName(self) -> str: ...
     @property
-    def importedSymbol(self) -> Symbol:
-        ...
+    def importedSymbol(self) -> Symbol: ...
     @property
-    def isFromExport(self) -> bool:
-        ...
+    def isFromExport(self) -> bool: ...
     @property
-    def package(self) -> PackageSymbol:
-        ...
+    def package(self) -> PackageSymbol: ...
     @property
-    def packageName(self) -> str:
-        ...
+    def packageName(self) -> str: ...
+
 class ExplicitNonAnsiPortSyntax(NonAnsiPortSyntax):
     closeParen: Token
     dot: Token
     expr: PortExpressionSyntax
     name: Token
     openParen: Token
-class Expression:
-    def __repr__(self) -> str:
-        ...
-    def eval(self, context: EvalContext) -> Any:
-        ...
-    def evalLValue(self, context: EvalContext) -> LValue:
-        ...
-    def getSymbolReference(self, allowPacked: bool = True) -> Any:
-        ...
-    def isImplicitlyAssignableTo(self, compilation: Compilation, type: Any) -> bool:
-        ...
+
+class Expression(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
+    def eval(self, context: EvalContext) -> Any: ...
+    def evalLValue(self, context: EvalContext) -> LValue: ...
+    def getSymbolReference(self, allowPacked: bool = True) -> Any: ...
+    def isImplicitlyAssignableTo(self, compilation: Compilation, type: Any) -> bool: ...
     def visit(self, f: typing.Any) -> None:
+        """Visit a pyslang object with a callback function `f`.
+        The callback function `f` should take a single argument, which is the current node being
+            visited.
+        The return value of `f` determines the next node to visit.
+        If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional
+            nodes are visited.
+        If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are
+            visited. For any other return value, including `pyslang.VisitAction.Advance`,
+            the return value is ignored, and the walk continues.
         """
-        Visit a pyslang object with a callback function `f`.
+    @property
+    def bad(self) -> bool: ...
+    @property
+    def constant(self) -> Any: ...
+    @property
+    def effectiveWidth(self) -> int | None: ...
+    @property
+    def hasHierarchicalReference(self) -> bool: ...
+    @property
+    def isImplicitString(self) -> bool: ...
+    @property
+    def isUnsizedInteger(self) -> bool: ...
+    @property
+    def kind(self) -> ExpressionKind: ...
+    @property
+    def sourceRange(self) -> Any: ...
+    @property
+    def syntax(self) -> Any: ...
+    @property
+    def type(self) -> Any: ...
 
-        The callback function `f` should take a single argument, which is the current node being visited.
-
-        The return value of `f` determines the next node to visit. If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional nodes are visited. If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are visited. For any other return value, including `pyslang.VisitAction.Advance`, the return value is ignored, and the walk continues.
-        """
-    @property
-    def bad(self) -> bool:
-        ...
-    @property
-    def constant(self) -> Any:
-        ...
-    @property
-    def effectiveWidth(self) -> int | None:
-        ...
-    @property
-    def hasHierarchicalReference(self) -> bool:
-        ...
-    @property
-    def isImplicitString(self) -> bool:
-        ...
-    @property
-    def isUnsizedInteger(self) -> bool:
-        ...
-    @property
-    def kind(self) -> ExpressionKind:
-        ...
-    @property
-    def sourceRange(self) -> Any:
-        ...
-    @property
-    def syntax(self) -> Any:
-        ...
-    @property
-    def type(self) -> Any:
-        ...
 class ExpressionConstraint(Constraint):
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
     @property
-    def isSoft(self) -> bool:
-        ...
+    def isSoft(self) -> bool: ...
+
 class ExpressionConstraintSyntax(ConstraintItemSyntax):
     expr: ExpressionSyntax
     semi: Token
     soft: Token
+
 class ExpressionCoverageBinInitializerSyntax(CoverageBinInitializerSyntax):
     expr: ExpressionSyntax
-class ExpressionKind:
-    """
-    Members:
 
-      Invalid
+class ExpressionKind(metaclass=_metaclass):
+    ArbitrarySymbol: ClassVar[ExpressionKind]
+    """Value = 25"""
+    AssertionInstance: ClassVar[ExpressionKind]
+    """Value = 39"""
+    Assignment: ClassVar[ExpressionKind]
+    """Value = 14"""
+    BinaryOp: ClassVar[ExpressionKind]
+    """Value = 11"""
+    Call: ClassVar[ExpressionKind]
+    """Value = 21"""
+    ClockingEvent: ClassVar[ExpressionKind]
+    """Value = 38"""
+    Concatenation: ClassVar[ExpressionKind]
+    """Value = 15"""
+    ConditionalOp: ClassVar[ExpressionKind]
+    """Value = 12"""
+    Conversion: ClassVar[ExpressionKind]
+    """Value = 22"""
+    CopyClass: ClassVar[ExpressionKind]
+    """Value = 36"""
+    DataType: ClassVar[ExpressionKind]
+    """Value = 23"""
+    Dist: ClassVar[ExpressionKind]
+    """Value = 32"""
+    ElementSelect: ClassVar[ExpressionKind]
+    """Value = 18"""
+    EmptyArgument: ClassVar[ExpressionKind]
+    """Value = 30"""
+    HierarchicalValue: ClassVar[ExpressionKind]
+    """Value = 9"""
+    Inside: ClassVar[ExpressionKind]
+    """Value = 13"""
+    IntegerLiteral: ClassVar[ExpressionKind]
+    """Value = 1"""
+    Invalid: ClassVar[ExpressionKind]
+    """Value = 0"""
+    LValueReference: ClassVar[ExpressionKind]
+    """Value = 26"""
+    MemberAccess: ClassVar[ExpressionKind]
+    """Value = 20"""
+    MinTypMax: ClassVar[ExpressionKind]
+    """Value = 37"""
+    NamedValue: ClassVar[ExpressionKind]
+    """Value = 8"""
+    NewArray: ClassVar[ExpressionKind]
+    """Value = 33"""
+    NewClass: ClassVar[ExpressionKind]
+    """Value = 34"""
+    NewCovergroup: ClassVar[ExpressionKind]
+    """Value = 35"""
+    NullLiteral: ClassVar[ExpressionKind]
+    """Value = 5"""
+    RangeSelect: ClassVar[ExpressionKind]
+    """Value = 19"""
+    RealLiteral: ClassVar[ExpressionKind]
+    """Value = 2"""
+    ReplicatedAssignmentPattern: ClassVar[ExpressionKind]
+    """Value = 29"""
+    Replication: ClassVar[ExpressionKind]
+    """Value = 16"""
+    SimpleAssignmentPattern: ClassVar[ExpressionKind]
+    """Value = 27"""
+    Streaming: ClassVar[ExpressionKind]
+    """Value = 17"""
+    StringLiteral: ClassVar[ExpressionKind]
+    """Value = 7"""
+    StructuredAssignmentPattern: ClassVar[ExpressionKind]
+    """Value = 28"""
+    TaggedUnion: ClassVar[ExpressionKind]
+    """Value = 40"""
+    TimeLiteral: ClassVar[ExpressionKind]
+    """Value = 3"""
+    TypeReference: ClassVar[ExpressionKind]
+    """Value = 24"""
+    UnaryOp: ClassVar[ExpressionKind]
+    """Value = 10"""
+    UnbasedUnsizedIntegerLiteral: ClassVar[ExpressionKind]
+    """Value = 4"""
+    UnboundedLiteral: ClassVar[ExpressionKind]
+    """Value = 6"""
+    ValueRange: ClassVar[ExpressionKind]
+    """Value = 31"""
 
-      IntegerLiteral
+    __members__: dict[str, Self]
 
-      RealLiteral
-
-      TimeLiteral
-
-      UnbasedUnsizedIntegerLiteral
-
-      NullLiteral
-
-      UnboundedLiteral
-
-      StringLiteral
-
-      NamedValue
-
-      HierarchicalValue
-
-      UnaryOp
-
-      BinaryOp
-
-      ConditionalOp
-
-      Inside
-
-      Assignment
-
-      Concatenation
-
-      Replication
-
-      Streaming
-
-      ElementSelect
-
-      RangeSelect
-
-      MemberAccess
-
-      Call
-
-      Conversion
-
-      DataType
-
-      TypeReference
-
-      ArbitrarySymbol
-
-      LValueReference
-
-      SimpleAssignmentPattern
-
-      StructuredAssignmentPattern
-
-      ReplicatedAssignmentPattern
-
-      EmptyArgument
-
-      ValueRange
-
-      Dist
-
-      NewArray
-
-      NewClass
-
-      NewCovergroup
-
-      CopyClass
-
-      MinTypMax
-
-      ClockingEvent
-
-      AssertionInstance
-
-      TaggedUnion
-    """
-    ArbitrarySymbol: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ArbitrarySymbol: 25>
-    AssertionInstance: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.AssertionInstance: 39>
-    Assignment: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Assignment: 14>
-    BinaryOp: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.BinaryOp: 11>
-    Call: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Call: 21>
-    ClockingEvent: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ClockingEvent: 38>
-    Concatenation: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Concatenation: 15>
-    ConditionalOp: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ConditionalOp: 12>
-    Conversion: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Conversion: 22>
-    CopyClass: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.CopyClass: 36>
-    DataType: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.DataType: 23>
-    Dist: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Dist: 32>
-    ElementSelect: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ElementSelect: 18>
-    EmptyArgument: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.EmptyArgument: 30>
-    HierarchicalValue: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.HierarchicalValue: 9>
-    Inside: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Inside: 13>
-    IntegerLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.IntegerLiteral: 1>
-    Invalid: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Invalid: 0>
-    LValueReference: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.LValueReference: 26>
-    MemberAccess: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.MemberAccess: 20>
-    MinTypMax: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.MinTypMax: 37>
-    NamedValue: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.NamedValue: 8>
-    NewArray: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.NewArray: 33>
-    NewClass: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.NewClass: 34>
-    NewCovergroup: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.NewCovergroup: 35>
-    NullLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.NullLiteral: 5>
-    RangeSelect: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.RangeSelect: 19>
-    RealLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.RealLiteral: 2>
-    ReplicatedAssignmentPattern: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ReplicatedAssignmentPattern: 29>
-    Replication: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Replication: 16>
-    SimpleAssignmentPattern: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.SimpleAssignmentPattern: 27>
-    Streaming: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.Streaming: 17>
-    StringLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.StringLiteral: 7>
-    StructuredAssignmentPattern: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.StructuredAssignmentPattern: 28>
-    TaggedUnion: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.TaggedUnion: 40>
-    TimeLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.TimeLiteral: 3>
-    TypeReference: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.TypeReference: 24>
-    UnaryOp: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.UnaryOp: 10>
-    UnbasedUnsizedIntegerLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.UnbasedUnsizedIntegerLiteral: 4>
-    UnboundedLiteral: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.UnboundedLiteral: 6>
-    ValueRange: typing.ClassVar[ExpressionKind]  # value = <ExpressionKind.ValueRange: 31>
-    __members__: typing.ClassVar[dict[str, ExpressionKind]]  # value = {'Invalid': <ExpressionKind.Invalid: 0>, 'IntegerLiteral': <ExpressionKind.IntegerLiteral: 1>, 'RealLiteral': <ExpressionKind.RealLiteral: 2>, 'TimeLiteral': <ExpressionKind.TimeLiteral: 3>, 'UnbasedUnsizedIntegerLiteral': <ExpressionKind.UnbasedUnsizedIntegerLiteral: 4>, 'NullLiteral': <ExpressionKind.NullLiteral: 5>, 'UnboundedLiteral': <ExpressionKind.UnboundedLiteral: 6>, 'StringLiteral': <ExpressionKind.StringLiteral: 7>, 'NamedValue': <ExpressionKind.NamedValue: 8>, 'HierarchicalValue': <ExpressionKind.HierarchicalValue: 9>, 'UnaryOp': <ExpressionKind.UnaryOp: 10>, 'BinaryOp': <ExpressionKind.BinaryOp: 11>, 'ConditionalOp': <ExpressionKind.ConditionalOp: 12>, 'Inside': <ExpressionKind.Inside: 13>, 'Assignment': <ExpressionKind.Assignment: 14>, 'Concatenation': <ExpressionKind.Concatenation: 15>, 'Replication': <ExpressionKind.Replication: 16>, 'Streaming': <ExpressionKind.Streaming: 17>, 'ElementSelect': <ExpressionKind.ElementSelect: 18>, 'RangeSelect': <ExpressionKind.RangeSelect: 19>, 'MemberAccess': <ExpressionKind.MemberAccess: 20>, 'Call': <ExpressionKind.Call: 21>, 'Conversion': <ExpressionKind.Conversion: 22>, 'DataType': <ExpressionKind.DataType: 23>, 'TypeReference': <ExpressionKind.TypeReference: 24>, 'ArbitrarySymbol': <ExpressionKind.ArbitrarySymbol: 25>, 'LValueReference': <ExpressionKind.LValueReference: 26>, 'SimpleAssignmentPattern': <ExpressionKind.SimpleAssignmentPattern: 27>, 'StructuredAssignmentPattern': <ExpressionKind.StructuredAssignmentPattern: 28>, 'ReplicatedAssignmentPattern': <ExpressionKind.ReplicatedAssignmentPattern: 29>, 'EmptyArgument': <ExpressionKind.EmptyArgument: 30>, 'ValueRange': <ExpressionKind.ValueRange: 31>, 'Dist': <ExpressionKind.Dist: 32>, 'NewArray': <ExpressionKind.NewArray: 33>, 'NewClass': <ExpressionKind.NewClass: 34>, 'NewCovergroup': <ExpressionKind.NewCovergroup: 35>, 'CopyClass': <ExpressionKind.CopyClass: 36>, 'MinTypMax': <ExpressionKind.MinTypMax: 37>, 'ClockingEvent': <ExpressionKind.ClockingEvent: 38>, 'AssertionInstance': <ExpressionKind.AssertionInstance: 39>, 'TaggedUnion': <ExpressionKind.TaggedUnion: 40>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ExpressionOrDistSyntax(ExpressionSyntax):
     distribution: DistConstraintListSyntax
     expr: ExpressionSyntax
+
 class ExpressionPatternSyntax(PatternSyntax):
     expr: ExpressionSyntax
+
 class ExpressionStatement(Statement):
     @property
-    def expr(self) -> Expression:
-        ...
+    def expr(self) -> Expression: ...
+
 class ExpressionStatementSyntax(StatementSyntax):
     expr: ExpressionSyntax
     semi: Token
+
 class ExpressionSyntax(SyntaxNode):
     pass
+
 class ExpressionTimingCheckArgSyntax(TimingCheckArgSyntax):
     expr: ExpressionSyntax
+
 class ExtendsClauseSyntax(SyntaxNode):
     arguments: ArgumentListSyntax
     baseName: NameSyntax
     defaultedArg: DefaultExtendsClauseArgSyntax
     keyword: Token
+
 class ExternInterfaceMethodSyntax(MemberSyntax):
     externKeyword: Token
     forkJoin: Token
     prototype: FunctionPrototypeSyntax
     semi: Token
+
 class ExternModuleDeclSyntax(MemberSyntax):
     actualAttributes: Any
     externKeyword: Token
     header: ModuleHeaderSyntax
+
 class ExternUdpDeclSyntax(MemberSyntax):
     actualAttributes: Any
     externKeyword: Token
     name: Token
     portList: UdpPortListSyntax
     primitive: Token
+
 class FieldSymbol(VariableSymbol):
     @property
-    def bitOffset(self) -> int:
-        ...
+    def bitOffset(self) -> int: ...
     @property
-    def fieldIndex(self) -> int:
-        ...
+    def fieldIndex(self) -> int: ...
     @property
-    def randMode(self) -> RandMode:
-        ...
+    def randMode(self) -> RandMode: ...
+
 class FilePathSpecSyntax(SyntaxNode):
     path: Token
+
 class FirstMatchAssertionExpr(AssertionExpr):
     @property
-    def matchItems(self) -> List[Any]:
-        ...
+    def matchItems(self) -> list[Any]: ...
     @property
-    def seq(self) -> AssertionExpr:
-        ...
+    def seq(self) -> AssertionExpr: ...
+
 class FirstMatchSequenceExprSyntax(SequenceExprSyntax):
     closeParen: Token
     expr: SequenceExprSyntax
     first_match: Token
     matchList: SequenceMatchListSyntax
     openParen: Token
+
 class FixedSizeUnpackedArrayType(Type):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
     @property
-    def range(self) -> ConstantRange:
-        ...
+    def range(self) -> ConstantRange: ...
+
 class FloatingType(Type):
-    class Kind:
-        """
-        Members:
+    class Kind(metaclass=_metaclass):
+        Real: ClassVar[Self]
+        """Value = 0"""
+        RealTime: ClassVar[Self]
+        """Value = 2"""
+        ShortReal: ClassVar[Self]
+        """Value = 1"""
 
-          Real
+        __members__: dict[str, Self]
 
-          ShortReal
-
-          RealTime
-        """
-        Real: typing.ClassVar[FloatingType.Kind]  # value = <Kind.Real: 0>
-        RealTime: typing.ClassVar[FloatingType.Kind]  # value = <Kind.RealTime: 2>
-        ShortReal: typing.ClassVar[FloatingType.Kind]  # value = <Kind.ShortReal: 1>
-        __members__: typing.ClassVar[dict[str, FloatingType.Kind]]  # value = {'Real': <Kind.Real: 0>, 'ShortReal': <Kind.ShortReal: 1>, 'RealTime': <Kind.RealTime: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Real: typing.ClassVar[FloatingType.Kind]  # value = <Kind.Real: 0>
-    RealTime: typing.ClassVar[FloatingType.Kind]  # value = <Kind.RealTime: 2>
-    ShortReal: typing.ClassVar[FloatingType.Kind]  # value = <Kind.ShortReal: 1>
+        def value(self) -> int: ...
+
+    Real: Final = Kind.Real
+    RealTime: Final = Kind.RealTime
+    ShortReal: Final = Kind.ShortReal
+
     @property
-    def floatKind(self) -> Any:
-        ...
+    def floatKind(self) -> Any: ...
+
 class ForLoopStatement(Statement):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def initializers(self) -> List[Expression]:
-        ...
+    def initializers(self) -> list[Expression]: ...
     @property
-    def loopVars(self) -> List[Any]:
-        ...
+    def loopVars(self) -> list[Any]: ...
     @property
-    def steps(self) -> List[Expression]:
-        ...
+    def steps(self) -> list[Expression]: ...
     @property
-    def stopExpr(self) -> Expression:
-        ...
+    def stopExpr(self) -> Expression: ...
+
 class ForLoopStatementSyntax(StatementSyntax):
     closeParen: Token
     forKeyword: Token
@@ -5277,20 +4254,20 @@ class ForLoopStatementSyntax(StatementSyntax):
     statement: StatementSyntax
     steps: Any
     stopExpr: ExpressionSyntax
+
 class ForVariableDeclarationSyntax(SyntaxNode):
     declarator: DeclaratorSyntax
     type: DataTypeSyntax
     varKeyword: Token
+
 class ForeachConstraint(Constraint):
     @property
-    def arrayRef(self) -> Any:
-        ...
+    def arrayRef(self) -> Any: ...
     @property
-    def body(self) -> Constraint:
-        ...
+    def body(self) -> Constraint: ...
     @property
-    def loopDims(self) -> List[Any]:
-        ...
+    def loopDims(self) -> list[Any]: ...
+
 class ForeachLoopListSyntax(SyntaxNode):
     arrayName: NameSyntax
     closeBracket: Token
@@ -5298,120 +4275,96 @@ class ForeachLoopListSyntax(SyntaxNode):
     loopVariables: Any
     openBracket: Token
     openParen: Token
+
 class ForeachLoopStatement(Statement):
-    class LoopDim:
+    class LoopDim(metaclass=_metaclass):
         @property
-        def loopVar(self) -> Any:
-            ...
+        def loopVar(self) -> Any: ...
         @property
-        def range(self) -> ConstantRange | None:
-            ...
+        def range(self) -> ConstantRange | None: ...
+
     @property
-    def arrayRef(self) -> Expression:
-        ...
+    def arrayRef(self) -> Expression: ...
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def loopDims(self) -> List[Any]:
-        ...
+    def loopDims(self) -> list[Any]: ...
+
 class ForeachLoopStatementSyntax(StatementSyntax):
     keyword: Token
     loopList: ForeachLoopListSyntax
     statement: StatementSyntax
+
 class ForeverLoopStatement(Statement):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
+
 class ForeverStatementSyntax(StatementSyntax):
     foreverKeyword: Token
     statement: StatementSyntax
+
 class FormalArgumentSymbol(VariableSymbol):
     @property
-    def defaultValue(self) -> Expression:
-        ...
+    def defaultValue(self) -> Expression: ...
     @property
-    def direction(self) -> ArgumentDirection:
-        ...
-class ForwardTypeRestriction:
-    """
-    Members:
+    def direction(self) -> ArgumentDirection: ...
 
-      None_
+class ForwardTypeRestriction(metaclass=_metaclass):
+    Class: ClassVar[ForwardTypeRestriction]
+    """Value = 4"""
+    Enum: ClassVar[ForwardTypeRestriction]
+    """Value = 1"""
+    InterfaceClass: ClassVar[ForwardTypeRestriction]
+    """Value = 5"""
+    None_: ClassVar[ForwardTypeRestriction]
+    """Value = 0"""
+    Struct: ClassVar[ForwardTypeRestriction]
+    """Value = 2"""
+    Union: ClassVar[ForwardTypeRestriction]
+    """Value = 3"""
 
-      Enum
+    __members__: dict[str, Self]
 
-      Struct
-
-      Union
-
-      Class
-
-      InterfaceClass
-    """
-    Class: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.Class: 4>
-    Enum: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.Enum: 1>
-    InterfaceClass: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.InterfaceClass: 5>
-    None_: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.None_: 0>
-    Struct: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.Struct: 2>
-    Union: typing.ClassVar[ForwardTypeRestriction]  # value = <ForwardTypeRestriction.Union: 3>
-    __members__: typing.ClassVar[dict[str, ForwardTypeRestriction]]  # value = {'None_': <ForwardTypeRestriction.None_: 0>, 'Enum': <ForwardTypeRestriction.Enum: 1>, 'Struct': <ForwardTypeRestriction.Struct: 2>, 'Union': <ForwardTypeRestriction.Union: 3>, 'Class': <ForwardTypeRestriction.Class: 4>, 'InterfaceClass': <ForwardTypeRestriction.InterfaceClass: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ForwardTypeRestrictionSyntax(SyntaxNode):
     keyword1: Token
     keyword2: Token
+
 class ForwardTypedefDeclarationSyntax(MemberSyntax):
     name: Token
     semi: Token
     typeRestriction: ForwardTypeRestrictionSyntax
     typedefKeyword: Token
+
 class ForwardingTypedefSymbol(Symbol):
     @property
-    def nextForwardDecl(self) -> ForwardingTypedefSymbol:
-        ...
+    def nextForwardDecl(self) -> ForwardingTypedefSymbol: ...
     @property
-    def typeRestriction(self) -> ForwardTypeRestriction:
-        ...
+    def typeRestriction(self) -> ForwardTypeRestriction: ...
     @property
-    def visibility(self) -> Visibility | None:
-        ...
+    def visibility(self) -> Visibility | None: ...
+
 class FunctionDeclarationSyntax(MemberSyntax):
     end: Token
     endBlockName: NamedBlockClauseSyntax
     items: Any
     prototype: FunctionPrototypeSyntax
     semi: Token
+
 class FunctionPortBaseSyntax(SyntaxNode):
     pass
+
 class FunctionPortListSyntax(SyntaxNode):
     closeParen: Token
     openParen: Token
     ports: Any
+
 class FunctionPortSyntax(FunctionPortBaseSyntax):
     attributes: Any
     constKeyword: Token
@@ -5420,6 +4373,7 @@ class FunctionPortSyntax(FunctionPortBaseSyntax):
     direction: Token
     staticKeyword: Token
     varKeyword: Token
+
 class FunctionPrototypeSyntax(SyntaxNode):
     keyword: Token
     lifetime: Token
@@ -5427,32 +4381,27 @@ class FunctionPrototypeSyntax(SyntaxNode):
     portList: FunctionPortListSyntax
     returnType: DataTypeSyntax
     specifiers: Any
+
 class GenerateBlockArraySymbol(Symbol, Scope):
     @property
-    def constructIndex(self) -> int:
-        ...
+    def constructIndex(self) -> int: ...
     @property
-    def entries(self) -> List[GenerateBlockSymbol]:
-        ...
+    def entries(self) -> list[GenerateBlockSymbol]: ...
     @property
-    def externalName(self) -> str:
-        ...
+    def externalName(self) -> str: ...
     @property
-    def valid(self) -> bool:
-        ...
+    def valid(self) -> bool: ...
+
 class GenerateBlockSymbol(Symbol, Scope):
     @property
-    def arrayIndex(self) -> SVInt:
-        ...
+    def arrayIndex(self) -> SVInt: ...
     @property
-    def constructIndex(self) -> int:
-        ...
+    def constructIndex(self) -> int: ...
     @property
-    def externalName(self) -> str:
-        ...
+    def externalName(self) -> str: ...
     @property
-    def isUninstantiated(self) -> bool:
-        ...
+    def isUninstantiated(self) -> bool: ...
+
 class GenerateBlockSyntax(MemberSyntax):
     begin: Token
     beginName: NamedBlockClauseSyntax
@@ -5460,48 +4409,56 @@ class GenerateBlockSyntax(MemberSyntax):
     endName: NamedBlockClauseSyntax
     label: NamedLabelSyntax
     members: Any
+
 class GenerateRegionSyntax(MemberSyntax):
     endgenerate: Token
     keyword: Token
     members: Any
+
 class GenericClassDefSymbol(Symbol):
-    def defaultSpecialization(self, arg1: Scope) -> Type:
-        ...
     @property
-    def firstForwardDecl(self) -> ForwardingTypedefSymbol:
-        ...
+    def defaultSpecialization(self) -> Type: ...
     @property
-    def invalidSpecialization(self) -> Type:
-        ...
+    def firstForwardDecl(self) -> ForwardingTypedefSymbol: ...
     @property
-    def isInterface(self) -> bool:
-        ...
+    def invalidSpecialization(self) -> Type: ...
+    @property
+    def isInterface(self) -> bool: ...
+
 class GenvarDeclarationSyntax(MemberSyntax):
     identifiers: Any
     keyword: Token
     semi: Token
+
 class GenvarSymbol(Symbol):
     pass
+
 class HierarchicalInstanceSyntax(SyntaxNode):
     closeParen: Token
     connections: Any
     decl: InstanceNameSyntax
     openParen: Token
+
 class HierarchicalValueExpression(ValueExpressionBase):
     pass
+
 class HierarchyInstantiationSyntax(MemberSyntax):
     instances: Any
     parameters: ParameterValueAssignmentSyntax
     semi: Token
     type: Token
+
 class IdWithExprCoverageBinInitializerSyntax(CoverageBinInitializerSyntax):
     id: Token
     withClause: WithClauseSyntax
+
 class IdentifierNameSyntax(NameSyntax):
     identifier: Token
+
 class IdentifierSelectNameSyntax(NameSyntax):
     identifier: Token
     selectors: Any
+
 class IfGenerateSyntax(MemberSyntax):
     block: MemberSyntax
     closeParen: Token
@@ -5509,1001 +4466,418 @@ class IfGenerateSyntax(MemberSyntax):
     elseClause: ElseClauseSyntax
     keyword: Token
     openParen: Token
+
 class IfNonePathDeclarationSyntax(MemberSyntax):
     keyword: Token
     path: PathDeclarationSyntax
+
 class IffEventClauseSyntax(SyntaxNode):
     expr: ExpressionSyntax
     iff: Token
+
 class ImmediateAssertionMemberSyntax(MemberSyntax):
     statement: ImmediateAssertionStatementSyntax
+
 class ImmediateAssertionStatement(Statement):
     @property
-    def assertionKind(self) -> AssertionKind:
-        ...
+    def assertionKind(self) -> AssertionKind: ...
     @property
-    def cond(self) -> Expression:
-        ...
+    def cond(self) -> Expression: ...
     @property
-    def ifFalse(self) -> Statement:
-        ...
+    def ifFalse(self) -> Statement: ...
     @property
-    def ifTrue(self) -> Statement:
-        ...
+    def ifTrue(self) -> Statement: ...
     @property
-    def isDeferred(self) -> bool:
-        ...
+    def isDeferred(self) -> bool: ...
     @property
-    def isFinal(self) -> bool:
-        ...
+    def isFinal(self) -> bool: ...
+
 class ImmediateAssertionStatementSyntax(StatementSyntax):
     action: ActionBlockSyntax
     delay: DeferredAssertionSyntax
     expr: ParenthesizedExpressionSyntax
     keyword: Token
+
 class ImplementsClauseSyntax(SyntaxNode):
     interfaces: Any
     keyword: Token
+
 class ImplicationConstraint(Constraint):
     @property
-    def body(self) -> Constraint:
-        ...
+    def body(self) -> Constraint: ...
     @property
-    def predicate(self) -> Any:
-        ...
+    def predicate(self) -> Any: ...
+
 class ImplicationConstraintSyntax(ConstraintItemSyntax):
     arrow: Token
     constraints: ConstraintItemSyntax
     left: ExpressionSyntax
+
 class ImplicitAnsiPortSyntax(MemberSyntax):
     declarator: DeclaratorSyntax
     header: PortHeaderSyntax
+
 class ImplicitEventControl(TimingControl):
     pass
+
 class ImplicitEventControlSyntax(TimingControlSyntax):
     at: Token
     closeParen: Token
     openParen: Token
     star: Token
+
 class ImplicitNonAnsiPortSyntax(NonAnsiPortSyntax):
     expr: PortExpressionSyntax
+
 class ImplicitTypeSyntax(DataTypeSyntax):
     dimensions: Any
     placeholder: Token
     signing: Token
+
 class IncludeDirectiveSyntax(DirectiveSyntax):
     fileName: Token
-class IncludeMetadata:
-    def __init__(self) -> None:
-        ...
+
+class IncludeMetadata(metaclass=_metaclass):
+    def __init__(self) -> None: ...
     @property
-    def buffer(self) -> SourceBuffer:
-        ...
+    def buffer(self) -> SourceBuffer: ...
     @property
-    def isSystem(self) -> bool:
-        ...
+    def isSystem(self) -> bool: ...
     @property
-    def path(self) -> str:
-        ...
+    def path(self) -> str: ...
     @property
-    def syntax(self) -> Any:
-        ...
+    def syntax(self) -> Any: ...
+
 class InsideExpression(Expression):
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def rangeList(self) -> List[Expression]:
-        ...
+    def rangeList(self) -> list[Expression]: ...
+
 class InsideExpressionSyntax(ExpressionSyntax):
     expr: ExpressionSyntax
     inside: Token
     ranges: RangeListSyntax
+
 class InstanceArraySymbol(Symbol, Scope):
     @property
-    def arrayName(self) -> str:
-        ...
+    def arrayName(self) -> str: ...
     @property
-    def elements(self) -> List[Symbol]:
-        ...
+    def elements(self) -> list[Symbol]: ...
     @property
-    def range(self) -> ConstantRange:
-        ...
+    def range(self) -> ConstantRange: ...
+
 class InstanceBodySymbol(Symbol, Scope):
-    def findPort(self, portName: str) -> Symbol:
-        ...
-    def hasSameType(self, other: InstanceBodySymbol) -> bool:
-        ...
+    def findPort(self, portName: str) -> Symbol: ...
+    def hasSameType(self, other: InstanceBodySymbol) -> bool: ...
     @property
-    def definition(self) -> DefinitionSymbol:
-        ...
+    def definition(self) -> DefinitionSymbol: ...
     @property
-    def parameters(self) -> List[ParameterSymbolBase]:
-        ...
+    def parameters(self) -> list[ParameterSymbolBase]: ...
     @property
-    def parentInstance(self) -> InstanceSymbol:
-        ...
+    def parentInstance(self) -> InstanceSymbol: ...
     @property
-    def portList(self) -> List[Symbol]:
-        ...
+    def portList(self) -> list[Symbol]: ...
+
 class InstanceConfigRuleSyntax(ConfigRuleSyntax):
     instance: Token
     instanceNames: Any
     ruleClause: ConfigRuleClauseSyntax
     semi: Token
     topModule: Token
+
 class InstanceNameSyntax(SyntaxNode):
     dimensions: Any
     name: Token
+
 class InstanceSymbol(InstanceSymbolBase):
     @typing.overload
-    def getPortConnection(self, port: PortSymbol) -> PortConnection:
-        ...
+    def getPortConnection(self, port: PortSymbol) -> PortConnection: ...
     @typing.overload
-    def getPortConnection(self, port: MultiPortSymbol) -> PortConnection:
-        ...
+    def getPortConnection(self, port: MultiPortSymbol) -> PortConnection: ...
     @typing.overload
-    def getPortConnection(self, port: InterfacePortSymbol) -> PortConnection:
-        ...
+    def getPortConnection(self, port: InterfacePortSymbol) -> PortConnection: ...
     @property
-    def body(self) -> Any:
-        ...
+    def body(self) -> Any: ...
     @property
-    def canonicalBody(self) -> Any:
-        ...
+    def canonicalBody(self) -> Any: ...
     @property
-    def definition(self) -> DefinitionSymbol:
-        ...
+    def definition(self) -> DefinitionSymbol: ...
     @property
-    def isInterface(self) -> bool:
-        ...
+    def isInterface(self) -> bool: ...
     @property
-    def isModule(self) -> bool:
-        ...
+    def isModule(self) -> bool: ...
     @property
-    def portConnections(self) -> List[PortConnection]:
-        ...
+    def portConnections(self) -> list[PortConnection]: ...
+
 class InstanceSymbolBase(Symbol):
     @property
-    def arrayName(self) -> str:
-        ...
+    def arrayName(self) -> str: ...
     @property
-    def arrayPath(self) -> List[int]:
-        ...
+    def arrayPath(self) -> list[int]: ...
+
 class IntegerLiteral(Expression):
     @property
-    def isDeclaredUnsized(self) -> bool:
-        ...
+    def isDeclaredUnsized(self) -> bool: ...
     @property
-    def value(self) -> Any:
-        ...
+    def value(self) -> Any: ...
+
 class IntegerTypeSyntax(DataTypeSyntax):
     dimensions: Any
     keyword: Token
     signing: Token
+
 class IntegerVectorExpressionSyntax(PrimaryExpressionSyntax):
     base: Token
     size: Token
     value: Token
-class IntegralFlags:
-    """
-    Members:
 
-      Unsigned
+class IntegralFlags(metaclass=_metaclass):
+    FourState: ClassVar[IntegralFlags]
+    """Value = 2"""
+    Reg: ClassVar[IntegralFlags]
+    """Value = 4"""
+    Signed: ClassVar[IntegralFlags]
+    """Value = 1"""
+    TwoState: ClassVar[IntegralFlags]
+    """Value = 0"""
+    Unsigned: ClassVar[IntegralFlags]
+    """Value = 0"""
 
-      TwoState
+    __members__: dict[str, Self]
 
-      Signed
-
-      FourState
-
-      Reg
-    """
-    FourState: typing.ClassVar[IntegralFlags]  # value = <IntegralFlags.FourState: 2>
-    Reg: typing.ClassVar[IntegralFlags]  # value = <IntegralFlags.Reg: 4>
-    Signed: typing.ClassVar[IntegralFlags]  # value = <IntegralFlags.Signed: 1>
-    TwoState: typing.ClassVar[IntegralFlags]  # value = <IntegralFlags.Unsigned: 0>
-    Unsigned: typing.ClassVar[IntegralFlags]  # value = <IntegralFlags.Unsigned: 0>
-    __members__: typing.ClassVar[dict[str, IntegralFlags]]  # value = {'Unsigned': <IntegralFlags.Unsigned: 0>, 'TwoState': <IntegralFlags.Unsigned: 0>, 'Signed': <IntegralFlags.Signed: 1>, 'FourState': <IntegralFlags.FourState: 2>, 'Reg': <IntegralFlags.Reg: 4>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class IntegralType(Type):
-    def getBitVectorRange(self) -> ConstantRange:
-        ...
-    def isDeclaredReg(self) -> bool:
-        ...
+    def getBitVectorRange(self) -> ConstantRange: ...
+    def isDeclaredReg(self) -> bool: ...
+
 class InterfacePortHeaderSyntax(PortHeaderSyntax):
     modport: DotMemberClauseSyntax
     nameOrKeyword: Token
+
 class InterfacePortSymbol(Symbol):
     @property
-    def connection(self) -> tuple[Symbol, ...]:
-        ...
+    def connection(self) -> tuple[Symbol, ...]: ...
     @property
-    def declaredRange(self) -> List[ConstantRange] | None:
-        ...
+    def declaredRange(self) -> list[ConstantRange] | None: ...
     @property
-    def interfaceDef(self) -> DefinitionSymbol:
-        ...
+    def interfaceDef(self) -> DefinitionSymbol: ...
     @property
-    def isGeneric(self) -> bool:
-        ...
+    def isGeneric(self) -> bool: ...
     @property
-    def isInvalid(self) -> bool:
-        ...
+    def isInvalid(self) -> bool: ...
     @property
-    def modport(self) -> str:
-        ...
+    def modport(self) -> str: ...
+
 class IntersectClauseSyntax(SyntaxNode):
     intersect: Token
     ranges: RangeListSyntax
+
 class InvalidAssertionExpr(AssertionExpr):
     pass
+
 class InvalidBinsSelectExpr(BinsSelectExpr):
     pass
+
 class InvalidConstraint(Constraint):
     pass
+
 class InvalidExpression(Expression):
     pass
+
 class InvalidPattern(Pattern):
     pass
+
 class InvalidStatement(Statement):
     pass
+
 class InvalidTimingControl(TimingControl):
     pass
+
 class InvocationExpressionSyntax(ExpressionSyntax):
     arguments: ArgumentListSyntax
     attributes: Any
     left: ExpressionSyntax
+
 class IteratorSymbol(TempVarSymbol):
     pass
+
 class JumpStatementSyntax(StatementSyntax):
     breakOrContinue: Token
     semi: Token
+
 class KeywordNameSyntax(NameSyntax):
     keyword: Token
+
 class KeywordTypeSyntax(DataTypeSyntax):
     keyword: Token
-class KnownSystemName:
-    """
-    Members:
 
-      Unknown
-
-      $bits
-
-      $typename
-
-      $isunbounded
-
-      $low
-
-      $high
-
-      $left
-
-      $right
-
-      $size
-
-      $increment
-
-      $dimensions
-
-      $unpacked_dimensions
-
-      $rtoi
-
-      $itor
-
-      $realtobits
-
-      $bitstoreal
-
-      $shortrealtobits
-
-      $bitstoshortreal
-
-      $signed
-
-      $unsigned
-
-      $coverage_control
-
-      $coverage_get_max
-
-      $coverage_get
-
-      $coverage_merge
-
-      $coverage_save
-
-      $get_coverage
-
-      $set_coverage_db_name
-
-      $load_coverage_db
-
-      $clog2
-
-      $countbits
-
-      $countones
-
-      $onehot
-
-      $onehot0
-
-      $isunknown
-
-      $ln
-
-      $log10
-
-      $exp
-
-      $sqrt
-
-      $floor
-
-      $ceil
-
-      $sin
-
-      $cos
-
-      $tan
-
-      $asin
-
-      $acos
-
-      $atan
-
-      $sinh
-
-      $cosh
-
-      $tanh
-
-      $asinh
-
-      $acosh
-
-      $atanh
-
-      $pow
-
-      $atan2
-
-      $hypot
-
-      $value$plusargs
-
-      $global_clock
-
-      $sformatf
-
-      $psprintf
-
-      $inferred_clock
-
-      $inferred_disable
-
-      randomize
-
-      triggered
-
-      matched
-
-      $ferror
-
-      $fgets
-
-      $fscanf
-
-      $sscanf
-
-      $fread
-
-      $fopen
-
-      $fclose
-
-      $fgetc
-
-      $ungetc
-
-      $ftell
-
-      $fseek
-
-      $rewind
-
-      $fflush
-
-      $feof
-
-      $rose
-
-      $fell
-
-      $stable
-
-      $changed
-
-      $past_gclk
-
-      $rose_gclk
-
-      $fell_gclk
-
-      $stable_gclk
-
-      $changed_gclk
-
-      $future_gclk
-
-      $rising_gclk
-
-      $falling_gclk
-
-      $steady_gclk
-
-      $changing_gclk
-
-      $sampled
-
-      $past
-
-      $stacktrace
-
-      $countdrivers
-
-      $getpattern
-
-      $test$plusargs
-
-      $time
-
-      $stime
-
-      $realtime
-
-      $random
-
-      $urandom
-
-      $urandom_range
-
-      $reset_count
-
-      $reset_value
-
-      $timeunit
-
-      $timeprecision
-
-      $scale
-
-      $sdf_annotate
-
-      $dist_uniform
-
-      $dist_normal
-
-      $dist_exponential
-
-      $dist_poisson
-
-      $dist_chi_square
-
-      $dist_t
-
-      $dist_erlang
-
-      $fatal
-
-      $static_assert
-
-      $cast
-
-      $info
-
-      $warning
-
-      $error
-
-      $finish
-
-      $stop
-
-      $assertcontrol
-
-      $asserton
-
-      $assertoff
-
-      $assertkill
-
-      $assertpasson
-
-      $assertpassoff
-
-      $assertfailon
-
-      $assertfailoff
-
-      $assertnonvacuouson
-
-      $assertvacuousoff
-
-      $display
-
-      $displayb
-
-      $displayo
-
-      $displayh
-
-      $write
-
-      $writeb
-
-      $writeo
-
-      $writeh
-
-      $strobe
-
-      $strobeb
-
-      $strobeo
-
-      $strobeh
-
-      $monitor
-
-      $monitorb
-
-      $monitoro
-
-      $monitorh
-
-      $fdisplay
-
-      $fdisplayb
-
-      $fdisplayo
-
-      $fdisplayh
-
-      $fwrite
-
-      $fwriteb
-
-      $fwriteo
-
-      $fwriteh
-
-      $fstrobe
-
-      $fstrobeb
-
-      $fstrobeo
-
-      $fstrobeh
-
-      $fmonitor
-
-      $fmonitorb
-
-      $fmonitoro
-
-      $fmonitorh
-
-      $swrite
-
-      $swriteb
-
-      $swriteo
-
-      $swriteh
-
-      $sformat
-
-      $printtimescale
-
-      $dumpvars
-
-      $dumpports
-
-      $showvars
-
-      $readmemb
-
-      $readmemh
-
-      $writememb
-
-      $writememh
-
-      $sreadmemb
-
-      $sreadmemh
-
-      $system
-
-      $list
-
-      $scope
-
-      $exit
-
-      $timeformat
-
-      $monitoron
-
-      $monitoroff
-
-      $dumpfile
-
-      $dumpon
-
-      $dumpoff
-
-      $dumpall
-
-      $dumplimit
-
-      $dumpflush
-
-      $dumpportson
-
-      $dumpportsoff
-
-      $dumpportsall
-
-      $dumpportslimit
-
-      $dumpportsflush
-
-      $input
-
-      $key
-
-      $nokey
-
-      $log
-
-      $nolog
-
-      $reset
-
-      $save
-
-      $restart
-
-      $incsave
-
-      $showscopes
-
-      $q_initialize
-
-      $q_add
-
-      $q_remove
-
-      $q_exam
-
-      $q_full
-
-      $async$and$array
-
-      $sync$and$array
-
-      $async$and$plane
-
-      $sync$and$plane
-
-      $async$nand$array
-
-      $sync$nand$array
-
-      $async$nand$plane
-
-      $sync$nand$plane
-
-      $async$or$array
-
-      $sync$or$array
-
-      $async$or$plane
-
-      $sync$or$plane
-
-      $async$nor$array
-
-      $sync$nor$array
-
-      $async$nor$plane
-
-      $sync$nor$plane
-
-      reverse
-
-      delete
-
-      exists
-
-      insert
-
-      index
-
-      map
-
-      size
-
-      or
-
-      and
-
-      xor
-
-      sum
-
-      product
-
-      find
-
-      find_index
-
-      find_first
-
-      find_first_index
-
-      find_last
-
-      find_last_index
-
-      min
-
-      max
-
-      unique
-
-      unique_index
-
-      sort
-
-      rsort
-
-      shuffle
-
-      num
-
-      first
-
-      last
-
-      next
-
-      prev
-
-      pop_front
-
-      pop_back
-
-      push_front
-
-      push_back
-
-      name
-
-      len
-
-      putc
-
-      getc
-
-      substr
-
-      toupper
-
-      tolower
-
-      compare
-
-      icompare
-
-      atoi
-
-      atohex
-
-      atooct
-
-      atobin
-
-      atoreal
-
-      itoa
-
-      hextoa
-
-      octtoa
-
-      bintoa
-
-      realtoa
-
-      rand_mode
-
-      constraint_mode
-    """
-    Unknown: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.Unknown: 0>
-    __members__: typing.ClassVar[dict[str, KnownSystemName]]  # value = {'Unknown': <KnownSystemName.Unknown: 0>, '$bits': <KnownSystemName.$bits: 1>, '$typename': <KnownSystemName.$typename: 2>, '$isunbounded': <KnownSystemName.$isunbounded: 3>, '$low': <KnownSystemName.$low: 4>, '$high': <KnownSystemName.$high: 5>, '$left': <KnownSystemName.$left: 6>, '$right': <KnownSystemName.$right: 7>, '$size': <KnownSystemName.$size: 8>, '$increment': <KnownSystemName.$increment: 9>, '$dimensions': <KnownSystemName.$dimensions: 10>, '$unpacked_dimensions': <KnownSystemName.$unpacked_dimensions: 11>, '$rtoi': <KnownSystemName.$rtoi: 12>, '$itor': <KnownSystemName.$itor: 13>, '$realtobits': <KnownSystemName.$realtobits: 14>, '$bitstoreal': <KnownSystemName.$bitstoreal: 15>, '$shortrealtobits': <KnownSystemName.$shortrealtobits: 16>, '$bitstoshortreal': <KnownSystemName.$bitstoshortreal: 17>, '$signed': <KnownSystemName.$signed: 18>, '$unsigned': <KnownSystemName.$unsigned: 19>, '$coverage_control': <KnownSystemName.$coverage_control: 20>, '$coverage_get_max': <KnownSystemName.$coverage_get_max: 21>, '$coverage_get': <KnownSystemName.$coverage_get: 22>, '$coverage_merge': <KnownSystemName.$coverage_merge: 23>, '$coverage_save': <KnownSystemName.$coverage_save: 24>, '$get_coverage': <KnownSystemName.$get_coverage: 25>, '$set_coverage_db_name': <KnownSystemName.$set_coverage_db_name: 26>, '$load_coverage_db': <KnownSystemName.$load_coverage_db: 27>, '$clog2': <KnownSystemName.$clog2: 28>, '$countbits': <KnownSystemName.$countbits: 29>, '$countones': <KnownSystemName.$countones: 30>, '$onehot': <KnownSystemName.$onehot: 31>, '$onehot0': <KnownSystemName.$onehot0: 32>, '$isunknown': <KnownSystemName.$isunknown: 33>, '$ln': <KnownSystemName.$ln: 34>, '$log10': <KnownSystemName.$log10: 35>, '$exp': <KnownSystemName.$exp: 36>, '$sqrt': <KnownSystemName.$sqrt: 37>, '$floor': <KnownSystemName.$floor: 38>, '$ceil': <KnownSystemName.$ceil: 39>, '$sin': <KnownSystemName.$sin: 40>, '$cos': <KnownSystemName.$cos: 41>, '$tan': <KnownSystemName.$tan: 42>, '$asin': <KnownSystemName.$asin: 43>, '$acos': <KnownSystemName.$acos: 44>, '$atan': <KnownSystemName.$atan: 45>, '$sinh': <KnownSystemName.$sinh: 46>, '$cosh': <KnownSystemName.$cosh: 47>, '$tanh': <KnownSystemName.$tanh: 48>, '$asinh': <KnownSystemName.$asinh: 49>, '$acosh': <KnownSystemName.$acosh: 50>, '$atanh': <KnownSystemName.$atanh: 51>, '$pow': <KnownSystemName.$pow: 52>, '$atan2': <KnownSystemName.$atan2: 53>, '$hypot': <KnownSystemName.$hypot: 54>, '$value$plusargs': <KnownSystemName.$value$plusargs: 55>, '$global_clock': <KnownSystemName.$global_clock: 56>, '$sformatf': <KnownSystemName.$sformatf: 57>, '$psprintf': <KnownSystemName.$psprintf: 58>, '$inferred_clock': <KnownSystemName.$inferred_clock: 59>, '$inferred_disable': <KnownSystemName.$inferred_disable: 60>, 'randomize': <KnownSystemName.randomize: 61>, 'triggered': <KnownSystemName.triggered: 62>, 'matched': <KnownSystemName.matched: 63>, '$ferror': <KnownSystemName.$ferror: 64>, '$fgets': <KnownSystemName.$fgets: 65>, '$fscanf': <KnownSystemName.$fscanf: 66>, '$sscanf': <KnownSystemName.$sscanf: 67>, '$fread': <KnownSystemName.$fread: 68>, '$fopen': <KnownSystemName.$fopen: 69>, '$fclose': <KnownSystemName.$fclose: 70>, '$fgetc': <KnownSystemName.$fgetc: 71>, '$ungetc': <KnownSystemName.$ungetc: 72>, '$ftell': <KnownSystemName.$ftell: 73>, '$fseek': <KnownSystemName.$fseek: 74>, '$rewind': <KnownSystemName.$rewind: 75>, '$fflush': <KnownSystemName.$fflush: 76>, '$feof': <KnownSystemName.$feof: 77>, '$rose': <KnownSystemName.$rose: 78>, '$fell': <KnownSystemName.$fell: 79>, '$stable': <KnownSystemName.$stable: 80>, '$changed': <KnownSystemName.$changed: 81>, '$past_gclk': <KnownSystemName.$past_gclk: 82>, '$rose_gclk': <KnownSystemName.$rose_gclk: 83>, '$fell_gclk': <KnownSystemName.$fell_gclk: 84>, '$stable_gclk': <KnownSystemName.$stable_gclk: 85>, '$changed_gclk': <KnownSystemName.$changed_gclk: 86>, '$future_gclk': <KnownSystemName.$future_gclk: 87>, '$rising_gclk': <KnownSystemName.$rising_gclk: 88>, '$falling_gclk': <KnownSystemName.$falling_gclk: 89>, '$steady_gclk': <KnownSystemName.$steady_gclk: 90>, '$changing_gclk': <KnownSystemName.$changing_gclk: 91>, '$sampled': <KnownSystemName.$sampled: 92>, '$past': <KnownSystemName.$past: 93>, '$stacktrace': <KnownSystemName.$stacktrace: 94>, '$countdrivers': <KnownSystemName.$countdrivers: 95>, '$getpattern': <KnownSystemName.$getpattern: 96>, '$test$plusargs': <KnownSystemName.$test$plusargs: 97>, '$time': <KnownSystemName.$time: 98>, '$stime': <KnownSystemName.$stime: 99>, '$realtime': <KnownSystemName.$realtime: 100>, '$random': <KnownSystemName.$random: 101>, '$urandom': <KnownSystemName.$urandom: 102>, '$urandom_range': <KnownSystemName.$urandom_range: 103>, '$reset_count': <KnownSystemName.$reset_count: 104>, '$reset_value': <KnownSystemName.$reset_value: 105>, '$timeunit': <KnownSystemName.$timeunit: 106>, '$timeprecision': <KnownSystemName.$timeprecision: 107>, '$scale': <KnownSystemName.$scale: 108>, '$sdf_annotate': <KnownSystemName.$sdf_annotate: 109>, '$dist_uniform': <KnownSystemName.$dist_uniform: 110>, '$dist_normal': <KnownSystemName.$dist_normal: 111>, '$dist_exponential': <KnownSystemName.$dist_exponential: 112>, '$dist_poisson': <KnownSystemName.$dist_poisson: 113>, '$dist_chi_square': <KnownSystemName.$dist_chi_square: 114>, '$dist_t': <KnownSystemName.$dist_t: 115>, '$dist_erlang': <KnownSystemName.$dist_erlang: 116>, '$fatal': <KnownSystemName.$fatal: 117>, '$static_assert': <KnownSystemName.$static_assert: 118>, '$cast': <KnownSystemName.$cast: 119>, '$info': <KnownSystemName.$info: 120>, '$warning': <KnownSystemName.$warning: 121>, '$error': <KnownSystemName.$error: 122>, '$finish': <KnownSystemName.$finish: 123>, '$stop': <KnownSystemName.$stop: 124>, '$assertcontrol': <KnownSystemName.$assertcontrol: 125>, '$asserton': <KnownSystemName.$asserton: 126>, '$assertoff': <KnownSystemName.$assertoff: 127>, '$assertkill': <KnownSystemName.$assertkill: 128>, '$assertpasson': <KnownSystemName.$assertpasson: 129>, '$assertpassoff': <KnownSystemName.$assertpassoff: 130>, '$assertfailon': <KnownSystemName.$assertfailon: 131>, '$assertfailoff': <KnownSystemName.$assertfailoff: 132>, '$assertnonvacuouson': <KnownSystemName.$assertnonvacuouson: 133>, '$assertvacuousoff': <KnownSystemName.$assertvacuousoff: 134>, '$display': <KnownSystemName.$display: 135>, '$displayb': <KnownSystemName.$displayb: 136>, '$displayo': <KnownSystemName.$displayo: 137>, '$displayh': <KnownSystemName.$displayh: 138>, '$write': <KnownSystemName.$write: 139>, '$writeb': <KnownSystemName.$writeb: 140>, '$writeo': <KnownSystemName.$writeo: 141>, '$writeh': <KnownSystemName.$writeh: 142>, '$strobe': <KnownSystemName.$strobe: 143>, '$strobeb': <KnownSystemName.$strobeb: 144>, '$strobeo': <KnownSystemName.$strobeo: 145>, '$strobeh': <KnownSystemName.$strobeh: 146>, '$monitor': <KnownSystemName.$monitor: 147>, '$monitorb': <KnownSystemName.$monitorb: 148>, '$monitoro': <KnownSystemName.$monitoro: 149>, '$monitorh': <KnownSystemName.$monitorh: 150>, '$fdisplay': <KnownSystemName.$fdisplay: 151>, '$fdisplayb': <KnownSystemName.$fdisplayb: 152>, '$fdisplayo': <KnownSystemName.$fdisplayo: 153>, '$fdisplayh': <KnownSystemName.$fdisplayh: 154>, '$fwrite': <KnownSystemName.$fwrite: 155>, '$fwriteb': <KnownSystemName.$fwriteb: 156>, '$fwriteo': <KnownSystemName.$fwriteo: 157>, '$fwriteh': <KnownSystemName.$fwriteh: 158>, '$fstrobe': <KnownSystemName.$fstrobe: 159>, '$fstrobeb': <KnownSystemName.$fstrobeb: 160>, '$fstrobeo': <KnownSystemName.$fstrobeo: 161>, '$fstrobeh': <KnownSystemName.$fstrobeh: 162>, '$fmonitor': <KnownSystemName.$fmonitor: 163>, '$fmonitorb': <KnownSystemName.$fmonitorb: 164>, '$fmonitoro': <KnownSystemName.$fmonitoro: 165>, '$fmonitorh': <KnownSystemName.$fmonitorh: 166>, '$swrite': <KnownSystemName.$swrite: 167>, '$swriteb': <KnownSystemName.$swriteb: 168>, '$swriteo': <KnownSystemName.$swriteo: 169>, '$swriteh': <KnownSystemName.$swriteh: 170>, '$sformat': <KnownSystemName.$sformat: 171>, '$printtimescale': <KnownSystemName.$printtimescale: 172>, '$dumpvars': <KnownSystemName.$dumpvars: 173>, '$dumpports': <KnownSystemName.$dumpports: 174>, '$showvars': <KnownSystemName.$showvars: 175>, '$readmemb': <KnownSystemName.$readmemb: 176>, '$readmemh': <KnownSystemName.$readmemh: 177>, '$writememb': <KnownSystemName.$writememb: 178>, '$writememh': <KnownSystemName.$writememh: 179>, '$sreadmemb': <KnownSystemName.$sreadmemb: 180>, '$sreadmemh': <KnownSystemName.$sreadmemh: 181>, '$system': <KnownSystemName.$system: 182>, '$list': <KnownSystemName.$list: 183>, '$scope': <KnownSystemName.$scope: 184>, '$exit': <KnownSystemName.$exit: 185>, '$timeformat': <KnownSystemName.$timeformat: 186>, '$monitoron': <KnownSystemName.$monitoron: 187>, '$monitoroff': <KnownSystemName.$monitoroff: 188>, '$dumpfile': <KnownSystemName.$dumpfile: 189>, '$dumpon': <KnownSystemName.$dumpon: 190>, '$dumpoff': <KnownSystemName.$dumpoff: 191>, '$dumpall': <KnownSystemName.$dumpall: 192>, '$dumplimit': <KnownSystemName.$dumplimit: 193>, '$dumpflush': <KnownSystemName.$dumpflush: 194>, '$dumpportson': <KnownSystemName.$dumpportson: 195>, '$dumpportsoff': <KnownSystemName.$dumpportsoff: 196>, '$dumpportsall': <KnownSystemName.$dumpportsall: 197>, '$dumpportslimit': <KnownSystemName.$dumpportslimit: 198>, '$dumpportsflush': <KnownSystemName.$dumpportsflush: 199>, '$input': <KnownSystemName.$input: 200>, '$key': <KnownSystemName.$key: 201>, '$nokey': <KnownSystemName.$nokey: 202>, '$log': <KnownSystemName.$log: 203>, '$nolog': <KnownSystemName.$nolog: 204>, '$reset': <KnownSystemName.$reset: 205>, '$save': <KnownSystemName.$save: 206>, '$restart': <KnownSystemName.$restart: 207>, '$incsave': <KnownSystemName.$incsave: 208>, '$showscopes': <KnownSystemName.$showscopes: 209>, '$q_initialize': <KnownSystemName.$q_initialize: 210>, '$q_add': <KnownSystemName.$q_add: 211>, '$q_remove': <KnownSystemName.$q_remove: 212>, '$q_exam': <KnownSystemName.$q_exam: 213>, '$q_full': <KnownSystemName.$q_full: 214>, '$async$and$array': <KnownSystemName.$async$and$array: 215>, '$sync$and$array': <KnownSystemName.$sync$and$array: 216>, '$async$and$plane': <KnownSystemName.$async$and$plane: 217>, '$sync$and$plane': <KnownSystemName.$sync$and$plane: 218>, '$async$nand$array': <KnownSystemName.$async$nand$array: 219>, '$sync$nand$array': <KnownSystemName.$sync$nand$array: 220>, '$async$nand$plane': <KnownSystemName.$async$nand$plane: 221>, '$sync$nand$plane': <KnownSystemName.$sync$nand$plane: 222>, '$async$or$array': <KnownSystemName.$async$or$array: 223>, '$sync$or$array': <KnownSystemName.$sync$or$array: 224>, '$async$or$plane': <KnownSystemName.$async$or$plane: 225>, '$sync$or$plane': <KnownSystemName.$sync$or$plane: 226>, '$async$nor$array': <KnownSystemName.$async$nor$array: 227>, '$sync$nor$array': <KnownSystemName.$sync$nor$array: 228>, '$async$nor$plane': <KnownSystemName.$async$nor$plane: 229>, '$sync$nor$plane': <KnownSystemName.$sync$nor$plane: 230>, 'reverse': <KnownSystemName.reverse: 231>, 'delete': <KnownSystemName.delete: 232>, 'exists': <KnownSystemName.exists: 233>, 'insert': <KnownSystemName.insert: 234>, 'index': <KnownSystemName.index: 235>, 'map': <KnownSystemName.map: 236>, 'size': <KnownSystemName.size: 237>, 'or': <KnownSystemName.or: 238>, 'and': <KnownSystemName.and: 239>, 'xor': <KnownSystemName.xor: 240>, 'sum': <KnownSystemName.sum: 241>, 'product': <KnownSystemName.product: 242>, 'find': <KnownSystemName.find: 243>, 'find_index': <KnownSystemName.find_index: 244>, 'find_first': <KnownSystemName.find_first: 245>, 'find_first_index': <KnownSystemName.find_first_index: 246>, 'find_last': <KnownSystemName.find_last: 247>, 'find_last_index': <KnownSystemName.find_last_index: 248>, 'min': <KnownSystemName.min: 249>, 'max': <KnownSystemName.max: 250>, 'unique': <KnownSystemName.unique: 251>, 'unique_index': <KnownSystemName.unique_index: 252>, 'sort': <KnownSystemName.sort: 253>, 'rsort': <KnownSystemName.rsort: 254>, 'shuffle': <KnownSystemName.shuffle: 255>, 'num': <KnownSystemName.num: 256>, 'first': <KnownSystemName.first: 257>, 'last': <KnownSystemName.last: 258>, 'next': <KnownSystemName.next: 259>, 'prev': <KnownSystemName.prev: 260>, 'pop_front': <KnownSystemName.pop_front: 261>, 'pop_back': <KnownSystemName.pop_back: 262>, 'push_front': <KnownSystemName.push_front: 263>, 'push_back': <KnownSystemName.push_back: 264>, 'name': <KnownSystemName.name: 265>, 'len': <KnownSystemName.len: 266>, 'putc': <KnownSystemName.putc: 267>, 'getc': <KnownSystemName.getc: 268>, 'substr': <KnownSystemName.substr: 269>, 'toupper': <KnownSystemName.toupper: 270>, 'tolower': <KnownSystemName.tolower: 271>, 'compare': <KnownSystemName.compare: 272>, 'icompare': <KnownSystemName.icompare: 273>, 'atoi': <KnownSystemName.atoi: 274>, 'atohex': <KnownSystemName.atohex: 275>, 'atooct': <KnownSystemName.atooct: 276>, 'atobin': <KnownSystemName.atobin: 277>, 'atoreal': <KnownSystemName.atoreal: 278>, 'itoa': <KnownSystemName.itoa: 279>, 'hextoa': <KnownSystemName.hextoa: 280>, 'octtoa': <KnownSystemName.octtoa: 281>, 'bintoa': <KnownSystemName.bintoa: 282>, 'realtoa': <KnownSystemName.realtoa: 283>, 'rand_mode': <KnownSystemName.rand_mode: 284>, 'constraint_mode': <KnownSystemName.constraint_mode: 285>}
-    # and: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.and: 239>
-    atobin: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.atobin: 277>
-    atohex: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.atohex: 275>
-    atoi: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.atoi: 274>
-    atooct: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.atooct: 276>
-    atoreal: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.atoreal: 278>
-    bintoa: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.bintoa: 282>
-    compare: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.compare: 272>
-    constraint_mode: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.constraint_mode: 285>
-    delete: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.delete: 232>
-    exists: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.exists: 233>
-    find: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find: 243>
-    find_first: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find_first: 245>
-    find_first_index: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find_first_index: 246>
-    find_index: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find_index: 244>
-    find_last: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find_last: 247>
-    find_last_index: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.find_last_index: 248>
-    first: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.first: 257>
-    getc: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.getc: 268>
-    hextoa: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.hextoa: 280>
-    icompare: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.icompare: 273>
-    index: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.index: 235>
-    insert: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.insert: 234>
-    itoa: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.itoa: 279>
-    last: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.last: 258>
-    len: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.len: 266>
-    map: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.map: 236>
-    matched: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.matched: 63>
-    max: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.max: 250>
-    min: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.min: 249>
-    name: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.name: 265>
-    next: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.next: 259>
-    num: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.num: 256>
-    octtoa: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.octtoa: 281>
-    # or: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.or: 238>
-    pop_back: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.pop_back: 262>
-    pop_front: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.pop_front: 261>
-    prev: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.prev: 260>
-    product: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.product: 242>
-    push_back: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.push_back: 264>
-    push_front: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.push_front: 263>
-    putc: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.putc: 267>
-    rand_mode: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.rand_mode: 284>
-    randomize: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.randomize: 61>
-    realtoa: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.realtoa: 283>
-    reverse: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.reverse: 231>
-    rsort: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.rsort: 254>
-    shuffle: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.shuffle: 255>
-    size: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.size: 237>
-    sort: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.sort: 253>
-    substr: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.substr: 269>
-    sum: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.sum: 241>
-    tolower: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.tolower: 271>
-    toupper: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.toupper: 270>
-    triggered: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.triggered: 62>
-    unique: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.unique: 251>
-    unique_index: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.unique_index: 252>
-    xor: typing.ClassVar[KnownSystemName]  # value = <KnownSystemName.xor: 240>
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+class KnownSystemName(metaclass=_metaclass):
+    Unknown: ClassVar[KnownSystemName]
+    """Value = 0"""
+    # and: ClassVar[KnownSystemName]
+    """Value = 239"""
+    atobin: ClassVar[KnownSystemName]
+    """Value = 277"""
+    atohex: ClassVar[KnownSystemName]
+    """Value = 275"""
+    atoi: ClassVar[KnownSystemName]
+    """Value = 274"""
+    atooct: ClassVar[KnownSystemName]
+    """Value = 276"""
+    atoreal: ClassVar[KnownSystemName]
+    """Value = 278"""
+    bintoa: ClassVar[KnownSystemName]
+    """Value = 282"""
+    compare: ClassVar[KnownSystemName]
+    """Value = 272"""
+    constraint_mode: ClassVar[KnownSystemName]
+    """Value = 285"""
+    delete: ClassVar[KnownSystemName]
+    """Value = 232"""
+    exists: ClassVar[KnownSystemName]
+    """Value = 233"""
+    find: ClassVar[KnownSystemName]
+    """Value = 243"""
+    find_first: ClassVar[KnownSystemName]
+    """Value = 245"""
+    find_first_index: ClassVar[KnownSystemName]
+    """Value = 246"""
+    find_index: ClassVar[KnownSystemName]
+    """Value = 244"""
+    find_last: ClassVar[KnownSystemName]
+    """Value = 247"""
+    find_last_index: ClassVar[KnownSystemName]
+    """Value = 248"""
+    first: ClassVar[KnownSystemName]
+    """Value = 257"""
+    getc: ClassVar[KnownSystemName]
+    """Value = 268"""
+    hextoa: ClassVar[KnownSystemName]
+    """Value = 280"""
+    icompare: ClassVar[KnownSystemName]
+    """Value = 273"""
+    index: ClassVar[KnownSystemName]
+    """Value = 235"""
+    insert: ClassVar[KnownSystemName]
+    """Value = 234"""
+    itoa: ClassVar[KnownSystemName]
+    """Value = 279"""
+    last: ClassVar[KnownSystemName]
+    """Value = 258"""
+    len: ClassVar[KnownSystemName]
+    """Value = 266"""
+    map: ClassVar[KnownSystemName]
+    """Value = 236"""
+    matched: ClassVar[KnownSystemName]
+    """Value = 63"""
+    max: ClassVar[KnownSystemName]
+    """Value = 250"""
+    min: ClassVar[KnownSystemName]
+    """Value = 249"""
+    # name: ClassVar[KnownSystemName]
+    """Value = 265"""
+    next: ClassVar[KnownSystemName]
+    """Value = 259"""
+    num: ClassVar[KnownSystemName]
+    """Value = 256"""
+    octtoa: ClassVar[KnownSystemName]
+    """Value = 281"""
+    # or: ClassVar[KnownSystemName]
+    """Value = 238"""
+    pop_back: ClassVar[KnownSystemName]
+    """Value = 262"""
+    pop_front: ClassVar[KnownSystemName]
+    """Value = 261"""
+    prev: ClassVar[KnownSystemName]
+    """Value = 260"""
+    product: ClassVar[KnownSystemName]
+    """Value = 242"""
+    push_back: ClassVar[KnownSystemName]
+    """Value = 264"""
+    push_front: ClassVar[KnownSystemName]
+    """Value = 263"""
+    putc: ClassVar[KnownSystemName]
+    """Value = 267"""
+    rand_mode: ClassVar[KnownSystemName]
+    """Value = 284"""
+    randomize: ClassVar[KnownSystemName]
+    """Value = 61"""
+    realtoa: ClassVar[KnownSystemName]
+    """Value = 283"""
+    reverse: ClassVar[KnownSystemName]
+    """Value = 231"""
+    rsort: ClassVar[KnownSystemName]
+    """Value = 254"""
+    shuffle: ClassVar[KnownSystemName]
+    """Value = 255"""
+    size: ClassVar[KnownSystemName]
+    """Value = 237"""
+    sort: ClassVar[KnownSystemName]
+    """Value = 253"""
+    substr: ClassVar[KnownSystemName]
+    """Value = 269"""
+    sum: ClassVar[KnownSystemName]
+    """Value = 241"""
+    tolower: ClassVar[KnownSystemName]
+    """Value = 271"""
+    toupper: ClassVar[KnownSystemName]
+    """Value = 270"""
+    triggered: ClassVar[KnownSystemName]
+    """Value = 62"""
+    unique: ClassVar[KnownSystemName]
+    """Value = 251"""
+    unique_index: ClassVar[KnownSystemName]
+    """Value = 252"""
+    xor: ClassVar[KnownSystemName]
+    """Value = 240"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def value(self) -> int:
-        ...
-class LValue:
-    def __init__(self) -> None:
-        ...
-    def bad(self) -> bool:
-        ...
-    def load(self) -> Any:
-        ...
-    def resolve(self) -> Any:
-        ...
-    def store(self, value: Any) -> None:
-        ...
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
+class LValue(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+    def bad(self) -> bool: ...
+    def load(self) -> Any: ...
+    def resolve(self) -> Any: ...
+    def store(self, value: Any) -> None: ...
+
 class LValueReferenceExpression(Expression):
     pass
-class LanguageVersion:
-    """
-    Members:
 
-      v1800_2017
+class LanguageVersion(metaclass=_metaclass):
+    Default: ClassVar[LanguageVersion]
+    """Value = 0"""
+    v1800_2017: ClassVar[LanguageVersion]
+    """Value = 0"""
+    v1800_2023: ClassVar[LanguageVersion]
+    """Value = 1"""
 
-      v1800_2023
+    __members__: dict[str, Self]
 
-      Default
-    """
-    Default: typing.ClassVar[LanguageVersion]  # value = <LanguageVersion.v1800_2017: 0>
-    __members__: typing.ClassVar[dict[str, LanguageVersion]]  # value = {'v1800_2017': <LanguageVersion.v1800_2017: 0>, 'v1800_2023': <LanguageVersion.v1800_2023: 1>, 'Default': <LanguageVersion.v1800_2017: 0>}
-    v1800_2017: typing.ClassVar[LanguageVersion]  # value = <LanguageVersion.v1800_2017: 0>
-    v1800_2023: typing.ClassVar[LanguageVersion]  # value = <LanguageVersion.v1800_2023: 1>
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class LetDeclSymbol(Symbol, Scope):
     @property
-    def ports(self) -> List[AssertionPortSymbol]:
-        ...
+    def ports(self) -> list[AssertionPortSymbol]: ...
+
 class LetDeclarationSyntax(MemberSyntax):
     equals: Token
     expr: ExpressionSyntax
@@ -6511,324 +4885,233 @@ class LetDeclarationSyntax(MemberSyntax):
     let: Token
     portList: AssertionItemPortListSyntax
     semi: Token
-class LexerOptions:
+
+class LexerOptions(metaclass=_metaclass):
     languageVersion: LanguageVersion
     maxErrors: int
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
+
 class LibraryDeclarationSyntax(MemberSyntax):
     filePaths: Any
     incDirClause: LibraryIncDirClauseSyntax
     library: Token
     name: Token
     semi: Token
+
 class LibraryIncDirClauseSyntax(SyntaxNode):
     filePaths: Any
     incdir: Token
     minus: Token
+
 class LibraryIncludeStatementSyntax(MemberSyntax):
     filePath: FilePathSpecSyntax
     include: Token
     semi: Token
+
 class LibraryMapSyntax(SyntaxNode):
     endOfFile: Token
     members: Any
+
 class LineDirectiveSyntax(DirectiveSyntax):
     fileName: Token
     level: Token
     lineNumber: Token
-class LiteralBase:
-    """
-    Members:
 
-      Binary
+class LiteralBase(metaclass=_metaclass):
+    Binary: ClassVar[LiteralBase]
+    """Value = 0"""
+    Decimal: ClassVar[LiteralBase]
+    """Value = 2"""
+    Hex: ClassVar[LiteralBase]
+    """Value = 3"""
+    Octal: ClassVar[LiteralBase]
+    """Value = 1"""
 
-      Octal
+    __members__: dict[str, Self]
 
-      Decimal
-
-      Hex
-    """
-    Binary: typing.ClassVar[LiteralBase]  # value = <LiteralBase.Binary: 0>
-    Decimal: typing.ClassVar[LiteralBase]  # value = <LiteralBase.Decimal: 2>
-    Hex: typing.ClassVar[LiteralBase]  # value = <LiteralBase.Hex: 3>
-    Octal: typing.ClassVar[LiteralBase]  # value = <LiteralBase.Octal: 1>
-    __members__: typing.ClassVar[dict[str, LiteralBase]]  # value = {'Binary': <LiteralBase.Binary: 0>, 'Octal': <LiteralBase.Octal: 1>, 'Decimal': <LiteralBase.Decimal: 2>, 'Hex': <LiteralBase.Hex: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class LiteralExpressionSyntax(PrimaryExpressionSyntax):
     literal: Token
+
 class LocalAssertionVarSymbol(VariableSymbol):
     pass
+
 class LocalVariableDeclarationSyntax(MemberSyntax):
     declarators: Any
     semi: Token
     type: DataTypeSyntax
     var: Token
-class Lookup:
+
+class Lookup(metaclass=_metaclass):
     @staticmethod
-    def ensureAccessible(symbol: Any, context: ASTContext, sourceRange: SourceRange | None) -> bool:
-        ...
+    def ensureAccessible(
+        symbol: Any, context: ASTContext, sourceRange: SourceRange | None
+    ) -> bool: ...
     @staticmethod
-    def ensureVisible(symbol: Any, context: ASTContext, sourceRange: SourceRange | None) -> bool:
-        ...
+    def ensureVisible(
+        symbol: Any, context: ASTContext, sourceRange: SourceRange | None
+    ) -> bool: ...
     @staticmethod
-    def findAssertionLocalVar(context: ASTContext, name: Any, result: LookupResult) -> bool:
-        ...
+    def findAssertionLocalVar(context: ASTContext, name: Any, result: LookupResult) -> bool: ...
     @staticmethod
-    def findClass(name: Any, context: ASTContext, requireInterfaceClass: DiagCode | None = None) -> Any:
-        ...
+    def findClass(
+        name: Any, context: ASTContext, requireInterfaceClass: DiagCode | None = None
+    ) -> Any: ...
     @staticmethod
-    def findTempVar(scope: Any, symbol: Any, name: Any, result: LookupResult) -> bool:
-        ...
+    def findTempVar(scope: Any, symbol: Any, name: Any, result: LookupResult) -> bool: ...
     @staticmethod
-    def getContainingClass(scope: Any) -> tuple[Any, bool]:
-        ...
+    def getContainingClass(scope: Any) -> tuple[Any, bool]: ...
     @staticmethod
-    def getVisibility(symbol: Any) -> Visibility:
-        ...
+    def getVisibility(symbol: Any) -> Visibility: ...
     @staticmethod
-    def isAccessibleFrom(target: Any, sourceScope: Any) -> bool:
-        ...
+    def isAccessibleFrom(target: Any, sourceScope: Any) -> bool: ...
     @staticmethod
-    def isVisibleFrom(symbol: Any, scope: Any) -> bool:
-        ...
+    def isVisibleFrom(symbol: Any, scope: Any) -> bool: ...
     @staticmethod
-    def name(syntax: Any, context: ASTContext, flags: LookupFlags, result: LookupResult) -> None:
-        ...
+    def name(
+        syntax: Any, context: ASTContext, flags: LookupFlags, result: LookupResult
+    ) -> None: ...
     @staticmethod
-    def unqualified(scope: Any, name: str, flags: LookupFlags = ...) -> Any:
-        ...
+    def unqualified(scope: Any, name: str, flags: LookupFlags = ...) -> Any: ...
     @staticmethod
-    def unqualifiedAt(scope: Any, name: str, location: LookupLocation, sourceRange: SourceRange, flags: LookupFlags = ...) -> Any:
-        ...
+    def unqualifiedAt(
+        scope: Any,
+        name: str,
+        location: LookupLocation,
+        sourceRange: SourceRange,
+        flags: LookupFlags = ...,
+    ) -> Any: ...
     @staticmethod
-    def withinClassRandomize(context: ASTContext, syntax: Any, flags: LookupFlags, result: LookupResult) -> bool:
-        ...
-class LookupFlags:
-    """
-    Members:
+    def withinClassRandomize(
+        context: ASTContext, syntax: Any, flags: LookupFlags, result: LookupResult
+    ) -> bool: ...
 
-      None_
+class LookupFlags(metaclass=_metaclass):
+    AllowDeclaredAfter: ClassVar[LookupFlags]
+    """Value = 2"""
+    AllowIncompleteForwardTypedefs: ClassVar[LookupFlags]
+    """Value = 32"""
+    AllowRoot: ClassVar[LookupFlags]
+    """Value = 256"""
+    AllowUnit: ClassVar[LookupFlags]
+    """Value = 512"""
+    AlwaysAllowUpward: ClassVar[LookupFlags]
+    """Value = 8192"""
+    DisallowUnitReferences: ClassVar[LookupFlags]
+    """Value = 16384"""
+    DisallowWildcardImport: ClassVar[LookupFlags]
+    """Value = 4"""
+    ForceHierarchical: ClassVar[LookupFlags]
+    """Value = 18"""
+    IfacePortConn: ClassVar[LookupFlags]
+    """Value = 1024"""
+    NoParentScope: ClassVar[LookupFlags]
+    """Value = 64"""
+    NoSelectors: ClassVar[LookupFlags]
+    """Value = 128"""
+    NoUndeclaredError: ClassVar[LookupFlags]
+    """Value = 8"""
+    NoUndeclaredErrorIfUninstantiated: ClassVar[LookupFlags]
+    """Value = 16"""
+    None_: ClassVar[LookupFlags]
+    """Value = 0"""
+    StaticInitializer: ClassVar[LookupFlags]
+    """Value = 2048"""
+    Type: ClassVar[LookupFlags]
+    """Value = 1"""
+    TypeReference: ClassVar[LookupFlags]
+    """Value = 4096"""
 
-      Type
+    __members__: dict[str, Self]
 
-      AllowDeclaredAfter
-
-      DisallowWildcardImport
-
-      NoUndeclaredError
-
-      NoUndeclaredErrorIfUninstantiated
-
-      AllowIncompleteForwardTypedefs
-
-      NoParentScope
-
-      NoSelectors
-
-      AllowRoot
-
-      AllowUnit
-
-      IfacePortConn
-
-      StaticInitializer
-
-      ForceHierarchical
-
-      TypeReference
-
-      AlwaysAllowUpward
-
-      DisallowUnitReferences
-    """
-    AllowDeclaredAfter: typing.ClassVar[LookupFlags]  # value = <LookupFlags.AllowDeclaredAfter: 2>
-    AllowIncompleteForwardTypedefs: typing.ClassVar[LookupFlags]  # value = <LookupFlags.AllowIncompleteForwardTypedefs: 32>
-    AllowRoot: typing.ClassVar[LookupFlags]  # value = <LookupFlags.AllowRoot: 256>
-    AllowUnit: typing.ClassVar[LookupFlags]  # value = <LookupFlags.AllowUnit: 512>
-    AlwaysAllowUpward: typing.ClassVar[LookupFlags]  # value = <LookupFlags.AlwaysAllowUpward: 8192>
-    DisallowUnitReferences: typing.ClassVar[LookupFlags]  # value = <LookupFlags.DisallowUnitReferences: 16384>
-    DisallowWildcardImport: typing.ClassVar[LookupFlags]  # value = <LookupFlags.DisallowWildcardImport: 4>
-    ForceHierarchical: typing.ClassVar[LookupFlags]  # value = <LookupFlags.ForceHierarchical: 18>
-    IfacePortConn: typing.ClassVar[LookupFlags]  # value = <LookupFlags.IfacePortConn: 1024>
-    NoParentScope: typing.ClassVar[LookupFlags]  # value = <LookupFlags.NoParentScope: 64>
-    NoSelectors: typing.ClassVar[LookupFlags]  # value = <LookupFlags.NoSelectors: 128>
-    NoUndeclaredError: typing.ClassVar[LookupFlags]  # value = <LookupFlags.NoUndeclaredError: 8>
-    NoUndeclaredErrorIfUninstantiated: typing.ClassVar[LookupFlags]  # value = <LookupFlags.NoUndeclaredErrorIfUninstantiated: 16>
-    None_: typing.ClassVar[LookupFlags]  # value = <LookupFlags.None_: 0>
-    StaticInitializer: typing.ClassVar[LookupFlags]  # value = <LookupFlags.StaticInitializer: 2048>
-    Type: typing.ClassVar[LookupFlags]  # value = <LookupFlags.Type: 1>
-    TypeReference: typing.ClassVar[LookupFlags]  # value = <LookupFlags.TypeReference: 4096>
-    __members__: typing.ClassVar[dict[str, LookupFlags]]  # value = {'None_': <LookupFlags.None_: 0>, 'Type': <LookupFlags.Type: 1>, 'AllowDeclaredAfter': <LookupFlags.AllowDeclaredAfter: 2>, 'DisallowWildcardImport': <LookupFlags.DisallowWildcardImport: 4>, 'NoUndeclaredError': <LookupFlags.NoUndeclaredError: 8>, 'NoUndeclaredErrorIfUninstantiated': <LookupFlags.NoUndeclaredErrorIfUninstantiated: 16>, 'AllowIncompleteForwardTypedefs': <LookupFlags.AllowIncompleteForwardTypedefs: 32>, 'NoParentScope': <LookupFlags.NoParentScope: 64>, 'NoSelectors': <LookupFlags.NoSelectors: 128>, 'AllowRoot': <LookupFlags.AllowRoot: 256>, 'AllowUnit': <LookupFlags.AllowUnit: 512>, 'IfacePortConn': <LookupFlags.IfacePortConn: 1024>, 'StaticInitializer': <LookupFlags.StaticInitializer: 2048>, 'ForceHierarchical': <LookupFlags.ForceHierarchical: 18>, 'TypeReference': <LookupFlags.TypeReference: 4096>, 'AlwaysAllowUpward': <LookupFlags.AlwaysAllowUpward: 8192>, 'DisallowUnitReferences': <LookupFlags.DisallowUnitReferences: 16384>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class LookupLocation:
-    max: typing.ClassVar[LookupLocation]  # value = <pyslang.LookupLocation object>
-    min: typing.ClassVar[LookupLocation]  # value = <pyslang.LookupLocation object>
+    def value(self) -> int: ...
+
+class LookupLocation(metaclass=_metaclass):
+    max: ClassVar[LookupLocation]  # value = <pyslang.LookupLocation object>
+    min: ClassVar[LookupLocation]  # value = <pyslang.LookupLocation object>
+
     @staticmethod
-    def after(symbol: Any) -> LookupLocation:
-        ...
+    def after(symbol: Any) -> LookupLocation: ...
     @staticmethod
-    def before(symbol: Any) -> LookupLocation:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def before(symbol: Any) -> LookupLocation: ...
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, scope: Any, index: int) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
+    def __init__(self, scope: Any, index: int) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
     @property
-    def index(self) -> Any:
-        ...
+    def index(self) -> Any: ...
     @property
-    def scope(self) -> Any:
-        ...
-class LookupResult:
-    class MemberSelector:
+    def scope(self) -> Any: ...
+
+class LookupResult(metaclass=_metaclass):
+    class MemberSelector(metaclass=_metaclass):
         @property
-        def dotLocation(self) -> SourceLocation:
-            ...
+        def dotLocation(self) -> SourceLocation: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def nameRange(self) -> SourceRange:
-            ...
-    def __init__(self) -> None:
-        ...
-    def clear(self) -> None:
-        ...
-    def errorIfSelectors(self, context: ASTContext) -> None:
-        ...
-    def reportDiags(self, context: ASTContext) -> None:
-        ...
-    @property
-    def diagnostics(self) -> Diagnostics:
-        ...
-    @property
-    def flags(self) -> LookupResultFlags:
-        ...
-    @property
-    def found(self) -> Any:
-        ...
-    @property
-    def hasError(self) -> bool:
-        ...
-    @property
-    def selectors(self) -> Any:
-        ...
-    @property
-    def systemSubroutine(self) -> SystemSubroutine:
-        ...
-    @property
-    def upwardCount(self) -> int:
-        ...
-class LookupResultFlags:
-    """
-    Members:
+        def nameRange(self) -> SourceRange: ...
 
-      None_
-
-      WasImported
-
-      IsHierarchical
-
-      SuppressUndeclared
-
-      FromTypeParam
-
-      FromForwardTypedef
-    """
-    FromForwardTypedef: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.FromForwardTypedef: 16>
-    FromTypeParam: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.FromTypeParam: 8>
-    IsHierarchical: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.IsHierarchical: 2>
-    None_: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.None_: 0>
-    SuppressUndeclared: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.SuppressUndeclared: 4>
-    WasImported: typing.ClassVar[LookupResultFlags]  # value = <LookupResultFlags.WasImported: 1>
-    __members__: typing.ClassVar[dict[str, LookupResultFlags]]  # value = {'None_': <LookupResultFlags.None_: 0>, 'WasImported': <LookupResultFlags.WasImported: 1>, 'IsHierarchical': <LookupResultFlags.IsHierarchical: 2>, 'SuppressUndeclared': <LookupResultFlags.SuppressUndeclared: 4>, 'FromTypeParam': <LookupResultFlags.FromTypeParam: 8>, 'FromForwardTypedef': <LookupResultFlags.FromForwardTypedef: 16>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __init__(self) -> None: ...
+    def clear(self) -> None: ...
+    def errorIfSelectors(self, context: ASTContext) -> None: ...
+    def reportDiags(self, context: ASTContext) -> None: ...
     @property
-    def name(self) -> str:
-        ...
+    def diagnostics(self) -> Diagnostics: ...
     @property
-    def value(self) -> int:
-        ...
+    def flags(self) -> LookupResultFlags: ...
+    @property
+    def found(self) -> Any: ...
+    @property
+    def hasError(self) -> bool: ...
+    @property
+    def selectors(self) -> Any: ...
+    @property
+    def systemSubroutine(self) -> SystemSubroutine: ...
+    @property
+    def upwardCount(self) -> int: ...
+
+class LookupResultFlags(metaclass=_metaclass):
+    FromForwardTypedef: ClassVar[LookupResultFlags]
+    """Value = 16"""
+    FromTypeParam: ClassVar[LookupResultFlags]
+    """Value = 8"""
+    IsHierarchical: ClassVar[LookupResultFlags]
+    """Value = 2"""
+    None_: ClassVar[LookupResultFlags]
+    """Value = 0"""
+    SuppressUndeclared: ClassVar[LookupResultFlags]
+    """Value = 4"""
+    WasImported: ClassVar[LookupResultFlags]
+    """Value = 1"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class LoopConstraintSyntax(ConstraintItemSyntax):
     constraints: ConstraintItemSyntax
     foreachKeyword: Token
     loopList: ForeachLoopListSyntax
+
 class LoopGenerateSyntax(MemberSyntax):
     block: MemberSyntax
     closeParen: Token
@@ -6842,273 +5125,220 @@ class LoopGenerateSyntax(MemberSyntax):
     semi1: Token
     semi2: Token
     stopExpr: ExpressionSyntax
+
 class LoopStatementSyntax(StatementSyntax):
     closeParen: Token
     expr: ExpressionSyntax
     openParen: Token
     repeatOrWhile: Token
     statement: StatementSyntax
+
 class MacroActualArgumentListSyntax(SyntaxNode):
     args: Any
     closeParen: Token
     openParen: Token
+
 class MacroActualArgumentSyntax(SyntaxNode):
     tokens: Any
+
 class MacroArgumentDefaultSyntax(SyntaxNode):
     equals: Token
     tokens: Any
+
 class MacroFormalArgumentListSyntax(SyntaxNode):
     args: Any
     closeParen: Token
     openParen: Token
+
 class MacroFormalArgumentSyntax(SyntaxNode):
     defaultValue: MacroArgumentDefaultSyntax
     name: Token
+
 class MacroUsageSyntax(DirectiveSyntax):
     args: MacroActualArgumentListSyntax
+
 class MatchesClauseSyntax(SyntaxNode):
     matchesKeyword: Token
     pattern: PatternSyntax
+
 class MemberAccessExpression(Expression):
     @property
-    def member(self) -> Any:
-        ...
+    def member(self) -> Any: ...
     @property
-    def value(self) -> Expression:
-        ...
+    def value(self) -> Expression: ...
+
 class MemberAccessExpressionSyntax(ExpressionSyntax):
     dot: Token
     left: ExpressionSyntax
     name: Token
+
 class MemberSyntax(SyntaxNode):
     attributes: Any
-class MethodFlags:
-    """
-    Members:
 
-      None_
+class MethodFlags(metaclass=_metaclass):
+    BuiltIn: ClassVar[MethodFlags]
+    """Value = 512"""
+    Constructor: ClassVar[MethodFlags]
+    """Value = 8"""
+    DPIContext: ClassVar[MethodFlags]
+    """Value = 256"""
+    DPIImport: ClassVar[MethodFlags]
+    """Value = 128"""
+    DefaultedSuperArg: ClassVar[MethodFlags]
+    """Value = 4096"""
+    Extends: ClassVar[MethodFlags]
+    """Value = 16384"""
+    Final: ClassVar[MethodFlags]
+    """Value = 32768"""
+    ForkJoin: ClassVar[MethodFlags]
+    """Value = 2048"""
+    Initial: ClassVar[MethodFlags]
+    """Value = 8192"""
+    InterfaceExtern: ClassVar[MethodFlags]
+    """Value = 16"""
+    ModportExport: ClassVar[MethodFlags]
+    """Value = 64"""
+    ModportImport: ClassVar[MethodFlags]
+    """Value = 32"""
+    None_: ClassVar[MethodFlags]
+    """Value = 0"""
+    Pure: ClassVar[MethodFlags]
+    """Value = 2"""
+    Randomize: ClassVar[MethodFlags]
+    """Value = 1024"""
+    Static: ClassVar[MethodFlags]
+    """Value = 4"""
+    Virtual: ClassVar[MethodFlags]
+    """Value = 1"""
 
-      Virtual
+    __members__: dict[str, Self]
 
-      Pure
-
-      Static
-
-      Constructor
-
-      InterfaceExtern
-
-      ModportImport
-
-      ModportExport
-
-      DPIImport
-
-      DPIContext
-
-      BuiltIn
-
-      Randomize
-
-      ForkJoin
-
-      DefaultedSuperArg
-
-      Initial
-
-      Extends
-
-      Final
-    """
-    BuiltIn: typing.ClassVar[MethodFlags]  # value = <MethodFlags.BuiltIn: 512>
-    Constructor: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Constructor: 8>
-    DPIContext: typing.ClassVar[MethodFlags]  # value = <MethodFlags.DPIContext: 256>
-    DPIImport: typing.ClassVar[MethodFlags]  # value = <MethodFlags.DPIImport: 128>
-    DefaultedSuperArg: typing.ClassVar[MethodFlags]  # value = <MethodFlags.DefaultedSuperArg: 4096>
-    Extends: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Extends: 16384>
-    Final: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Final: 32768>
-    ForkJoin: typing.ClassVar[MethodFlags]  # value = <MethodFlags.ForkJoin: 2048>
-    Initial: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Initial: 8192>
-    InterfaceExtern: typing.ClassVar[MethodFlags]  # value = <MethodFlags.InterfaceExtern: 16>
-    ModportExport: typing.ClassVar[MethodFlags]  # value = <MethodFlags.ModportExport: 64>
-    ModportImport: typing.ClassVar[MethodFlags]  # value = <MethodFlags.ModportImport: 32>
-    None_: typing.ClassVar[MethodFlags]  # value = <MethodFlags.None_: 0>
-    Pure: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Pure: 2>
-    Randomize: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Randomize: 1024>
-    Static: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Static: 4>
-    Virtual: typing.ClassVar[MethodFlags]  # value = <MethodFlags.Virtual: 1>
-    __members__: typing.ClassVar[dict[str, MethodFlags]]  # value = {'None_': <MethodFlags.None_: 0>, 'Virtual': <MethodFlags.Virtual: 1>, 'Pure': <MethodFlags.Pure: 2>, 'Static': <MethodFlags.Static: 4>, 'Constructor': <MethodFlags.Constructor: 8>, 'InterfaceExtern': <MethodFlags.InterfaceExtern: 16>, 'ModportImport': <MethodFlags.ModportImport: 32>, 'ModportExport': <MethodFlags.ModportExport: 64>, 'DPIImport': <MethodFlags.DPIImport: 128>, 'DPIContext': <MethodFlags.DPIContext: 256>, 'BuiltIn': <MethodFlags.BuiltIn: 512>, 'Randomize': <MethodFlags.Randomize: 1024>, 'ForkJoin': <MethodFlags.ForkJoin: 2048>, 'DefaultedSuperArg': <MethodFlags.DefaultedSuperArg: 4096>, 'Initial': <MethodFlags.Initial: 8192>, 'Extends': <MethodFlags.Extends: 16384>, 'Final': <MethodFlags.Final: 32768>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class MethodPrototypeSymbol(Symbol, Scope):
-    class ExternImpl:
+    class ExternImpl(metaclass=_metaclass):
         @property
-        def impl(self) -> SubroutineSymbol:
-            ...
+        def impl(self) -> SubroutineSymbol: ...
         @property
-        def nextImpl(self) -> MethodPrototypeSymbol.ExternImpl:
-            ...
-    @property
-    def arguments(self) -> List[FormalArgumentSymbol]:
-        ...
-    @property
-    def firstExternImpl(self) -> Any:
-        ...
-    @property
-    def flags(self) -> MethodFlags:
-        ...
-    @property
-    def isVirtual(self) -> bool:
-        ...
-    @property
-    def override(self) -> Symbol:
-        ...
-    @property
-    def returnType(self) -> Any:
-        ...
-    @property
-    def subroutine(self) -> SubroutineSymbol:
-        ...
-    @property
-    def subroutineKind(self) -> SubroutineKind:
-        ...
-    @property
-    def visibility(self) -> Visibility:
-        ...
-class MinTypMax:
-    """
-    Members:
+        def nextImpl(self) -> MethodPrototypeSymbol.ExternImpl: ...
 
-      Min
-
-      Typ
-
-      Max
-    """
-    Max: typing.ClassVar[MinTypMax]  # value = <MinTypMax.Max: 2>
-    Min: typing.ClassVar[MinTypMax]  # value = <MinTypMax.Min: 0>
-    Typ: typing.ClassVar[MinTypMax]  # value = <MinTypMax.Typ: 1>
-    __members__: typing.ClassVar[dict[str, MinTypMax]]  # value = {'Min': <MinTypMax.Min: 0>, 'Typ': <MinTypMax.Typ: 1>, 'Max': <MinTypMax.Max: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
     @property
-    def name(self) -> str:
-        ...
+    def arguments(self) -> list[FormalArgumentSymbol]: ...
     @property
-    def value(self) -> int:
-        ...
+    def firstExternImpl(self) -> Any: ...
+    @property
+    def flags(self) -> MethodFlags: ...
+    @property
+    def isVirtual(self) -> bool: ...
+    @property
+    def override(self) -> Symbol: ...
+    @property
+    def returnType(self) -> Any: ...
+    @property
+    def subroutine(self) -> SubroutineSymbol: ...
+    @property
+    def subroutineKind(self) -> SubroutineKind: ...
+    @property
+    def visibility(self) -> Visibility: ...
+
+class MinTypMax(metaclass=_metaclass):
+    Max: ClassVar[MinTypMax]
+    """Value = 2"""
+    Min: ClassVar[MinTypMax]
+    """Value = 0"""
+    Typ: ClassVar[MinTypMax]
+    """Value = 1"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class MinTypMaxExpression(Expression):
     @property
-    def max(self) -> Expression:
-        ...
+    def max(self) -> Expression: ...
     @property
-    def min(self) -> Expression:
-        ...
+    def min(self) -> Expression: ...
     @property
-    def selected(self) -> Expression:
-        ...
+    def selected(self) -> Expression: ...
     @property
-    def typ(self) -> Expression:
-        ...
+    def typ(self) -> Expression: ...
+
 class MinTypMaxExpressionSyntax(ExpressionSyntax):
     colon1: Token
     colon2: Token
     max: ExpressionSyntax
     min: ExpressionSyntax
     typ: ExpressionSyntax
+
 class ModportClockingPortSyntax(MemberSyntax):
     clocking: Token
     name: Token
+
 class ModportClockingSymbol(Symbol):
     @property
-    def target(self) -> Symbol:
-        ...
+    def target(self) -> Symbol: ...
+
 class ModportDeclarationSyntax(MemberSyntax):
     items: Any
     keyword: Token
     semi: Token
+
 class ModportExplicitPortSyntax(ModportPortSyntax):
     closeParen: Token
     dot: Token
     expr: ExpressionSyntax
     name: Token
     openParen: Token
+
 class ModportItemSyntax(SyntaxNode):
     name: Token
     ports: AnsiPortListSyntax
+
 class ModportNamedPortSyntax(ModportPortSyntax):
     name: Token
+
 class ModportPortSymbol(ValueSymbol):
     @property
-    def direction(self) -> ArgumentDirection:
-        ...
+    def direction(self) -> ArgumentDirection: ...
     @property
-    def explicitConnection(self) -> Expression:
-        ...
+    def explicitConnection(self) -> Expression: ...
     @property
-    def internalSymbol(self) -> Symbol:
-        ...
+    def internalSymbol(self) -> Symbol: ...
+
 class ModportPortSyntax(SyntaxNode):
     pass
+
 class ModportSimplePortListSyntax(MemberSyntax):
     direction: Token
     ports: Any
+
 class ModportSubroutinePortListSyntax(MemberSyntax):
     importExport: Token
     ports: Any
+
 class ModportSubroutinePortSyntax(ModportPortSyntax):
     prototype: FunctionPrototypeSyntax
+
 class ModportSymbol(Symbol, Scope):
     @property
-    def hasExports(self) -> bool:
-        ...
+    def hasExports(self) -> bool: ...
+
 class ModuleDeclarationSyntax(MemberSyntax):
     blockName: NamedBlockClauseSyntax
     endmodule: Token
     header: ModuleHeaderSyntax
     members: Any
+
 class ModuleHeaderSyntax(SyntaxNode):
     imports: Any
     lifetime: Token
@@ -7117,75 +5347,85 @@ class ModuleHeaderSyntax(SyntaxNode):
     parameters: ParameterPortListSyntax
     ports: PortListSyntax
     semi: Token
+
 class MultiPortSymbol(Symbol):
     @property
-    def direction(self) -> ArgumentDirection:
-        ...
+    def direction(self) -> ArgumentDirection: ...
     @property
-    def initializer(self) -> Expression:
-        ...
+    def initializer(self) -> Expression: ...
     @property
-    def isNullPort(self) -> bool:
-        ...
+    def isNullPort(self) -> bool: ...
     @property
-    def ports(self) -> List[PortSymbol]:
-        ...
+    def ports(self) -> list[PortSymbol]: ...
     @property
-    def type(self) -> Any:
-        ...
+    def type(self) -> Any: ...
+
 class MultipleConcatenationExpressionSyntax(PrimaryExpressionSyntax):
     closeBrace: Token
     concatenation: ConcatenationExpressionSyntax
     expression: ExpressionSyntax
     openBrace: Token
+
 class NameSyntax(ExpressionSyntax):
     pass
+
 class NameValuePragmaExpressionSyntax(PragmaExpressionSyntax):
     equals: Token
     name: Token
     value: PragmaExpressionSyntax
+
 class NamedArgumentSyntax(ArgumentSyntax):
     closeParen: Token
     dot: Token
     expr: PropertyExprSyntax
     name: Token
     openParen: Token
+
 class NamedBlockClauseSyntax(SyntaxNode):
     colon: Token
     name: Token
+
 class NamedConditionalDirectiveExpressionSyntax(ConditionalDirectiveExpressionSyntax):
     name: Token
+
 class NamedLabelSyntax(SyntaxNode):
     colon: Token
     name: Token
+
 class NamedParamAssignmentSyntax(ParamAssignmentSyntax):
     closeParen: Token
     dot: Token
     expr: ExpressionSyntax
     name: Token
     openParen: Token
+
 class NamedPortConnectionSyntax(PortConnectionSyntax):
     closeParen: Token
     dot: Token
     expr: PropertyExprSyntax
     name: Token
     openParen: Token
+
 class NamedStructurePatternMemberSyntax(StructurePatternMemberSyntax):
     colon: Token
     name: Token
     pattern: PatternSyntax
+
 class NamedTypeSyntax(DataTypeSyntax):
     name: NameSyntax
+
 class NamedValueExpression(ValueExpressionBase):
     pass
+
 class NetAliasSymbol(Symbol):
     @property
-    def netReferences(self) -> List[Expression]:
-        ...
+    def netReferences(self) -> list[Expression]: ...
+
 class NetAliasSyntax(MemberSyntax):
     keyword: Token
     nets: Any
     semi: Token
+
 class NetDeclarationSyntax(MemberSyntax):
     declarators: Any
     delay: TimingControlSyntax
@@ -7194,398 +5434,358 @@ class NetDeclarationSyntax(MemberSyntax):
     semi: Token
     strength: NetStrengthSyntax
     type: DataTypeSyntax
+
 class NetPortHeaderSyntax(PortHeaderSyntax):
     dataType: DataTypeSyntax
     direction: Token
     netType: Token
+
 class NetStrengthSyntax(SyntaxNode):
     pass
+
 class NetSymbol(ValueSymbol):
-    class ExpansionHint:
-        """
-        Members:
+    class ExpansionHint(metaclass=_metaclass):
+        None_ = 0
+        Scalared = 2
+        Vectored = 1
 
-          None_
+        __members__: dict[str, Self]
 
-          Vectored
-
-          Scalared
-        """
-        None_: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.None_: 0>
-        Scalared: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.Scalared: 2>
-        Vectored: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.Vectored: 1>
-        __members__: typing.ClassVar[dict[str, NetSymbol.ExpansionHint]]  # value = {'None_': <ExpansionHint.None_: 0>, 'Vectored': <ExpansionHint.Vectored: 1>, 'Scalared': <ExpansionHint.Scalared: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    None_: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.None_: 0>
-    Scalared: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.Scalared: 2>
-    Vectored: typing.ClassVar[NetSymbol.ExpansionHint]  # value = <ExpansionHint.Vectored: 1>
+        def value(self) -> int: ...
+
+    None_: Final = ExpansionHint.None_
+    Scalared: Final = ExpansionHint.Scalared
+    Vectored: Final = ExpansionHint.Vectored
+
     @property
-    def chargeStrength(self) -> Any | None:
-        ...
+    def chargeStrength(self) -> Any | None: ...
     @property
-    def delay(self) -> TimingControl:
-        ...
+    def delay(self) -> TimingControl: ...
     @property
-    def driveStrength(self) -> tuple[Any | None, Any | None]:
-        ...
+    def driveStrength(self) -> tuple[Any | None, Any | None]: ...
     @property
-    def expansionHint(self) -> Any:
-        ...
+    def expansionHint(self) -> Any: ...
     @property
-    def isImplicit(self) -> bool:
-        ...
+    def isImplicit(self) -> bool: ...
     @property
-    def netType(self) -> Any:
-        ...
+    def netType(self) -> Any: ...
+
 class NetType(Symbol):
-    class NetKind:
-        """
-        Members:
+    class NetKind(metaclass=_metaclass):
+        Interconnect: ClassVar[Self]
+        """Value = 13"""
+        Supply0: ClassVar[Self]
+        """Value = 10"""
+        Supply1: ClassVar[Self]
+        """Value = 11"""
+        Tri: ClassVar[Self]
+        """Value = 4"""
+        Tri0: ClassVar[Self]
+        """Value = 7"""
+        Tri1: ClassVar[Self]
+        """Value = 8"""
+        TriAnd: ClassVar[Self]
+        """Value = 5"""
+        TriOr: ClassVar[Self]
+        """Value = 6"""
+        TriReg: ClassVar[Self]
+        """Value = 9"""
+        UWire: ClassVar[Self]
+        """Value = 12"""
+        Unknown: ClassVar[Self]
+        """Value = 0"""
+        UserDefined: ClassVar[Self]
+        """Value = 14"""
+        WAnd: ClassVar[Self]
+        """Value = 2"""
+        WOr: ClassVar[Self]
+        """Value = 3"""
+        Wire: ClassVar[Self]
+        """Value = 1"""
 
-          Unknown
+        __members__: dict[str, Self]
 
-          Wire
-
-          WAnd
-
-          WOr
-
-          Tri
-
-          TriAnd
-
-          TriOr
-
-          Tri0
-
-          Tri1
-
-          TriReg
-
-          Supply0
-
-          Supply1
-
-          UWire
-
-          Interconnect
-
-          UserDefined
-        """
-        Interconnect: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Interconnect: 13>
-        Supply0: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Supply0: 10>
-        Supply1: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Supply1: 11>
-        Tri: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri: 4>
-        Tri0: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri0: 7>
-        Tri1: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri1: 8>
-        TriAnd: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriAnd: 5>
-        TriOr: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriOr: 6>
-        TriReg: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriReg: 9>
-        UWire: typing.ClassVar[NetType.NetKind]  # value = <NetKind.UWire: 12>
-        Unknown: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Unknown: 0>
-        UserDefined: typing.ClassVar[NetType.NetKind]  # value = <NetKind.UserDefined: 14>
-        WAnd: typing.ClassVar[NetType.NetKind]  # value = <NetKind.WAnd: 2>
-        WOr: typing.ClassVar[NetType.NetKind]  # value = <NetKind.WOr: 3>
-        Wire: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Wire: 1>
-        __members__: typing.ClassVar[dict[str, NetType.NetKind]]  # value = {'Unknown': <NetKind.Unknown: 0>, 'Wire': <NetKind.Wire: 1>, 'WAnd': <NetKind.WAnd: 2>, 'WOr': <NetKind.WOr: 3>, 'Tri': <NetKind.Tri: 4>, 'TriAnd': <NetKind.TriAnd: 5>, 'TriOr': <NetKind.TriOr: 6>, 'Tri0': <NetKind.Tri0: 7>, 'Tri1': <NetKind.Tri1: 8>, 'TriReg': <NetKind.TriReg: 9>, 'Supply0': <NetKind.Supply0: 10>, 'Supply1': <NetKind.Supply1: 11>, 'UWire': <NetKind.UWire: 12>, 'Interconnect': <NetKind.Interconnect: 13>, 'UserDefined': <NetKind.UserDefined: 14>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Interconnect: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Interconnect: 13>
-    Supply0: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Supply0: 10>
-    Supply1: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Supply1: 11>
-    Tri: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri: 4>
-    Tri0: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri0: 7>
-    Tri1: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Tri1: 8>
-    TriAnd: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriAnd: 5>
-    TriOr: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriOr: 6>
-    TriReg: typing.ClassVar[NetType.NetKind]  # value = <NetKind.TriReg: 9>
-    UWire: typing.ClassVar[NetType.NetKind]  # value = <NetKind.UWire: 12>
-    Unknown: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Unknown: 0>
-    UserDefined: typing.ClassVar[NetType.NetKind]  # value = <NetKind.UserDefined: 14>
-    WAnd: typing.ClassVar[NetType.NetKind]  # value = <NetKind.WAnd: 2>
-    WOr: typing.ClassVar[NetType.NetKind]  # value = <NetKind.WOr: 3>
-    Wire: typing.ClassVar[NetType.NetKind]  # value = <NetKind.Wire: 1>
+        def value(self) -> int: ...
+
+    Interconnect: Final = NetKind.Interconnect
+    Supply0: Final = NetKind.Supply0
+    Supply1: Final = NetKind.Supply1
+    Tri: Final = NetKind.Tri
+    Tri0: Final = NetKind.Tri0
+    Tri1: Final = NetKind.Tri1
+    TriAnd: Final = NetKind.TriAnd
+    TriOr: Final = NetKind.TriOr
+    TriReg: Final = NetKind.TriReg
+    UWire: Final = NetKind.UWire
+    Unknown: Final = NetKind.Unknown
+    UserDefined: Final = NetKind.UserDefined
+    WAnd: Final = NetKind.WAnd
+    WOr: Final = NetKind.WOr
+    Wire: Final = NetKind.Wire
+
     @staticmethod
-    def getSimulatedNetType(internal: NetType, external: NetType, shouldWarn: bool) -> NetType:
-        ...
+    def getSimulatedNetType(internal: NetType, external: NetType, shouldWarn: bool) -> NetType: ...
     @property
-    def declaredType(self) -> Any:
-        ...
+    def declaredType(self) -> Any: ...
     @property
-    def isBuiltIn(self) -> bool:
-        ...
+    def isBuiltIn(self) -> bool: ...
     @property
-    def isError(self) -> bool:
-        ...
+    def isError(self) -> bool: ...
     @property
-    def netKind(self) -> Any:
-        ...
+    def netKind(self) -> Any: ...
     @property
-    def resolutionFunction(self) -> SubroutineSymbol:
-        ...
+    def resolutionFunction(self) -> SubroutineSymbol: ...
+
 class NetTypeDeclarationSyntax(MemberSyntax):
     keyword: Token
     name: Token
     semi: Token
     type: DataTypeSyntax
     withFunction: WithFunctionClauseSyntax
+
 class NewArrayExpression(Expression):
     @property
-    def initExpr(self) -> Expression:
-        ...
+    def initExpr(self) -> Expression: ...
     @property
-    def sizeExpr(self) -> Expression:
-        ...
+    def sizeExpr(self) -> Expression: ...
+
 class NewArrayExpressionSyntax(ExpressionSyntax):
     closeBracket: Token
     initializer: ParenthesizedExpressionSyntax
     newKeyword: NameSyntax
     openBracket: Token
     sizeExpr: ExpressionSyntax
+
 class NewClassExpression(Expression):
     @property
-    def constructorCall(self) -> Expression:
-        ...
+    def constructorCall(self) -> Expression: ...
     @property
-    def isSuperClass(self) -> bool:
-        ...
+    def isSuperClass(self) -> bool: ...
+
 class NewClassExpressionSyntax(ExpressionSyntax):
     argList: ArgumentListSyntax
     scopedNew: NameSyntax
+
 class NewCovergroupExpression(Expression):
     @property
-    def arguments(self) -> List[Expression]:
-        ...
+    def arguments(self) -> list[Expression]: ...
+
 class NonAnsiPortListSyntax(PortListSyntax):
     closeParen: Token
     openParen: Token
     ports: Any
+
 class NonAnsiPortSyntax(SyntaxNode):
     pass
+
 class NonAnsiUdpPortListSyntax(UdpPortListSyntax):
     closeParen: Token
     openParen: Token
     ports: Any
     semi: Token
+
 class NonConstantFunction(SimpleSystemSubroutine):
-    def __init__(self, name: str, returnType: Any, requiredArgs: int = 0, argTypes: list[Any] = [], isMethod: bool = False) -> None:
-        ...
-class Null:
-    def __init__(self) -> None:
-        ...
-    def __repr__(self) -> str:
-        ...
+    def __init__(
+        self,
+        name: str,
+        returnType: Any,
+        requiredArgs: int = 0,
+        argTypes: list[Any] = [],
+        isMethod: bool = False,
+    ) -> None: ...
+
+class Null(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+    def __repr__(self) -> str: ...
+
 class NullLiteral(Expression):
     pass
+
 class NullType(Type):
     pass
+
 class NumberPragmaExpressionSyntax(PragmaExpressionSyntax):
     base: Token
     size: Token
     value: Token
+
 class OneStepDelayControl(TimingControl):
     pass
+
 class OneStepDelaySyntax(TimingControlSyntax):
     hash: Token
     oneStep: Token
+
 class OrderedArgumentSyntax(ArgumentSyntax):
     expr: PropertyExprSyntax
+
 class OrderedParamAssignmentSyntax(ParamAssignmentSyntax):
     expr: ExpressionSyntax
+
 class OrderedPortConnectionSyntax(PortConnectionSyntax):
     expr: PropertyExprSyntax
+
 class OrderedStructurePatternMemberSyntax(StructurePatternMemberSyntax):
     pattern: PatternSyntax
+
 class PackageExportAllDeclarationSyntax(MemberSyntax):
     doubleColon: Token
     keyword: Token
     semi: Token
     star1: Token
     star2: Token
+
 class PackageExportDeclarationSyntax(MemberSyntax):
     items: Any
     keyword: Token
     semi: Token
+
 class PackageImportDeclarationSyntax(MemberSyntax):
     items: Any
     keyword: Token
     semi: Token
+
 class PackageImportItemSyntax(SyntaxNode):
     doubleColon: Token
     item: Token
     package: Token
+
 class PackageSymbol(Symbol, Scope):
-    def findForImport(self, name: str) -> Symbol:
-        ...
+    def findForImport(self, name: str) -> Symbol: ...
     @property
-    def defaultLifetime(self) -> VariableLifetime:
-        ...
+    def defaultLifetime(self) -> VariableLifetime: ...
     @property
-    def defaultNetType(self) -> Any:
-        ...
+    def defaultNetType(self) -> Any: ...
     @property
-    def exportDecls(self) -> List[Any]:
-        ...
+    def exportDecls(self) -> list[Any]: ...
     @property
-    def hasExportAll(self) -> bool:
-        ...
+    def hasExportAll(self) -> bool: ...
     @property
-    def timeScale(self) -> TimeScale | None:
-        ...
+    def timeScale(self) -> TimeScale | None: ...
+
 class PackedArrayType(IntegralType):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
     @property
-    def range(self) -> ConstantRange:
-        ...
+    def range(self) -> ConstantRange: ...
+
 class PackedStructType(IntegralType, Scope):
     @property
-    def systemId(self) -> int:
-        ...
+    def systemId(self) -> int: ...
+
 class PackedUnionType(IntegralType, Scope):
     @property
-    def isSoft(self) -> bool:
-        ...
+    def isSoft(self) -> bool: ...
     @property
-    def isTagged(self) -> bool:
-        ...
+    def isTagged(self) -> bool: ...
     @property
-    def systemId(self) -> int:
-        ...
+    def systemId(self) -> int: ...
     @property
-    def tagBits(self) -> int:
-        ...
+    def tagBits(self) -> int: ...
+
 class ParamAssignmentSyntax(SyntaxNode):
     pass
+
 class ParameterDeclarationBaseSyntax(SyntaxNode):
     keyword: Token
+
 class ParameterDeclarationStatementSyntax(MemberSyntax):
     parameter: ParameterDeclarationBaseSyntax
     semi: Token
+
 class ParameterDeclarationSyntax(ParameterDeclarationBaseSyntax):
     declarators: Any
     type: DataTypeSyntax
+
 class ParameterPortListSyntax(SyntaxNode):
     closeParen: Token
     declarations: Any
     hash: Token
     openParen: Token
+
 class ParameterSymbol(ValueSymbol, ParameterSymbolBase):
     @property
-    def isOverridden(self) -> bool:
-        ...
+    def isOverridden(self) -> bool: ...
     @property
-    def value(self) -> ConstantValue:
-        ...
-class ParameterSymbolBase:
+    def value(self) -> ConstantValue: ...
+
+class ParameterSymbolBase(metaclass=_metaclass):
     @property
-    def isBodyParam(self) -> bool:
-        ...
+    def isBodyParam(self) -> bool: ...
     @property
-    def isLocalParam(self) -> bool:
-        ...
+    def isLocalParam(self) -> bool: ...
     @property
-    def isPortParam(self) -> bool:
-        ...
+    def isPortParam(self) -> bool: ...
+
 class ParameterValueAssignmentSyntax(SyntaxNode):
     closeParen: Token
     hash: Token
     openParen: Token
     parameters: Any
+
 class ParenExpressionListSyntax(SyntaxNode):
     closeParen: Token
     expressions: Any
     openParen: Token
+
 class ParenPragmaExpressionSyntax(PragmaExpressionSyntax):
     closeParen: Token
     openParen: Token
     values: Any
+
 class ParenthesizedBinsSelectExprSyntax(BinsSelectExpressionSyntax):
     closeParen: Token
     expr: BinsSelectExpressionSyntax
     openParen: Token
+
 class ParenthesizedConditionalDirectiveExpressionSyntax(ConditionalDirectiveExpressionSyntax):
     closeParen: Token
     openParen: Token
     operand: ConditionalDirectiveExpressionSyntax
+
 class ParenthesizedEventExpressionSyntax(EventExpressionSyntax):
     closeParen: Token
     expr: EventExpressionSyntax
     openParen: Token
+
 class ParenthesizedExpressionSyntax(PrimaryExpressionSyntax):
     closeParen: Token
     expression: ExpressionSyntax
     openParen: Token
+
 class ParenthesizedPatternSyntax(PatternSyntax):
     closeParen: Token
     openParen: Token
     pattern: PatternSyntax
+
 class ParenthesizedPropertyExprSyntax(PropertyExprSyntax):
     closeParen: Token
     expr: PropertyExprSyntax
     matchList: SequenceMatchListSyntax
     openParen: Token
+
 class ParenthesizedSequenceExprSyntax(SequenceExprSyntax):
     closeParen: Token
     expr: SequenceExprSyntax
     matchList: SequenceMatchListSyntax
     openParen: Token
     repetition: SequenceRepetitionSyntax
-class ParserOptions:
+
+class ParserOptions(metaclass=_metaclass):
     languageVersion: LanguageVersion
     maxRecursionDepth: int
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
+
 class PathDeclarationSyntax(MemberSyntax):
     closeParen: Token
     delays: Any
@@ -7593,6 +5793,7 @@ class PathDeclarationSyntax(MemberSyntax):
     equals: Token
     openParen: Token
     semi: Token
+
 class PathDescriptionSyntax(SyntaxNode):
     closeParen: Token
     edgeIdentifier: Token
@@ -7601,246 +5802,189 @@ class PathDescriptionSyntax(SyntaxNode):
     pathOperator: Token
     polarityOperator: Token
     suffix: PathSuffixSyntax
+
 class PathSuffixSyntax(SyntaxNode):
     pass
-class Pattern:
-    def __repr__(self) -> str:
-        ...
-    def eval(self, context: EvalContext, value: Any, conditionKind: Any) -> Any:
-        ...
+
+class Pattern(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
+    def eval(self, context: EvalContext, value: Any, conditionKind: Any) -> Any: ...
     @property
-    def bad(self) -> bool:
-        ...
+    def bad(self) -> bool: ...
     @property
-    def kind(self) -> PatternKind:
-        ...
+    def kind(self) -> PatternKind: ...
     @property
-    def sourceRange(self) -> Any:
-        ...
+    def sourceRange(self) -> Any: ...
     @property
-    def syntax(self) -> Any:
-        ...
+    def syntax(self) -> Any: ...
+
 class PatternCaseItemSyntax(CaseItemSyntax):
     colon: Token
     expr: ExpressionSyntax
     pattern: PatternSyntax
     statement: StatementSyntax
     tripleAnd: Token
+
 class PatternCaseStatement(Statement):
-    class ItemGroup:
+    class ItemGroup(metaclass=_metaclass):
         @property
-        def filter(self) -> Expression:
-            ...
+        def filter(self) -> Expression: ...
         @property
-        def pattern(self) -> Pattern:
-            ...
+        def pattern(self) -> Pattern: ...
         @property
-        def stmt(self) -> Statement:
-            ...
-    @property
-    def check(self) -> UniquePriorityCheck:
-        ...
-    @property
-    def condition(self) -> CaseStatementCondition:
-        ...
-    @property
-    def defaultCase(self) -> Statement:
-        ...
-    @property
-    def expr(self) -> Expression:
-        ...
-    @property
-    def items(self) -> List[Any]:
-        ...
-class PatternKind:
-    """
-    Members:
+        def stmt(self) -> Statement: ...
 
-      Invalid
-
-      Wildcard
-
-      Constant
-
-      Variable
-
-      Tagged
-
-      Structure
-    """
-    Constant: typing.ClassVar[PatternKind]  # value = <PatternKind.Constant: 2>
-    Invalid: typing.ClassVar[PatternKind]  # value = <PatternKind.Invalid: 0>
-    Structure: typing.ClassVar[PatternKind]  # value = <PatternKind.Structure: 5>
-    Tagged: typing.ClassVar[PatternKind]  # value = <PatternKind.Tagged: 4>
-    Variable: typing.ClassVar[PatternKind]  # value = <PatternKind.Variable: 3>
-    Wildcard: typing.ClassVar[PatternKind]  # value = <PatternKind.Wildcard: 1>
-    __members__: typing.ClassVar[dict[str, PatternKind]]  # value = {'Invalid': <PatternKind.Invalid: 0>, 'Wildcard': <PatternKind.Wildcard: 1>, 'Constant': <PatternKind.Constant: 2>, 'Variable': <PatternKind.Variable: 3>, 'Tagged': <PatternKind.Tagged: 4>, 'Structure': <PatternKind.Structure: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
     @property
-    def name(self) -> str:
-        ...
+    def check(self) -> UniquePriorityCheck: ...
     @property
-    def value(self) -> int:
-        ...
+    def condition(self) -> CaseStatementCondition: ...
+    @property
+    def defaultCase(self) -> Statement: ...
+    @property
+    def expr(self) -> Expression: ...
+    @property
+    def items(self) -> list[Any]: ...
+
+class PatternKind(metaclass=_metaclass):
+    Constant: ClassVar[PatternKind]
+    """Value = 2"""
+    Invalid: ClassVar[PatternKind]
+    """Value = 0"""
+    Structure: ClassVar[PatternKind]
+    """Value = 5"""
+    Tagged: ClassVar[PatternKind]
+    """Value = 4"""
+    Variable: ClassVar[PatternKind]
+    """Value = 3"""
+    Wildcard: ClassVar[PatternKind]
+    """Value = 1"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def value(self) -> int: ...
+
 class PatternSyntax(SyntaxNode):
     pass
+
 class PatternVarSymbol(TempVarSymbol):
     pass
-class PendingAnalysis:
-    def tryGet(self) -> AnalyzedScope:
-        ...
+
+class PendingAnalysis(metaclass=_metaclass):
+    def tryGet(self) -> AnalyzedScope: ...
     @property
-    def symbol(self) -> Any:
-        ...
+    def symbol(self) -> Any: ...
+
 class PortConcatenationSyntax(PortExpressionSyntax):
     closeBrace: Token
     openBrace: Token
     references: Any
-class PortConnection:
+
+class PortConnection(metaclass=_metaclass):
     @property
-    def expression(self) -> Expression:
-        ...
+    def expression(self) -> Expression: ...
     @property
-    def ifaceConn(self) -> tuple[Symbol, ...]:
-        ...
+    def ifaceConn(self) -> tuple[Symbol, ...]: ...
     @property
-    def port(self) -> Symbol:
-        ...
+    def port(self) -> Symbol: ...
+
 class PortConnectionSyntax(SyntaxNode):
     attributes: Any
+
 class PortDeclarationSyntax(MemberSyntax):
     declarators: Any
     header: PortHeaderSyntax
     semi: Token
+
 class PortExpressionSyntax(SyntaxNode):
     pass
+
 class PortHeaderSyntax(SyntaxNode):
     pass
+
 class PortListSyntax(SyntaxNode):
     pass
+
 class PortReferenceSyntax(PortExpressionSyntax):
     name: Token
     select: ElementSelectSyntax
+
 class PortSymbol(Symbol):
     @property
-    def direction(self) -> ArgumentDirection:
-        ...
+    def direction(self) -> ArgumentDirection: ...
     @property
-    def externalLoc(self) -> SourceLocation:
-        ...
+    def externalLoc(self) -> SourceLocation: ...
     @property
-    def initializer(self) -> Expression:
-        ...
+    def initializer(self) -> Expression: ...
     @property
-    def internalExpr(self) -> Expression:
-        ...
+    def internalExpr(self) -> Expression: ...
     @property
-    def internalSymbol(self) -> Symbol:
-        ...
+    def internalSymbol(self) -> Symbol: ...
     @property
-    def isAnsiPort(self) -> bool:
-        ...
+    def isAnsiPort(self) -> bool: ...
     @property
-    def isNetPort(self) -> bool:
-        ...
+    def isNetPort(self) -> bool: ...
     @property
-    def isNullPort(self) -> bool:
-        ...
+    def isNullPort(self) -> bool: ...
     @property
-    def type(self) -> Any:
-        ...
+    def type(self) -> Any: ...
+
 class PostfixUnaryExpressionSyntax(ExpressionSyntax):
     attributes: Any
     operand: ExpressionSyntax
     operatorToken: Token
+
 class PragmaDirectiveSyntax(DirectiveSyntax):
     args: Any
     name: Token
+
 class PragmaExpressionSyntax(SyntaxNode):
     pass
+
 class PredefinedIntegerType(IntegralType):
-    class Kind:
-        """
-        Members:
+    class Kind(metaclass=_metaclass):
+        Byte: ClassVar[Self]
+        """Value = 3"""
+        Int: ClassVar[Self]
+        """Value = 1"""
+        Integer: ClassVar[Self]
+        """Value = 4"""
+        LongInt: ClassVar[Self]
+        """Value = 2"""
+        ShortInt: ClassVar[Self]
+        """Value = 0"""
+        Time: ClassVar[Self]
+        """Value = 5"""
 
-          ShortInt
+        __members__: dict[str, Self]
 
-          Int
-
-          LongInt
-
-          Byte
-
-          Integer
-
-          Time
-        """
-        Byte: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Byte: 3>
-        Int: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Int: 1>
-        Integer: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Integer: 4>
-        LongInt: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.LongInt: 2>
-        ShortInt: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.ShortInt: 0>
-        Time: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Time: 5>
-        __members__: typing.ClassVar[dict[str, PredefinedIntegerType.Kind]]  # value = {'ShortInt': <Kind.ShortInt: 0>, 'Int': <Kind.Int: 1>, 'LongInt': <Kind.LongInt: 2>, 'Byte': <Kind.Byte: 3>, 'Integer': <Kind.Integer: 4>, 'Time': <Kind.Time: 5>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Byte: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Byte: 3>
-    Int: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Int: 1>
-    Integer: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Integer: 4>
-    LongInt: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.LongInt: 2>
-    ShortInt: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.ShortInt: 0>
-    Time: typing.ClassVar[PredefinedIntegerType.Kind]  # value = <Kind.Time: 5>
+        def value(self) -> int: ...
+
+    Byte: Final = Kind.Byte
+    Int: Final = Kind.Int
+    Integer: Final = Kind.Integer
+    LongInt: Final = Kind.LongInt
+    ShortInt: Final = Kind.ShortInt
+    Time: Final = Kind.Time
+
     @property
-    def integerKind(self) -> Any:
-        ...
+    def integerKind(self) -> Any: ...
+
 class PrefixUnaryExpressionSyntax(ExpressionSyntax):
     attributes: Any
     operand: ExpressionSyntax
     operatorToken: Token
-class PreprocessorOptions:
+
+class PreprocessorOptions(metaclass=_metaclass):
     additionalIncludePaths: list[os.PathLike]
     ignoreDirectives: set[str]
     languageVersion: LanguageVersion
@@ -7848,240 +5992,160 @@ class PreprocessorOptions:
     predefineSource: str
     predefines: list[str]
     undefines: list[str]
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
+
 class PrimaryBlockEventExpressionSyntax(BlockEventExpressionSyntax):
     keyword: Token
     name: NameSyntax
+
 class PrimaryExpressionSyntax(ExpressionSyntax):
     pass
+
 class PrimitiveInstanceSymbol(InstanceSymbolBase):
     @property
-    def delay(self) -> TimingControl:
-        ...
+    def delay(self) -> TimingControl: ...
     @property
-    def driveStrength(self) -> tuple[Any | None, Any | None]:
-        ...
+    def driveStrength(self) -> tuple[Any | None, Any | None]: ...
     @property
-    def portConnections(self) -> List[Expression]:
-        ...
+    def portConnections(self) -> list[Expression]: ...
     @property
-    def primitiveType(self) -> Any:
-        ...
+    def primitiveType(self) -> Any: ...
+
 class PrimitiveInstantiationSyntax(MemberSyntax):
     delay: TimingControlSyntax
     instances: Any
     semi: Token
     strength: NetStrengthSyntax
     type: Token
-class PrimitivePortDirection:
-    """
-    Members:
 
-      In
+class PrimitivePortDirection(metaclass=_metaclass):
+    In: ClassVar[PrimitivePortDirection]
+    """Value = 0"""
+    Out: ClassVar[PrimitivePortDirection]
+    """Value = 1"""
+    OutReg: ClassVar[PrimitivePortDirection]
+    """Value = 2"""
+    InOut: ClassVar[PrimitivePortDirection]
+    """Value = 3"""
 
-      Out
+    __members__: dict[str, Self]
 
-      OutReg
-
-      InOut
-    """
-    In: typing.ClassVar[PrimitivePortDirection]  # value = <PrimitivePortDirection.In: 0>
-    InOut: typing.ClassVar[PrimitivePortDirection]  # value = <PrimitivePortDirection.InOut: 3>
-    Out: typing.ClassVar[PrimitivePortDirection]  # value = <PrimitivePortDirection.Out: 1>
-    OutReg: typing.ClassVar[PrimitivePortDirection]  # value = <PrimitivePortDirection.OutReg: 2>
-    __members__: typing.ClassVar[dict[str, PrimitivePortDirection]]  # value = {'In': <PrimitivePortDirection.In: 0>, 'Out': <PrimitivePortDirection.Out: 1>, 'OutReg': <PrimitivePortDirection.OutReg: 2>, 'InOut': <PrimitivePortDirection.InOut: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class PrimitivePortSymbol(ValueSymbol):
     @property
-    def direction(self) -> PrimitivePortDirection:
-        ...
+    def direction(self) -> PrimitivePortDirection: ...
+
 class PrimitiveSymbol(Symbol, Scope):
-    class PrimitiveKind:
-        """
-        Members:
+    class PrimitiveKind(metaclass=_metaclass):
+        Fixed: ClassVar[Self]
+        """Value = 1"""
+        NInput: ClassVar[Self]
+        """Value = 2"""
+        NOutput: ClassVar[Self]
+        """Value = 3"""
+        UserDefined: ClassVar[Self]
+        """Value = 0"""
 
-          UserDefined
+        __members__: dict[str, Self]
 
-          Fixed
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
+        @property
+        def name(self) -> str: ...
+        @property
+        def value(self) -> int: ...
 
-          NInput
+    class TableEntry(metaclass=_metaclass):
+        @property
+        def inputs(self) -> str: ...
+        @property
+        def output(self) -> str: ...
+        @property
+        def state(self) -> str: ...
 
-          NOutput
-        """
-        Fixed: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.Fixed: 1>
-        NInput: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.NInput: 2>
-        NOutput: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.NOutput: 3>
-        UserDefined: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.UserDefined: 0>
-        __members__: typing.ClassVar[dict[str, PrimitiveSymbol.PrimitiveKind]]  # value = {'UserDefined': <PrimitiveKind.UserDefined: 0>, 'Fixed': <PrimitiveKind.Fixed: 1>, 'NInput': <PrimitiveKind.NInput: 2>, 'NOutput': <PrimitiveKind.NOutput: 3>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
-        @property
-        def name(self) -> str:
-            ...
-        @property
-        def value(self) -> int:
-            ...
-    class TableEntry:
-        @property
-        def inputs(self) -> str:
-            ...
-        @property
-        def output(self) -> str:
-            ...
-        @property
-        def state(self) -> str:
-            ...
-    Fixed: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.Fixed: 1>
-    NInput: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.NInput: 2>
-    NOutput: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.NOutput: 3>
-    UserDefined: typing.ClassVar[PrimitiveSymbol.PrimitiveKind]  # value = <PrimitiveKind.UserDefined: 0>
+    Fixed = PrimitiveKind.Fixed
+    NInput = PrimitiveKind.NInput
+    NOutput = PrimitiveKind.NOutput
+    UserDefined = PrimitiveKind.UserDefined
+
     @property
-    def initVal(self) -> ConstantValue:
-        ...
+    def initVal(self) -> ConstantValue: ...
     @property
-    def isSequential(self) -> bool:
-        ...
+    def isSequential(self) -> bool: ...
     @property
-    def ports(self) -> List[PrimitivePortSymbol]:
-        ...
+    def ports(self) -> list[PrimitivePortSymbol]: ...
     @property
-    def primitiveKind(self) -> Any:
-        ...
+    def primitiveKind(self) -> Any: ...
     @property
-    def table(self) -> List[Any]:
-        ...
+    def table(self) -> list[Any]: ...
+
 class ProceduralAssignStatement(Statement):
     @property
-    def assignment(self) -> Expression:
-        ...
+    def assignment(self) -> Expression: ...
     @property
-    def isForce(self) -> bool:
-        ...
+    def isForce(self) -> bool: ...
+
 class ProceduralAssignStatementSyntax(StatementSyntax):
     expr: ExpressionSyntax
     keyword: Token
     semi: Token
-class ProceduralBlockKind:
-    """
-    Members:
 
-      Initial
+class ProceduralBlockKind(metaclass=_metaclass):
+    Always: ClassVar[ProceduralBlockKind]
+    """Value = 2"""
+    AlwaysComb: ClassVar[ProceduralBlockKind]
+    """Value = 3"""
+    AlwaysFF: ClassVar[ProceduralBlockKind]
+    """Value = 5"""
+    AlwaysLatch: ClassVar[ProceduralBlockKind]
+    """Value = 4"""
+    Final: ClassVar[ProceduralBlockKind]
+    """Value = 1"""
+    Initial: ClassVar[ProceduralBlockKind]
+    """Value = 0"""
 
-      Final
+    __members__: dict[str, Self]
 
-      Always
-
-      AlwaysComb
-
-      AlwaysLatch
-
-      AlwaysFF
-    """
-    Always: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.Always: 2>
-    AlwaysComb: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.AlwaysComb: 3>
-    AlwaysFF: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.AlwaysFF: 5>
-    AlwaysLatch: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.AlwaysLatch: 4>
-    Final: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.Final: 1>
-    Initial: typing.ClassVar[ProceduralBlockKind]  # value = <ProceduralBlockKind.Initial: 0>
-    __members__: typing.ClassVar[dict[str, ProceduralBlockKind]]  # value = {'Initial': <ProceduralBlockKind.Initial: 0>, 'Final': <ProceduralBlockKind.Final: 1>, 'Always': <ProceduralBlockKind.Always: 2>, 'AlwaysComb': <ProceduralBlockKind.AlwaysComb: 3>, 'AlwaysLatch': <ProceduralBlockKind.AlwaysLatch: 4>, 'AlwaysFF': <ProceduralBlockKind.AlwaysFF: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ProceduralBlockSymbol(Symbol):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def isSingleDriverBlock(self) -> bool:
-        ...
+    def isSingleDriverBlock(self) -> bool: ...
     @property
-    def procedureKind(self) -> ProceduralBlockKind:
-        ...
+    def procedureKind(self) -> ProceduralBlockKind: ...
+
 class ProceduralBlockSyntax(MemberSyntax):
     keyword: Token
     statement: StatementSyntax
+
 class ProceduralCheckerStatement(Statement):
     @property
-    def instances(self) -> List[Any]:
-        ...
+    def instances(self) -> list[Any]: ...
+
 class ProceduralDeassignStatement(Statement):
     @property
-    def isRelease(self) -> bool:
-        ...
+    def isRelease(self) -> bool: ...
     @property
-    def lvalue(self) -> Expression:
-        ...
+    def lvalue(self) -> Expression: ...
+
 class ProceduralDeassignStatementSyntax(StatementSyntax):
     keyword: Token
     semi: Token
     variable: ExpressionSyntax
+
 class ProductionSyntax(SyntaxNode):
     colon: Token
     dataType: DataTypeSyntax
@@ -8089,8 +6153,10 @@ class ProductionSyntax(SyntaxNode):
     portList: FunctionPortListSyntax
     rules: Any
     semi: Token
+
 class PropertyCaseItemSyntax(SyntaxNode):
     pass
+
 class PropertyDeclarationSyntax(MemberSyntax):
     end: Token
     endBlockName: NamedBlockClauseSyntax
@@ -8101,238 +6167,193 @@ class PropertyDeclarationSyntax(MemberSyntax):
     propertySpec: PropertySpecSyntax
     semi: Token
     variables: Any
+
 class PropertyExprSyntax(SyntaxNode):
     pass
+
 class PropertySpecSyntax(SyntaxNode):
     clocking: TimingControlSyntax
     disable: DisableIffSyntax
     expr: PropertyExprSyntax
+
 class PropertySymbol(Symbol, Scope):
     @property
-    def ports(self) -> List[AssertionPortSymbol]:
-        ...
+    def ports(self) -> list[AssertionPortSymbol]: ...
+
 class PropertyType(Type):
     pass
+
 class PullStrengthSyntax(NetStrengthSyntax):
     closeParen: Token
     openParen: Token
     strength: Token
+
 class PulseStyleDeclarationSyntax(MemberSyntax):
     inputs: Any
     keyword: Token
     semi: Token
-class PulseStyleKind:
-    """
-    Members:
 
-      OnEvent
+class PulseStyleKind(metaclass=_metaclass):
+    NoShowCancelled: ClassVar[PulseStyleKind]
+    """Value = 3"""
+    OnDetect: ClassVar[PulseStyleKind]
+    """Value = 1"""
+    OnEvent: ClassVar[PulseStyleKind]
+    """Value = 0"""
+    ShowCancelled: ClassVar[PulseStyleKind]
+    """Value = 2"""
 
-      OnDetect
+    __members__: dict[str, Self]
 
-      ShowCancelled
-
-      NoShowCancelled
-    """
-    NoShowCancelled: typing.ClassVar[PulseStyleKind]  # value = <PulseStyleKind.NoShowCancelled: 3>
-    OnDetect: typing.ClassVar[PulseStyleKind]  # value = <PulseStyleKind.OnDetect: 1>
-    OnEvent: typing.ClassVar[PulseStyleKind]  # value = <PulseStyleKind.OnEvent: 0>
-    ShowCancelled: typing.ClassVar[PulseStyleKind]  # value = <PulseStyleKind.ShowCancelled: 2>
-    __members__: typing.ClassVar[dict[str, PulseStyleKind]]  # value = {'OnEvent': <PulseStyleKind.OnEvent: 0>, 'OnDetect': <PulseStyleKind.OnDetect: 1>, 'ShowCancelled': <PulseStyleKind.ShowCancelled: 2>, 'NoShowCancelled': <PulseStyleKind.NoShowCancelled: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class PulseStyleSymbol(Symbol):
     @property
-    def pulseStyleKind(self) -> PulseStyleKind:
-        ...
+    def pulseStyleKind(self) -> PulseStyleKind: ...
     @property
-    def terminals(self) -> List[Expression]:
-        ...
+    def terminals(self) -> list[Expression]: ...
+
 class QueueDimensionSpecifierSyntax(DimensionSpecifierSyntax):
     dollar: Token
     maxSizeClause: ColonExpressionClauseSyntax
+
 class QueueType(Type):
     @property
-    def elementType(self) -> Type:
-        ...
+    def elementType(self) -> Type: ...
     @property
-    def maxBound(self) -> int:
-        ...
+    def maxBound(self) -> int: ...
+
 class RandCaseItemSyntax(SyntaxNode):
     colon: Token
     expr: ExpressionSyntax
     statement: StatementSyntax
+
 class RandCaseStatement(Statement):
-    class Item:
+    class Item(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def stmt(self) -> Statement:
-            ...
+        def stmt(self) -> Statement: ...
+
     @property
-    def items(self) -> List[Any]:
-        ...
+    def items(self) -> list[Any]: ...
+
 class RandCaseStatementSyntax(StatementSyntax):
     endCase: Token
     items: Any
     randCase: Token
+
 class RandJoinClauseSyntax(SyntaxNode):
     expr: ParenthesizedExpressionSyntax
     join: Token
     rand: Token
-class RandMode:
-    """
-    Members:
 
-      None_
+class RandMode(metaclass=_metaclass):
+    None_: ClassVar[RandMode]
+    """Value = 0"""
+    Rand: ClassVar[RandMode]
+    """Value = 1"""
+    RandC: ClassVar[RandMode]
+    """Value = 2"""
 
-      Rand
+    __members__: dict[str, Self]
 
-      RandC
-    """
-    None_: typing.ClassVar[RandMode]  # value = <RandMode.None_: 0>
-    Rand: typing.ClassVar[RandMode]  # value = <RandMode.Rand: 1>
-    RandC: typing.ClassVar[RandMode]  # value = <RandMode.RandC: 2>
-    __members__: typing.ClassVar[dict[str, RandMode]]  # value = {'None_': <RandMode.None_: 0>, 'Rand': <RandMode.Rand: 1>, 'RandC': <RandMode.RandC: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class RandSeqProductionSymbol(Symbol, Scope):
-    class ProdKind(enum.Enum):
+    class ProdKind(metaclass=_metaclass):
         Case = 4
         CodeBlock = 1
         IfElse = 2
         Item = 0
         Repeat = 3
 
-    class ProdBase:
+        __members__: dict[str, Self]
+
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def kind(self) -> RandSeqProductionSymbol.ProdKind:
-            ...
-    class CaseItem:
+        def name(self) -> str: ...
         @property
-        def expressions(self) -> List[Expression]:
-            ...
+        def value(self) -> int: ...
+
+    class ProdBase(metaclass=_metaclass):
         @property
-        def item(self) -> RandSeqProductionSymbol.ProdItem:
-            ...
+        def kind(self) -> RandSeqProductionSymbol.ProdKind: ...
+
+    class CaseItem(metaclass=_metaclass):
+        @property
+        def expressions(self) -> list[Expression]: ...
+        @property
+        def item(self) -> RandSeqProductionSymbol.ProdItem: ...
+
     class CaseProd(RandSeqProductionSymbol.ProdBase):
         @property
-        def defaultItem(self) -> RandSeqProductionSymbol.ProdItem | None:
-            ...
+        def defaultItem(self) -> RandSeqProductionSymbol.ProdItem | None: ...
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def items(self) -> List[RandSeqProductionSymbol.CaseItem]:
-            ...
+        def items(self) -> list[RandSeqProductionSymbol.CaseItem]: ...
+
     class CodeBlockProd(RandSeqProductionSymbol.ProdBase):
         @property
-        def block(self) -> StatementBlockSymbol:
-            ...
+        def block(self) -> StatementBlockSymbol: ...
+
     class IfElseProd(ProdBase):
         @property
-        def elseItem(self) -> RandSeqProductionSymbol.ProdItem | None:
-            ...
+        def elseItem(self) -> RandSeqProductionSymbol.ProdItem | None: ...
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def ifItem(self) -> RandSeqProductionSymbol.ProdItem:
-            ...
+        def ifItem(self) -> RandSeqProductionSymbol.ProdItem: ...
+
     class ProdItem(ProdBase):
         @property
-        def args(self) -> List[Expression]:
-            ...
+        def args(self) -> list[Expression]: ...
         @property
-        def target(self) -> RandSeqProductionSymbol:
-            ...
+        def target(self) -> RandSeqProductionSymbol: ...
+
     class RepeatProd(RandSeqProductionSymbol.ProdBase):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def item(self) -> RandSeqProductionSymbol.ProdItem:
-            ...
-    class Rule:
+        def item(self) -> RandSeqProductionSymbol.ProdItem: ...
+
+    class Rule(metaclass=_metaclass):
         @property
-        def codeBlock(self) -> RandSeqProductionSymbol.CodeBlockProd | None:
-            ...
+        def codeBlock(self) -> RandSeqProductionSymbol.CodeBlockProd | None: ...
         @property
-        def isRandJoin(self) -> bool:
-            ...
+        def isRandJoin(self) -> bool: ...
         @property
-        def prods(self) -> List[RandSeqProductionSymbol.ProdBase]:
-            ...
+        def prods(self) -> list[RandSeqProductionSymbol.ProdBase]: ...
         @property
-        def randJoinExpr(self) -> Expression:
-            ...
+        def randJoinExpr(self) -> Expression: ...
         @property
-        def ruleBlock(self) -> StatementBlockSymbol:
-            ...
+        def ruleBlock(self) -> StatementBlockSymbol: ...
         @property
-        def weightExpr(self) -> Expression:
-            ...
+        def weightExpr(self) -> Expression: ...
+
     @property
-    def arguments(self) -> List[FormalArgumentSymbol]:
-        ...
+    def arguments(self) -> list[FormalArgumentSymbol]: ...
     @property
-    def returnType(self) -> Any:
-        ...
+    def returnType(self) -> Any: ...
     @property
-    def rules(self) -> List[Any]:
-        ...
+    def rules(self) -> list[Any]: ...
+
 class RandSequenceStatement(Statement):
     @property
-    def firstProduction(self) -> Any:
-        ...
+    def firstProduction(self) -> Any: ...
+
 class RandSequenceStatementSyntax(StatementSyntax):
     closeParen: Token
     endsequence: Token
@@ -8340,100 +6361,78 @@ class RandSequenceStatementSyntax(StatementSyntax):
     openParen: Token
     productions: Any
     randsequence: Token
+
 class RangeCoverageBinInitializerSyntax(CoverageBinInitializerSyntax):
     ranges: RangeListSyntax
     withClause: WithClauseSyntax
+
 class RangeDimensionSpecifierSyntax(DimensionSpecifierSyntax):
     selector: SelectorSyntax
+
 class RangeListSyntax(SyntaxNode):
     closeBrace: Token
     openBrace: Token
     valueRanges: Any
+
 class RangeSelectExpression(Expression):
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def right(self) -> Expression:
-        ...
+    def right(self) -> Expression: ...
     @property
-    def selectionKind(self) -> RangeSelectionKind:
-        ...
+    def selectionKind(self) -> RangeSelectionKind: ...
     @property
-    def value(self) -> Expression:
-        ...
+    def value(self) -> Expression: ...
+
 class RangeSelectSyntax(SelectorSyntax):
     left: ExpressionSyntax
     range: Token
     right: ExpressionSyntax
-class RangeSelectionKind:
-    """
-    Members:
 
-      Simple
+class RangeSelectionKind(metaclass=_metaclass):
+    IndexedDown: ClassVar[RangeSelectionKind]
+    """Value = 2"""
+    IndexedUp: ClassVar[RangeSelectionKind]
+    """Value = 1"""
+    Simple: ClassVar[RangeSelectionKind]
+    """Value = 0"""
 
-      IndexedUp
+    __members__: dict[str, Self]
 
-      IndexedDown
-    """
-    IndexedDown: typing.ClassVar[RangeSelectionKind]  # value = <RangeSelectionKind.IndexedDown: 2>
-    IndexedUp: typing.ClassVar[RangeSelectionKind]  # value = <RangeSelectionKind.IndexedUp: 1>
-    Simple: typing.ClassVar[RangeSelectionKind]  # value = <RangeSelectionKind.Simple: 0>
-    __members__: typing.ClassVar[dict[str, RangeSelectionKind]]  # value = {'Simple': <RangeSelectionKind.Simple: 0>, 'IndexedUp': <RangeSelectionKind.IndexedUp: 1>, 'IndexedDown': <RangeSelectionKind.IndexedDown: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class RealLiteral(Expression):
     @property
-    def value(self) -> float:
-        ...
+    def value(self) -> float: ...
+
 class RepeatLoopStatement(Statement):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def count(self) -> Expression:
-        ...
+    def count(self) -> Expression: ...
+
 class RepeatedEventControl(TimingControl):
     @property
-    def event(self) -> TimingControl:
-        ...
+    def event(self) -> TimingControl: ...
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
+
 class RepeatedEventControlSyntax(TimingControlSyntax):
     closeParen: Token
     eventControl: TimingControlSyntax
     expr: ExpressionSyntax
     openParen: Token
     repeat: Token
+
 class ReplicatedAssignmentPatternExpression(AssignmentPatternExpressionBase):
     @property
-    def count(self) -> Expression:
-        ...
+    def count(self) -> Expression: ...
+
 class ReplicatedAssignmentPatternSyntax(AssignmentPatternSyntax):
     closeBrace: Token
     countExpr: ExpressionSyntax
@@ -8441,52 +6440,47 @@ class ReplicatedAssignmentPatternSyntax(AssignmentPatternSyntax):
     innerOpenBrace: Token
     items: Any
     openBrace: Token
+
 class ReplicationExpression(Expression):
     @property
-    def concat(self) -> Expression:
-        ...
+    def concat(self) -> Expression: ...
     @property
-    def count(self) -> Expression:
-        ...
-class ReportedDiagnostic:
+    def count(self) -> Expression: ...
+
+class ReportedDiagnostic(metaclass=_metaclass):
     @property
-    def expansionLocs(self) -> List[SourceLocation]:
-        ...
+    def expansionLocs(self) -> list[SourceLocation]: ...
     @property
-    def formattedMessage(self) -> str:
-        ...
+    def formattedMessage(self) -> str: ...
     @property
-    def location(self) -> SourceLocation:
-        ...
+    def location(self) -> SourceLocation: ...
     @property
-    def originalDiagnostic(self) -> Diagnostic:
-        ...
+    def originalDiagnostic(self) -> Diagnostic: ...
     @property
-    def ranges(self) -> List[SourceRange]:
-        ...
+    def ranges(self) -> list[SourceRange]: ...
     @property
-    def severity(self) -> DiagnosticSeverity:
-        ...
+    def severity(self) -> DiagnosticSeverity: ...
     @property
-    def shouldShowIncludeStack(self) -> bool:
-        ...
+    def shouldShowIncludeStack(self) -> bool: ...
+
 class ReturnStatement(Statement):
     @property
-    def expr(self) -> Expression:
-        ...
+    def expr(self) -> Expression: ...
+
 class ReturnStatementSyntax(StatementSyntax):
     returnKeyword: Token
     returnValue: ExpressionSyntax
     semi: Token
+
 class RootSymbol(Symbol, Scope):
     @property
-    def compilationUnits(self) -> List[CompilationUnitSymbol]:
-        ...
+    def compilationUnits(self) -> list[CompilationUnitSymbol]: ...
     @property
-    def topInstances(self) -> List[Any]:
-        ...
+    def topInstances(self) -> list[Any]: ...
+
 class RsCaseItemSyntax(SyntaxNode):
     pass
+
 class RsCaseSyntax(RsProdSyntax):
     closeParen: Token
     endcase: Token
@@ -8494,13 +6488,16 @@ class RsCaseSyntax(RsProdSyntax):
     items: Any
     keyword: Token
     openParen: Token
+
 class RsCodeBlockSyntax(RsProdSyntax):
     closeBrace: Token
     items: Any
     openBrace: Token
+
 class RsElseClauseSyntax(SyntaxNode):
     item: RsProdItemSyntax
     keyword: Token
+
 class RsIfElseSyntax(RsProdSyntax):
     closeParen: Token
     condition: ExpressionSyntax
@@ -8508,429 +6505,287 @@ class RsIfElseSyntax(RsProdSyntax):
     ifItem: RsProdItemSyntax
     keyword: Token
     openParen: Token
+
 class RsProdItemSyntax(RsProdSyntax):
     argList: ArgumentListSyntax
     name: Token
+
 class RsProdSyntax(SyntaxNode):
     pass
+
 class RsRepeatSyntax(RsProdSyntax):
     closeParen: Token
     expr: ExpressionSyntax
     item: RsProdItemSyntax
     keyword: Token
     openParen: Token
+
 class RsRuleSyntax(SyntaxNode):
     prods: Any
     randJoin: RandJoinClauseSyntax
     weightClause: RsWeightClauseSyntax
+
 class RsWeightClauseSyntax(SyntaxNode):
     codeBlock: RsProdSyntax
     colonEqual: Token
     weight: ExpressionSyntax
-class SVInt:
+
+class SVInt(metaclass=_metaclass):
     @staticmethod
-    def concat(arg0: List[SVInt]) -> SVInt:
-        ...
+    def concat(arg0: list[SVInt]) -> SVInt: ...
     @staticmethod
-    def conditional(condition: SVInt, lhs: SVInt, rhs: SVInt) -> SVInt:
-        ...
+    def conditional(condition: SVInt, lhs: SVInt, rhs: SVInt) -> SVInt: ...
     @staticmethod
-    def createFillX(bitWidth: int, isSigned: bool) -> SVInt:
-        ...
+    def createFillX(bitWidth: int, isSigned: bool) -> SVInt: ...
     @staticmethod
-    def createFillZ(bitWidth: int, isSigned: bool) -> SVInt:
-        ...
+    def createFillZ(bitWidth: int, isSigned: bool) -> SVInt: ...
     @staticmethod
-    def fromDigits(bits: int, base: LiteralBase, isSigned: bool, anyUnknown: bool, digits: List[logic_t]) -> SVInt:
-        ...
+    def fromDigits(
+        bits: int, base: LiteralBase, isSigned: bool, anyUnknown: bool, digits: list[logic_t]
+    ) -> SVInt: ...
     @staticmethod
-    def fromDouble(bits: int, value: float, isSigned: bool, round: bool = True) -> SVInt:
-        ...
+    def fromDouble(bits: int, value: float, isSigned: bool, round: bool = True) -> SVInt: ...
     @staticmethod
-    def fromFloat(bits: int, value: float, isSigned: bool, round: bool = True) -> SVInt:
-        ...
+    def fromFloat(bits: int, value: float, isSigned: bool, round: bool = True) -> SVInt: ...
     @staticmethod
-    def logicalEquiv(lhs: SVInt, rhs: SVInt) -> logic_t:
-        ...
+    def logicalEquiv(lhs: SVInt, rhs: SVInt) -> logic_t: ...
     @staticmethod
-    def logicalImpl(lhs: SVInt, rhs: SVInt) -> logic_t:
-        ...
+    def logicalImpl(lhs: SVInt, rhs: SVInt) -> logic_t: ...
     @typing.overload
-    def __add__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __add__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __add__(self, arg0: int) -> SVInt:
-        ...
+    def __add__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __and__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __and__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __and__(self, arg0: int) -> SVInt:
+    def __and__(self, arg0: int) -> SVInt: ...
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: SVInt | int) -> logic_t:  # type: ignore[override]
         ...
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: Union[SVInt, int]) -> logic_t:  # type: ignore[override]
-        ...
-    def __float__(self) -> float:
-        ...
+    def __float__(self) -> float: ...
     @typing.overload
-    def __ge__(self, arg0: SVInt) -> logic_t:
-        ...
+    def __ge__(self, arg0: SVInt) -> logic_t: ...
     @typing.overload
-    def __ge__(self, arg0: int) -> logic_t:
-        ...
-    def __getitem__(self, arg0: int) -> logic_t:
-        ...
+    def __ge__(self, arg0: int) -> logic_t: ...
+    def __getitem__(self, arg0: int) -> logic_t: ...
     @typing.overload
-    def __gt__(self, arg0: SVInt) -> logic_t:
-        ...
+    def __gt__(self, arg0: SVInt) -> logic_t: ...
     @typing.overload
-    def __gt__(self, arg0: int) -> logic_t:
-        ...
-    def __hash__(self) -> int:
-        ...
+    def __gt__(self, arg0: int) -> logic_t: ...
+    def __hash__(self) -> int: ...
     @typing.overload
-    def __iadd__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __iadd__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __iadd__(self, arg0: int) -> SVInt:
-        ...
+    def __iadd__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __iand__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __iand__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __iand__(self, arg0: int) -> SVInt:
-        ...
+    def __iand__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __imod__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __imod__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __imod__(self, arg0: int) -> SVInt:
-        ...
+    def __imod__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __imul__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __imul__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __imul__(self, arg0: int) -> SVInt:
-        ...
+    def __imul__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, bit: logic_t) -> None:
-        ...
+    def __init__(self, bit: logic_t) -> None: ...
     @typing.overload
-    def __init__(self, bits: int, value: int, isSigned: bool) -> None:
-        ...
+    def __init__(self, bits: int, value: int, isSigned: bool) -> None: ...
     @typing.overload
-    def __init__(self, bits: int, bytes: List[Any], isSigned: bool) -> None:
-        ...
+    def __init__(self, bits: int, bytes: list[Any], isSigned: bool) -> None: ...
     @typing.overload
-    def __init__(self, str: str) -> None:
-        ...
+    def __init__(self, str: str) -> None: ...
     @typing.overload
-    def __init__(self, value: int) -> None:
-        ...
+    def __init__(self, value: int) -> None: ...
     @typing.overload
-    def __init__(self, value: float) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __invert__(self) -> SVInt:
-        ...
+    def __init__(self, value: float) -> None: ...
+    def __int__(self) -> int: ...
+    def __invert__(self) -> SVInt: ...
     @typing.overload
-    def __ior__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __ior__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __ior__(self, arg0: int) -> SVInt:
-        ...
+    def __ior__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __isub__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __isub__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __isub__(self, arg0: int) -> SVInt:
-        ...
+    def __isub__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __itruediv__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __itruediv__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __itruediv__(self, arg0: int) -> SVInt:
-        ...
+    def __itruediv__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __ixor__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __ixor__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __ixor__(self, arg0: int) -> SVInt:
-        ...
+    def __ixor__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __le__(self, arg0: SVInt) -> logic_t:
-        ...
+    def __le__(self, arg0: SVInt) -> logic_t: ...
     @typing.overload
-    def __le__(self, arg0: int) -> logic_t:
-        ...
+    def __le__(self, arg0: int) -> logic_t: ...
     @typing.overload
-    def __lt__(self, arg0: SVInt) -> logic_t:
-        ...
+    def __lt__(self, arg0: SVInt) -> logic_t: ...
     @typing.overload
-    def __lt__(self, arg0: int) -> logic_t:
-        ...
+    def __lt__(self, arg0: int) -> logic_t: ...
     @typing.overload
-    def __mod__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __mod__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __mod__(self, arg0: int) -> SVInt:
-        ...
+    def __mod__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __mul__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __mul__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __mul__(self, arg0: int) -> SVInt:
+    def __mul__(self, arg0: int) -> SVInt: ...
+    def __ne__(self, arg0: SVInt | int) -> logic_t:  # type: ignore[override]
         ...
-    def __ne__(self, arg0: Union[SVInt, int]) -> logic_t:  # type: ignore[override]
-        ...
-    def __neg__(self) -> SVInt:
-        ...
+    def __neg__(self) -> SVInt: ...
     @typing.overload
-    def __or__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __or__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __or__(self, arg0: int) -> SVInt:
-        ...
-    def __pow__(self, arg0: SVInt) -> SVInt:
-        ...
-    def __radd__(self, arg0: int) -> SVInt:
-        ...
-    def __rand__(self, arg0: int) -> SVInt:
-        ...
-    def __rdiv__(self, arg0: int) -> SVInt:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __rmod__(self, arg0: int) -> SVInt:
-        ...
-    def __rmul__(self, arg0: int) -> SVInt:
-        ...
-    def __ror__(self, arg0: int) -> SVInt:
-        ...
-    def __rsub__(self, arg0: int) -> SVInt:
-        ...
-    def __rxor__(self, arg0: int) -> SVInt:
-        ...
+    def __or__(self, arg0: int) -> SVInt: ...
+    def __pow__(self, arg0: SVInt) -> SVInt: ...
+    def __radd__(self, arg0: int) -> SVInt: ...
+    def __rand__(self, arg0: int) -> SVInt: ...
+    def __rdiv__(self, arg0: int) -> SVInt: ...
+    def __repr__(self) -> str: ...
+    def __rmod__(self, arg0: int) -> SVInt: ...
+    def __rmul__(self, arg0: int) -> SVInt: ...
+    def __ror__(self, arg0: int) -> SVInt: ...
+    def __rsub__(self, arg0: int) -> SVInt: ...
+    def __rxor__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __sub__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __sub__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __sub__(self, arg0: int) -> SVInt:
-        ...
+    def __sub__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __truediv__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __truediv__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __truediv__(self, arg0: int) -> SVInt:
-        ...
+    def __truediv__(self, arg0: int) -> SVInt: ...
     @typing.overload
-    def __xor__(self, arg0: SVInt) -> SVInt:
-        ...
+    def __xor__(self, arg0: SVInt) -> SVInt: ...
     @typing.overload
-    def __xor__(self, arg0: int) -> SVInt:
-        ...
-    def ashr(self, rhs: SVInt) -> SVInt:
-        ...
-    def countLeadingOnes(self) -> int:
-        ...
-    def countLeadingUnknowns(self) -> int:
-        ...
-    def countLeadingZeros(self) -> int:
-        ...
-    def countLeadingZs(self) -> int:
-        ...
-    def countOnes(self) -> int:
-        ...
-    def countXs(self) -> int:
-        ...
-    def countZeros(self) -> int:
-        ...
-    def countZs(self) -> int:
-        ...
-    def extend(self, bits: int, isSigned: bool) -> SVInt:
-        ...
-    def flattenUnknowns(self) -> None:
-        ...
-    def getActiveBits(self) -> int:
-        ...
-    def getMinRepresentedBits(self) -> int:
-        ...
-    def isEven(self) -> bool:
-        ...
-    def isNegative(self) -> bool:
-        ...
-    def isOdd(self) -> bool:
-        ...
-    def isSignExtendedFrom(self, msb: int) -> bool:
-        ...
-    def lshr(self, rhs: SVInt) -> SVInt:
-        ...
-    def reductionAnd(self) -> logic_t:
-        ...
-    def reductionOr(self) -> logic_t:
-        ...
-    def reductionXor(self) -> logic_t:
-        ...
-    def replicate(self, times: SVInt) -> SVInt:
-        ...
-    def resize(self, bits: int) -> SVInt:
-        ...
-    def reverse(self) -> SVInt:
-        ...
-    def set(self, msb: int, lsb: int, value: SVInt) -> None:
-        ...
-    def setAllOnes(self) -> None:
-        ...
-    def setAllX(self) -> None:
-        ...
-    def setAllZ(self) -> None:
-        ...
-    def setAllZeros(self) -> None:
-        ...
-    def setSigned(self, isSigned: bool) -> None:
-        ...
-    def sext(self, bits: int) -> SVInt:
-        ...
-    def shl(self, rhs: SVInt) -> SVInt:
-        ...
-    def shrinkToFit(self) -> None:
-        ...
-    def signExtendFrom(self, msb: int) -> None:
-        ...
-    def slice(self, msb: int, lsb: int) -> SVInt:
-        ...
-    def toString(self, base: LiteralBase, includeBase: bool, abbreviateThresholdBits: int = 16777215) -> str:
-        ...
-    def trunc(self, bits: int) -> SVInt:
-        ...
-    def xnor(self, rhs: SVInt) -> SVInt:
-        ...
-    def zext(self, bits: int) -> SVInt:
-        ...
+    def __xor__(self, arg0: int) -> SVInt: ...
+    def ashr(self, rhs: SVInt) -> SVInt: ...
+    def countLeadingOnes(self) -> int: ...
+    def countLeadingUnknowns(self) -> int: ...
+    def countLeadingZeros(self) -> int: ...
+    def countLeadingZs(self) -> int: ...
+    def countOnes(self) -> int: ...
+    def countXs(self) -> int: ...
+    def countZeros(self) -> int: ...
+    def countZs(self) -> int: ...
+    def extend(self, bits: int, isSigned: bool) -> SVInt: ...
+    def flattenUnknowns(self) -> None: ...
+    def getActiveBits(self) -> int: ...
+    def getMinRepresentedBits(self) -> int: ...
+    def isEven(self) -> bool: ...
+    def isNegative(self) -> bool: ...
+    def isOdd(self) -> bool: ...
+    def isSignExtendedFrom(self, msb: int) -> bool: ...
+    def lshr(self, rhs: SVInt) -> SVInt: ...
+    def reductionAnd(self) -> logic_t: ...
+    def reductionOr(self) -> logic_t: ...
+    def reductionXor(self) -> logic_t: ...
+    def replicate(self, times: SVInt) -> SVInt: ...
+    def resize(self, bits: int) -> SVInt: ...
+    def reverse(self) -> SVInt: ...
+    def set(self, msb: int, lsb: int, value: SVInt) -> None: ...
+    def setAllOnes(self) -> None: ...
+    def setAllX(self) -> None: ...
+    def setAllZ(self) -> None: ...
+    def setAllZeros(self) -> None: ...
+    def setSigned(self, isSigned: bool) -> None: ...
+    def sext(self, bits: int) -> SVInt: ...
+    def shl(self, rhs: SVInt) -> SVInt: ...
+    def shrinkToFit(self) -> None: ...
+    def signExtendFrom(self, msb: int) -> None: ...
+    def slice(self, msb: int, lsb: int) -> SVInt: ...
+    def toString(
+        self, base: LiteralBase, includeBase: bool, abbreviateThresholdBits: int = 16777215
+    ) -> str: ...
+    def trunc(self, bits: int) -> SVInt: ...
+    def xnor(self, rhs: SVInt) -> SVInt: ...
+    def zext(self, bits: int) -> SVInt: ...
     @property
-    def bitWidth(self) -> int:
-        ...
+    def bitWidth(self) -> int: ...
     @property
-    def hasUnknown(self) -> bool:
-        ...
+    def hasUnknown(self) -> bool: ...
     @property
-    def isSigned(self) -> bool:
-        ...
+    def isSigned(self) -> bool: ...
+
 class ScalarType(IntegralType):
-    class Kind:
-        """
-        Members:
+    class Kind(metaclass=_metaclass):
+        Bit = 0
+        Logic = 1
+        Reg = 2
 
-          Bit
+        __members__: dict[str, Self]
 
-          Logic
-
-          Reg
-        """
-        Bit: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Bit: 0>
-        Logic: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Logic: 1>
-        Reg: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Reg: 2>
-        __members__: typing.ClassVar[dict[str, ScalarType.Kind]]  # value = {'Bit': <Kind.Bit: 0>, 'Logic': <Kind.Logic: 1>, 'Reg': <Kind.Reg: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Bit: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Bit: 0>
-    Logic: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Logic: 1>
-    Reg: typing.ClassVar[ScalarType.Kind]  # value = <Kind.Reg: 2>
+        def value(self) -> int: ...
+
+    Bit: Final = Kind.Bit
+    Logic: Final = Kind.Logic
+    Reg: Final = Kind.Reg
+
     @property
-    def scalarKind(self) -> Any:
-        ...
-class Scope:
-    def __getitem__(self, arg0: int) -> typing.Any:
-        ...
-    def __iter__(self) -> typing.Iterator[Symbol]:
-        ...
-    def __len__(self) -> int:
-        ...
-    def find(self, arg0: str) -> Symbol:
-        ...
-    def lookupName(self, name: str, location: LookupLocation = ..., flags: LookupFlags = ...) -> Symbol:
-        ...
+    def scalarKind(self) -> Any: ...
+
+class Scope(metaclass=_metaclass):
+    def __getitem__(self, arg0: int) -> typing.Any: ...
+    def __iter__(self) -> typing.Iterator[Symbol]: ...
+    def __len__(self) -> int: ...
+    def find(self, arg0: str) -> Symbol: ...
+    def lookupName(
+        self, name: str, location: LookupLocation = ..., flags: LookupFlags = ...
+    ) -> Symbol: ...
     @property
-    def compilation(self) -> Compilation:
-        ...
+    def compilation(self) -> Compilation: ...
     @property
-    def compilationUnit(self) -> Any:
-        ...
+    def compilationUnit(self) -> Any: ...
     @property
-    def containingInstance(self) -> Any:
-        ...
+    def containingInstance(self) -> Any: ...
     @property
-    def defaultNetType(self) -> Any:
-        ...
+    def defaultNetType(self) -> Any: ...
     @property
-    def isProceduralContext(self) -> bool:
-        ...
+    def isProceduralContext(self) -> bool: ...
     @property
-    def isUninstantiated(self) -> bool:
-        ...
+    def isUninstantiated(self) -> bool: ...
     @property
-    def timeScale(self) -> TimeScale | None:
-        ...
+    def timeScale(self) -> TimeScale | None: ...
+
 class ScopedNameSyntax(NameSyntax):
     left: NameSyntax
     right: NameSyntax
     separator: Token
-class ScriptSession:
-    def __init__(self) -> None:
-        ...
-    def eval(self, text: str) -> Any:
-        ...
-    def evalExpression(self, expr: Any) -> Any:
-        ...
-    def evalStatement(self, expr: Any) -> None:
-        ...
-    def getDiagnostics(self) -> Any:
-        ...
+
+class ScriptSession(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+    def eval(self, text: str) -> Any: ...
+    def evalExpression(self, expr: Any) -> Any: ...
+    def evalStatement(self, expr: Any) -> None: ...
+    def getDiagnostics(self) -> Any: ...
     @property
-    def compilation(self) -> Compilation:
-        ...
+    def compilation(self) -> Compilation: ...
+
 class SelectorSyntax(SyntaxNode):
     pass
+
 class SequenceConcatExpr(AssertionExpr):
-    class Element:
+    class Element(metaclass=_metaclass):
         @property
-        def delay(self) -> SequenceRange:
-            ...
+        def delay(self) -> SequenceRange: ...
         @property
-        def sequence(self) -> AssertionExpr:
-            ...
+        def sequence(self) -> AssertionExpr: ...
+
     @property
-    def elements(self) -> List[Any]:
-        ...
+    def elements(self) -> list[Any]: ...
+
 class SequenceDeclarationSyntax(MemberSyntax):
     end: Token
     endBlockName: NamedBlockClauseSyntax
@@ -8941,350 +6796,289 @@ class SequenceDeclarationSyntax(MemberSyntax):
     semi: Token
     seqExpr: SequenceExprSyntax
     variables: Any
+
 class SequenceExprSyntax(SyntaxNode):
     pass
+
 class SequenceMatchListSyntax(SyntaxNode):
     comma: Token
     items: Any
-class SequenceRange:
+
+class SequenceRange(metaclass=_metaclass):
     @property
-    def max(self) -> int | None:
-        ...
+    def max(self) -> int | None: ...
     @property
-    def min(self) -> int:
-        ...
-class SequenceRepetition:
-    class Kind:
-        """
-        Members:
+    def min(self) -> int: ...
 
-          Consecutive
+class SequenceRepetition(metaclass=_metaclass):
+    class Kind(metaclass=_metaclass):
+        Consecutive = 0
+        GoTo = 2
+        Nonconsecutive = 1
 
-          Nonconsecutive
+        __members__: dict[str, Self]
 
-          GoTo
-        """
-        Consecutive: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.Consecutive: 0>
-        GoTo: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.GoTo: 2>
-        Nonconsecutive: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.Nonconsecutive: 1>
-        __members__: typing.ClassVar[dict[str, SequenceRepetition.Kind]]  # value = {'Consecutive': <Kind.Consecutive: 0>, 'Nonconsecutive': <Kind.Nonconsecutive: 1>, 'GoTo': <Kind.GoTo: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Consecutive: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.Consecutive: 0>
-    GoTo: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.GoTo: 2>
-    Nonconsecutive: typing.ClassVar[SequenceRepetition.Kind]  # value = <Kind.Nonconsecutive: 1>
+        def value(self) -> int: ...
+
+    Consecutive = Kind.Consecutive
+    GoTo = Kind.GoTo
+    Nonconsecutive = Kind.Nonconsecutive
+
     @property
-    def kind(self) -> Any:
-        ...
+    def kind(self) -> Any: ...
     @property
-    def range(self) -> SequenceRange:
-        ...
+    def range(self) -> SequenceRange: ...
+
 class SequenceRepetitionSyntax(SyntaxNode):
     closeBracket: Token
     op: Token
     openBracket: Token
     selector: SelectorSyntax
+
 class SequenceSymbol(Symbol, Scope):
     @property
-    def ports(self) -> List[AssertionPortSymbol]:
-        ...
+    def ports(self) -> list[AssertionPortSymbol]: ...
+
 class SequenceType(Type):
     pass
+
 class SequenceWithMatchExpr(AssertionExpr):
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
     @property
-    def matchItems(self) -> List[Any]:
-        ...
+    def matchItems(self) -> list[Any]: ...
     @property
-    def repetition(self) -> SequenceRepetition | None:
-        ...
+    def repetition(self) -> SequenceRepetition | None: ...
+
 class SetExprBinsSelectExpr(BinsSelectExpr):
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
     @property
-    def matchesExpr(self) -> Any:
-        ...
+    def matchesExpr(self) -> Any: ...
+
 class SignalEventControl(TimingControl):
     @property
-    def edge(self) -> Any:
-        ...
+    def edge(self) -> Any: ...
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
     @property
-    def iffCondition(self) -> Any:
-        ...
+    def iffCondition(self) -> Any: ...
+
 class SignalEventExpressionSyntax(EventExpressionSyntax):
     edge: Token
     expr: ExpressionSyntax
     iffClause: IffEventClauseSyntax
+
 class SignedCastExpressionSyntax(ExpressionSyntax):
     apostrophe: Token
     inner: ParenthesizedExpressionSyntax
     signing: Token
+
 class SimpleAssertionExpr(AssertionExpr):
     @property
-    def expr(self) -> Any:
-        ...
+    def expr(self) -> Any: ...
     @property
-    def repetition(self) -> SequenceRepetition | None:
-        ...
+    def repetition(self) -> SequenceRepetition | None: ...
+
 class SimpleAssignmentPatternExpression(AssignmentPatternExpressionBase):
     pass
+
 class SimpleAssignmentPatternSyntax(AssignmentPatternSyntax):
     closeBrace: Token
     items: Any
     openBrace: Token
+
 class SimpleBinsSelectExprSyntax(BinsSelectExpressionSyntax):
     expr: ExpressionSyntax
     matchesClause: MatchesClauseSyntax
+
 class SimpleDirectiveSyntax(DirectiveSyntax):
     pass
+
 class SimplePathSuffixSyntax(PathSuffixSyntax):
     outputs: Any
+
 class SimplePragmaExpressionSyntax(PragmaExpressionSyntax):
     value: Token
+
 class SimplePropertyExprSyntax(PropertyExprSyntax):
     expr: SequenceExprSyntax
+
 class SimpleSequenceExprSyntax(SequenceExprSyntax):
     expr: ExpressionSyntax
     repetition: SequenceRepetitionSyntax
+
 class SimpleSystemSubroutine(SystemSubroutine):
-    def __init__(self, name: str, kind: SubroutineKind, requiredArgs: int, argTypes: list[Any], returnType: Any, isMethod: bool, isFirstArgLValue: bool = False) -> None:
-        ...
+    def __init__(
+        self,
+        name: str,
+        kind: SubroutineKind,
+        requiredArgs: int,
+        argTypes: list[Any],
+        returnType: Any,
+        isMethod: bool,
+        isFirstArgLValue: bool = False,
+    ) -> None: ...
+
 class SolveBeforeConstraint(Constraint):
     @property
-    def after(self) -> List[Any]:
-        ...
+    def after(self) -> list[Any]: ...
     @property
-    def solve(self) -> List[Any]:
-        ...
+    def solve(self) -> list[Any]: ...
+
 class SolveBeforeConstraintSyntax(ConstraintItemSyntax):
     afterExpr: Any
     before: Token
     beforeExpr: Any
     semi: Token
     solve: Token
-class SourceBuffer:
-    def __bool__(self) -> bool:
-        ...
-    def __init__(self) -> None:
-        ...
+
+class SourceBuffer(metaclass=_metaclass):
+    def __bool__(self) -> bool: ...
+    def __init__(self) -> None: ...
     @property
-    def data(self) -> str:
-        ...
+    def data(self) -> str: ...
     @property
-    def id(self) -> BufferID:
-        ...
+    def id(self) -> BufferID: ...
     @property
-    def library(self) -> SourceLibrary:
-        ...
-class SourceLibrary:
-    def __init__(self) -> None:
-        ...
+    def library(self) -> SourceLibrary: ...
+
+class SourceLibrary(metaclass=_metaclass):
+    def __init__(self) -> None: ...
     @property
-    def name(self) -> str:
-        ...
-class SourceLoader:
-    def __init__(self, sourceManager: Any) -> None:
-        ...
-    def addFiles(self, pattern: str) -> None:
-        ...
-    def addLibraryFiles(self, libraryName: str, pattern: str) -> None:
-        ...
-    def addLibraryMaps(self, pattern: str, basePath: os.PathLike, optionBag: Any) -> None:
-        ...
-    def addSearchDirectories(self, pattern: str) -> None:
-        ...
-    def addSearchExtension(self, extension: str) -> None:
-        ...
-    def addSeparateUnit(self, filePatterns: List[str], includePaths: list[str], defines: list[str], libraryName: str) -> None:
-        ...
-    def loadAndParseSources(self, optionBag: Any) -> list[Any]:
-        ...
-    def loadSources(self) -> list[Any]:
-        ...
+    def name(self) -> str: ...
+
+class SourceLoader(metaclass=_metaclass):
+    def __init__(self, sourceManager: Any) -> None: ...
+    def addFiles(self, pattern: str) -> None: ...
+    def addLibraryFiles(self, libraryName: str, pattern: str) -> None: ...
+    def addLibraryMaps(self, pattern: str, basePath: os.PathLike, optionBag: Any) -> None: ...
+    def addSearchDirectories(self, pattern: str) -> None: ...
+    def addSearchExtension(self, extension: str) -> None: ...
+    def addSeparateUnit(
+        self, filePatterns: list[str], includePaths: list[str], defines: list[str], libraryName: str
+    ) -> None: ...
+    def loadAndParseSources(self, optionBag: Any) -> list[Any]: ...
+    def loadSources(self) -> list[Any]: ...
     @property
-    def errors(self) -> List[str]:
-        ...
+    def errors(self) -> list[str]: ...
     @property
-    def hasFiles(self) -> bool:
-        ...
+    def hasFiles(self) -> bool: ...
     @property
-    def libraryMaps(self) -> list[Any]:
-        ...
-class SourceLocation:
+    def libraryMaps(self) -> list[Any]: ...
+
+class SourceLocation(metaclass=_metaclass):
     NoLocation: typing.ClassVar[SourceLocation]  # value = SourceLocation(268435455, 68719476735)
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
-    def __ge__(self, arg0: SourceLocation) -> bool:
-        ...
-    def __gt__(self, arg0: SourceLocation) -> bool:
-        ...
-    def __hash__(self) -> int:
-        ...
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: object) -> bool: ...
+    def __ge__(self, arg0: SourceLocation) -> bool: ...
+    def __gt__(self, arg0: SourceLocation) -> bool: ...
+    def __hash__(self) -> int: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, buffer: BufferID, offset: int) -> None:
-        ...
-    def __le__(self, arg0: SourceLocation) -> bool:
-        ...
-    def __lt__(self, arg0: SourceLocation) -> bool:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
+    def __init__(self, buffer: BufferID, offset: int) -> None: ...
+    def __le__(self, arg0: SourceLocation) -> bool: ...
+    def __lt__(self, arg0: SourceLocation) -> bool: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
     @property
-    def buffer(self) -> BufferID:
-        ...
+    def buffer(self) -> BufferID: ...
     @property
-    def offset(self) -> int:
-        ...
-class SourceManager:
-    def __init__(self) -> None:
-        ...
-    def addDiagnosticDirective(self, location: SourceLocation, name: str, severity: Any) -> None:
-        ...
-    def addLineDirective(self, location: SourceLocation, lineNum: int, name: str, level: int) -> None:
-        ...
-    def addSystemDirectories(self, path: str) -> None:
-        ...
-    def addUserDirectories(self, path: str) -> None:
-        ...
+    def offset(self) -> int: ...
+
+class SourceManager(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+    def addDiagnosticDirective(
+        self, location: SourceLocation, name: str, severity: Any
+    ) -> None: ...
+    def addLineDirective(
+        self, location: SourceLocation, lineNum: int, name: str, level: int
+    ) -> None: ...
+    def addSystemDirectories(self, path: str) -> None: ...
+    def addUserDirectories(self, path: str) -> None: ...
     @typing.overload
     def assignText(
-        self,
-        text: str,
-        includedFrom: SourceLocation = ...,
-        library: Optional[SourceLibrary] = None
-    ) -> SourceBuffer:
-        ...
+        self, text: str, includedFrom: SourceLocation = ..., library: SourceLibrary | None = None
+    ) -> SourceBuffer: ...
     @typing.overload
     def assignText(
         self,
         path: str,
         text: str,
         includedFrom: SourceLocation = ...,
-        library: Optional[SourceLibrary] = None
-    ) -> SourceBuffer:
-        ...
-    def getAllBuffers(self) -> list[BufferID]:
-        ...
-    def getColumnNumber(self, location: SourceLocation) -> int:
-        ...
-    def getExpansionLoc(self, location: SourceLocation) -> SourceLocation:
-        ...
-    def getExpansionRange(self, location: SourceLocation) -> SourceRange:
-        ...
-    def getFileName(self, location: SourceLocation) -> str:
-        ...
-    def getFullPath(self, buffer: BufferID) -> os.PathLike:
-        ...
-    def getFullyExpandedLoc(self, location: SourceLocation) -> SourceLocation:
-        ...
-    def getFullyOriginalLoc(self, location: SourceLocation) -> SourceLocation:
-        ...
-    def getFullyOriginalRange(self, range: SourceRange) -> SourceRange:
-        ...
-    def getIncludedFrom(self, buffer: BufferID) -> SourceLocation:
-        ...
-    def getLineNumber(self, location: SourceLocation) -> int:
-        ...
-    def getMacroName(self, location: SourceLocation) -> str:
-        ...
-    def getOriginalLoc(self, location: SourceLocation) -> SourceLocation:
-        ...
-    def getRawFileName(self, buffer: BufferID) -> str:
-        ...
-    def getSourceText(self, buffer: BufferID) -> str:
-        ...
-    def isBeforeInCompilationUnit(self, left: SourceLocation, right: SourceLocation) -> bool | None:
-        ...
-    def isCached(self, path: os.PathLike) -> bool:
-        ...
-    def isFileLoc(self, location: SourceLocation) -> bool:
-        ...
-    def isIncludedFileLoc(self, location: SourceLocation) -> bool:
-        ...
-    def isMacroArgLoc(self, location: SourceLocation) -> bool:
-        ...
-    def isMacroLoc(self, location: SourceLocation) -> bool:
-        ...
-    def isPreprocessedLoc(self, location: SourceLocation) -> bool:
-        ...
-    def readHeader(self, path: str, includedFrom: SourceLocation, library: SourceLibrary, isSystemPath: bool) -> SourceBuffer:
-        ...
-    def readSource(self, path: os.PathLike, library: Optional[SourceLibrary] = None) -> SourceBuffer:
-        ...
-    def setDisableProximatePaths(self, set: bool) -> None:
-        ...
-class SourceOptions:
+        library: SourceLibrary | None = None,
+    ) -> SourceBuffer: ...
+    def getAllBuffers(self) -> list[BufferID]: ...
+    def getColumnNumber(self, location: SourceLocation) -> int: ...
+    def getExpansionLoc(self, location: SourceLocation) -> SourceLocation: ...
+    def getExpansionRange(self, location: SourceLocation) -> SourceRange: ...
+    def getFileName(self, location: SourceLocation) -> str: ...
+    def getFullPath(self, buffer: BufferID) -> os.PathLike: ...
+    def getFullyExpandedLoc(self, location: SourceLocation) -> SourceLocation: ...
+    def getFullyOriginalLoc(self, location: SourceLocation) -> SourceLocation: ...
+    def getFullyOriginalRange(self, range: SourceRange) -> SourceRange: ...
+    def getIncludedFrom(self, buffer: BufferID) -> SourceLocation: ...
+    def getLineNumber(self, location: SourceLocation) -> int: ...
+    def getMacroName(self, location: SourceLocation) -> str: ...
+    def getOriginalLoc(self, location: SourceLocation) -> SourceLocation: ...
+    def getRawFileName(self, buffer: BufferID) -> str: ...
+    def getSourceText(self, buffer: BufferID) -> str: ...
+    def isBeforeInCompilationUnit(
+        self, left: SourceLocation, right: SourceLocation
+    ) -> bool | None: ...
+    def isCached(self, path: os.PathLike) -> bool: ...
+    def isFileLoc(self, location: SourceLocation) -> bool: ...
+    def isIncludedFileLoc(self, location: SourceLocation) -> bool: ...
+    def isMacroArgLoc(self, location: SourceLocation) -> bool: ...
+    def isMacroLoc(self, location: SourceLocation) -> bool: ...
+    def isPreprocessedLoc(self, location: SourceLocation) -> bool: ...
+    def readHeader(
+        self, path: str, includedFrom: SourceLocation, library: SourceLibrary, isSystemPath: bool
+    ) -> SourceBuffer: ...
+    def readSource(
+        self, path: os.PathLike, library: SourceLibrary | None = None
+    ) -> SourceBuffer: ...
+    def setDisableProximatePaths(self, set: bool) -> None: ...
+
+class SourceOptions(metaclass=_metaclass):
     librariesInheritMacros: bool
     numThreads: int | None
     onlyLint: bool
     singleUnit: bool
-    def __init__(self) -> None:
-        ...
-class SourceRange:
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def __init__(self) -> None: ...
+
+class SourceRange(metaclass=_metaclass):
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, startLoc: SourceLocation, endLoc: SourceLocation) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
+    def __init__(self, startLoc: SourceLocation, endLoc: SourceLocation) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
     @property
-    def end(self) -> SourceLocation:
-        ...
+    def end(self) -> SourceLocation: ...
     @property
-    def start(self) -> SourceLocation:
-        ...
+    def start(self) -> SourceLocation: ...
+
 class SpecifyBlockSymbol(Symbol, Scope):
     pass
+
 class SpecifyBlockSyntax(MemberSyntax):
     endspecify: Token
     items: Any
     specify: Token
+
 class SpecparamDeclarationSyntax(MemberSyntax):
     declarators: Any
     keyword: Token
     semi: Token
     type: ImplicitTypeSyntax
+
 class SpecparamDeclaratorSyntax(SyntaxNode):
     closeParen: Token
     comma: Token
@@ -9293,277 +7087,195 @@ class SpecparamDeclaratorSyntax(SyntaxNode):
     openParen: Token
     value1: ExpressionSyntax
     value2: ExpressionSyntax
+
 class SpecparamSymbol(ValueSymbol):
     @property
-    def isPathPulse(self) -> bool:
-        ...
+    def isPathPulse(self) -> bool: ...
     @property
-    def pathDest(self) -> Symbol:
-        ...
+    def pathDest(self) -> Symbol: ...
     @property
-    def pathSource(self) -> Symbol:
-        ...
+    def pathSource(self) -> Symbol: ...
     @property
-    def pulseErrorLimit(self) -> ConstantValue:
-        ...
+    def pulseErrorLimit(self) -> ConstantValue: ...
     @property
-    def pulseRejectLimit(self) -> ConstantValue:
-        ...
+    def pulseRejectLimit(self) -> ConstantValue: ...
     @property
-    def value(self) -> ConstantValue:
-        ...
+    def value(self) -> ConstantValue: ...
+
 class StandardCaseItemSyntax(CaseItemSyntax):
     clause: SyntaxNode
     colon: Token
     expressions: Any
+
 class StandardPropertyCaseItemSyntax(PropertyCaseItemSyntax):
     colon: Token
     expr: PropertyExprSyntax
     expressions: Any
     semi: Token
+
 class StandardRsCaseItemSyntax(RsCaseItemSyntax):
     colon: Token
     expressions: Any
     item: RsProdItemSyntax
     semi: Token
-class Statement:
-    def __repr__(self) -> str:
-        ...
-    def eval(self, context: EvalContext) -> Any:
-        ...
+
+class Statement(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
+    def eval(self, context: EvalContext) -> Any: ...
     def visit(self, f: typing.Any) -> None:
+        """Visit a pyslang object with a callback function `f`.
+        The callback function `f` should take a single argument, which is the current node being
+            visited.
+        The return value of `f` determines the next node to visit.
+        If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional
+            nodes are visited.
+        If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are
+            visited. For any other return value, including `pyslang.VisitAction.Advance`,
+            the return value is ignored, and the walk continues.
         """
-        Visit a pyslang object with a callback function `f`.
-
-        The callback function `f` should take a single argument, which is the current node being visited.
-
-        The return value of `f` determines the next node to visit. If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional nodes are visited. If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are visited. For any other return value, including `pyslang.VisitAction.Advance`, the return value is ignored, and the walk continues.
-        """
     @property
-    def bad(self) -> bool:
-        ...
+    def bad(self) -> bool: ...
     @property
-    def kind(self) -> StatementKind:
-        ...
+    def kind(self) -> StatementKind: ...
     @property
-    def sourceRange(self) -> SourceRange:
-        ...
+    def sourceRange(self) -> SourceRange: ...
     @property
-    def syntax(self) -> Any:
-        ...
-class StatementBlockKind:
-    """
-    Members:
+    def syntax(self) -> Any: ...
 
-      Sequential
+class StatementBlockKind(metaclass=_metaclass):
+    JoinAll: ClassVar[StatementBlockKind]
+    """Value = 1"""
+    JoinAny: ClassVar[StatementBlockKind]
+    """Value = 2"""
+    JoinNone: ClassVar[StatementBlockKind]
+    """Value = 3"""
+    Sequential: ClassVar[StatementBlockKind]
+    """Value = 0"""
 
-      JoinAll
+    __members__: dict[str, Self]
 
-      JoinAny
-
-      JoinNone
-    """
-    JoinAll: typing.ClassVar[StatementBlockKind]  # value = <StatementBlockKind.JoinAll: 1>
-    JoinAny: typing.ClassVar[StatementBlockKind]  # value = <StatementBlockKind.JoinAny: 2>
-    JoinNone: typing.ClassVar[StatementBlockKind]  # value = <StatementBlockKind.JoinNone: 3>
-    Sequential: typing.ClassVar[StatementBlockKind]  # value = <StatementBlockKind.Sequential: 0>
-    __members__: typing.ClassVar[dict[str, StatementBlockKind]]  # value = {'Sequential': <StatementBlockKind.Sequential: 0>, 'JoinAll': <StatementBlockKind.JoinAll: 1>, 'JoinAny': <StatementBlockKind.JoinAny: 2>, 'JoinNone': <StatementBlockKind.JoinNone: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class StatementBlockSymbol(Symbol, Scope):
     @property
-    def blockKind(self) -> StatementBlockKind:
-        ...
+    def blockKind(self) -> StatementBlockKind: ...
     @property
-    def defaultLifetime(self) -> VariableLifetime:
-        ...
-class StatementKind:
-    """
-    Members:
+    def defaultLifetime(self) -> VariableLifetime: ...
 
-      Invalid
+class StatementKind(metaclass=_metaclass):
+    Block: ClassVar[StatementKind]
+    """Value = 3"""
+    Break: ClassVar[StatementKind]
+    """Value = 8"""
+    Case: ClassVar[StatementKind]
+    """Value = 11"""
+    ConcurrentAssertion: ClassVar[StatementKind]
+    """Value = 21"""
+    Conditional: ClassVar[StatementKind]
+    """Value = 10"""
+    Continue: ClassVar[StatementKind]
+    """Value = 7"""
+    Disable: ClassVar[StatementKind]
+    """Value = 9"""
+    DisableFork: ClassVar[StatementKind]
+    """Value = 22"""
+    DoWhileLoop: ClassVar[StatementKind]
+    """Value = 17"""
+    Empty: ClassVar[StatementKind]
+    """Value = 1"""
+    EventTrigger: ClassVar[StatementKind]
+    """Value = 26"""
+    ExpressionStatement: ClassVar[StatementKind]
+    """Value = 4"""
+    ForLoop: ClassVar[StatementKind]
+    """Value = 13"""
+    ForeachLoop: ClassVar[StatementKind]
+    """Value = 15"""
+    ForeverLoop: ClassVar[StatementKind]
+    """Value = 18"""
+    ImmediateAssertion: ClassVar[StatementKind]
+    """Value = 20"""
+    Invalid: ClassVar[StatementKind]
+    """Value = 0"""
+    List: ClassVar[StatementKind]
+    """Value = 2"""
+    PatternCase: ClassVar[StatementKind]
+    """Value = 12"""
+    ProceduralAssign: ClassVar[StatementKind]
+    """Value = 27"""
+    ProceduralChecker: ClassVar[StatementKind]
+    """Value = 31"""
+    ProceduralDeassign: ClassVar[StatementKind]
+    """Value = 28"""
+    RandCase: ClassVar[StatementKind]
+    """Value = 29"""
+    RandSequence: ClassVar[StatementKind]
+    """Value = 30"""
+    RepeatLoop: ClassVar[StatementKind]
+    """Value = 14"""
+    Return: ClassVar[StatementKind]
+    """Value = 6"""
+    Timed: ClassVar[StatementKind]
+    """Value = 19"""
+    VariableDeclaration: ClassVar[StatementKind]
+    """Value = 5"""
+    Wait: ClassVar[StatementKind]
+    """Value = 23"""
+    WaitFork: ClassVar[StatementKind]
+    """Value = 24"""
+    WaitOrder: ClassVar[StatementKind]
+    """Value = 25"""
+    WhileLoop: ClassVar[StatementKind]
+    """Value = 16"""
 
-      Empty
+    __members__: dict[str, Self]
 
-      List
-
-      Block
-
-      ExpressionStatement
-
-      VariableDeclaration
-
-      Return
-
-      Continue
-
-      Break
-
-      Disable
-
-      Conditional
-
-      Case
-
-      PatternCase
-
-      ForLoop
-
-      RepeatLoop
-
-      ForeachLoop
-
-      WhileLoop
-
-      DoWhileLoop
-
-      ForeverLoop
-
-      Timed
-
-      ImmediateAssertion
-
-      ConcurrentAssertion
-
-      DisableFork
-
-      Wait
-
-      WaitFork
-
-      WaitOrder
-
-      EventTrigger
-
-      ProceduralAssign
-
-      ProceduralDeassign
-
-      RandCase
-
-      RandSequence
-
-      ProceduralChecker
-    """
-    Block: typing.ClassVar[StatementKind]  # value = <StatementKind.Block: 3>
-    Break: typing.ClassVar[StatementKind]  # value = <StatementKind.Break: 8>
-    Case: typing.ClassVar[StatementKind]  # value = <StatementKind.Case: 11>
-    ConcurrentAssertion: typing.ClassVar[StatementKind]  # value = <StatementKind.ConcurrentAssertion: 21>
-    Conditional: typing.ClassVar[StatementKind]  # value = <StatementKind.Conditional: 10>
-    Continue: typing.ClassVar[StatementKind]  # value = <StatementKind.Continue: 7>
-    Disable: typing.ClassVar[StatementKind]  # value = <StatementKind.Disable: 9>
-    DisableFork: typing.ClassVar[StatementKind]  # value = <StatementKind.DisableFork: 22>
-    DoWhileLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.DoWhileLoop: 17>
-    Empty: typing.ClassVar[StatementKind]  # value = <StatementKind.Empty: 1>
-    EventTrigger: typing.ClassVar[StatementKind]  # value = <StatementKind.EventTrigger: 26>
-    ExpressionStatement: typing.ClassVar[StatementKind]  # value = <StatementKind.ExpressionStatement: 4>
-    ForLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.ForLoop: 13>
-    ForeachLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.ForeachLoop: 15>
-    ForeverLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.ForeverLoop: 18>
-    ImmediateAssertion: typing.ClassVar[StatementKind]  # value = <StatementKind.ImmediateAssertion: 20>
-    Invalid: typing.ClassVar[StatementKind]  # value = <StatementKind.Invalid: 0>
-    List: typing.ClassVar[StatementKind]  # value = <StatementKind.List: 2>
-    PatternCase: typing.ClassVar[StatementKind]  # value = <StatementKind.PatternCase: 12>
-    ProceduralAssign: typing.ClassVar[StatementKind]  # value = <StatementKind.ProceduralAssign: 27>
-    ProceduralChecker: typing.ClassVar[StatementKind]  # value = <StatementKind.ProceduralChecker: 31>
-    ProceduralDeassign: typing.ClassVar[StatementKind]  # value = <StatementKind.ProceduralDeassign: 28>
-    RandCase: typing.ClassVar[StatementKind]  # value = <StatementKind.RandCase: 29>
-    RandSequence: typing.ClassVar[StatementKind]  # value = <StatementKind.RandSequence: 30>
-    RepeatLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.RepeatLoop: 14>
-    Return: typing.ClassVar[StatementKind]  # value = <StatementKind.Return: 6>
-    Timed: typing.ClassVar[StatementKind]  # value = <StatementKind.Timed: 19>
-    VariableDeclaration: typing.ClassVar[StatementKind]  # value = <StatementKind.VariableDeclaration: 5>
-    Wait: typing.ClassVar[StatementKind]  # value = <StatementKind.Wait: 23>
-    WaitFork: typing.ClassVar[StatementKind]  # value = <StatementKind.WaitFork: 24>
-    WaitOrder: typing.ClassVar[StatementKind]  # value = <StatementKind.WaitOrder: 25>
-    WhileLoop: typing.ClassVar[StatementKind]  # value = <StatementKind.WhileLoop: 16>
-    __members__: typing.ClassVar[dict[str, StatementKind]]  # value = {'Invalid': <StatementKind.Invalid: 0>, 'Empty': <StatementKind.Empty: 1>, 'List': <StatementKind.List: 2>, 'Block': <StatementKind.Block: 3>, 'ExpressionStatement': <StatementKind.ExpressionStatement: 4>, 'VariableDeclaration': <StatementKind.VariableDeclaration: 5>, 'Return': <StatementKind.Return: 6>, 'Continue': <StatementKind.Continue: 7>, 'Break': <StatementKind.Break: 8>, 'Disable': <StatementKind.Disable: 9>, 'Conditional': <StatementKind.Conditional: 10>, 'Case': <StatementKind.Case: 11>, 'PatternCase': <StatementKind.PatternCase: 12>, 'ForLoop': <StatementKind.ForLoop: 13>, 'RepeatLoop': <StatementKind.RepeatLoop: 14>, 'ForeachLoop': <StatementKind.ForeachLoop: 15>, 'WhileLoop': <StatementKind.WhileLoop: 16>, 'DoWhileLoop': <StatementKind.DoWhileLoop: 17>, 'ForeverLoop': <StatementKind.ForeverLoop: 18>, 'Timed': <StatementKind.Timed: 19>, 'ImmediateAssertion': <StatementKind.ImmediateAssertion: 20>, 'ConcurrentAssertion': <StatementKind.ConcurrentAssertion: 21>, 'DisableFork': <StatementKind.DisableFork: 22>, 'Wait': <StatementKind.Wait: 23>, 'WaitFork': <StatementKind.WaitFork: 24>, 'WaitOrder': <StatementKind.WaitOrder: 25>, 'EventTrigger': <StatementKind.EventTrigger: 26>, 'ProceduralAssign': <StatementKind.ProceduralAssign: 27>, 'ProceduralDeassign': <StatementKind.ProceduralDeassign: 28>, 'RandCase': <StatementKind.RandCase: 29>, 'RandSequence': <StatementKind.RandSequence: 30>, 'ProceduralChecker': <StatementKind.ProceduralChecker: 31>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class StatementList(Statement):
     @property
-    def list(self) -> List[Statement]:
-        ...
+    def list(self) -> list[Statement]: ...
+
 class StatementSyntax(SyntaxNode):
     attributes: Any
     label: NamedLabelSyntax
+
 class StreamExpressionSyntax(SyntaxNode):
     expression: ExpressionSyntax
     withRange: StreamExpressionWithRangeSyntax
+
 class StreamExpressionWithRangeSyntax(SyntaxNode):
     range: ElementSelectSyntax
     withKeyword: Token
+
 class StreamingConcatenationExpression(Expression):
-    class StreamExpression:
+    class StreamExpression(metaclass=_metaclass):
         @property
-        def constantWithWidth(self) -> int | None:
-            ...
+        def constantWithWidth(self) -> int | None: ...
         @property
-        def operand(self) -> Expression:
-            ...
+        def operand(self) -> Expression: ...
         @property
-        def withExpr(self) -> Expression:
-            ...
+        def withExpr(self) -> Expression: ...
+
     @property
-    def bitstreamWidth(self) -> int:
-        ...
+    def bitstreamWidth(self) -> int: ...
     @property
-    def isFixedSize(self) -> bool:
-        ...
+    def isFixedSize(self) -> bool: ...
     @property
-    def sliceSize(self) -> int:
-        ...
+    def sliceSize(self) -> int: ...
     @property
-    def streams(self) -> List[Any]:
-        ...
+    def streams(self) -> list[Any]: ...
+
 class StreamingConcatenationExpressionSyntax(PrimaryExpressionSyntax):
     closeBrace: Token
     expressions: Any
@@ -9572,75 +7284,54 @@ class StreamingConcatenationExpressionSyntax(PrimaryExpressionSyntax):
     openBrace: Token
     operatorToken: Token
     sliceSize: ExpressionSyntax
+
 class StringLiteral(Expression):
     @property
-    def intValue(self) -> Any:
-        ...
+    def intValue(self) -> Any: ...
     @property
-    def rawValue(self) -> str:
-        ...
+    def rawValue(self) -> str: ...
     @property
-    def value(self) -> str:
-        ...
+    def value(self) -> str: ...
+
 class StringType(Type):
     pass
+
 class StrongWeakAssertionExpr(AssertionExpr):
-    class Strength:
-        """
-        Members:
+    class Strength(metaclass=_metaclass):
+        Strong: ClassVar[Self]
+        """Value = 0"""
+        Weak: ClassVar[Self]
+        """Value = 1"""
 
-          Strong
+        __members__: dict[str, Self]
 
-          Weak
-        """
-        Strong: typing.ClassVar[StrongWeakAssertionExpr.Strength]  # value = <Strength.Strong: 0>
-        Weak: typing.ClassVar[StrongWeakAssertionExpr.Strength]  # value = <Strength.Weak: 1>
-        __members__: typing.ClassVar[dict[str, StrongWeakAssertionExpr.Strength]]  # value = {'Strong': <Strength.Strong: 0>, 'Weak': <Strength.Weak: 1>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Strong: typing.ClassVar[StrongWeakAssertionExpr.Strength]  # value = <Strength.Strong: 0>
-    Weak: typing.ClassVar[StrongWeakAssertionExpr.Strength]  # value = <Strength.Weak: 1>
+        def value(self) -> int: ...
+
+    Strong = Strength.Strong
+    Weak = Strength.Weak
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
     @property
-    def strength(self) -> Any:
-        ...
+    def strength(self) -> Any: ...
+
 class StrongWeakPropertyExprSyntax(PropertyExprSyntax):
     closeParen: Token
     expr: SequenceExprSyntax
     keyword: Token
     openParen: Token
+
 class StructUnionMemberSyntax(SyntaxNode):
     attributes: Any
     declarators: Any
     randomQualifier: Token
     semi: Token
     type: DataTypeSyntax
+
 class StructUnionTypeSyntax(DataTypeSyntax):
     closeBrace: Token
     dimensions: Any
@@ -9650,4436 +7341,3017 @@ class StructUnionTypeSyntax(DataTypeSyntax):
     packed: Token
     signing: Token
     taggedOrSoft: Token
+
 class StructurePattern(Pattern):
-    class FieldPattern:
+    class FieldPattern(metaclass=_metaclass):
         @property
-        def field(self) -> Any:
-            ...
+        def field(self) -> Any: ...
         @property
-        def pattern(self) -> Pattern:
-            ...
+        def pattern(self) -> Pattern: ...
+
     @property
-    def patterns(self) -> List[Any]:
-        ...
+    def patterns(self) -> list[Any]: ...
+
 class StructurePatternMemberSyntax(SyntaxNode):
     pass
+
 class StructurePatternSyntax(PatternSyntax):
     closeBrace: Token
     members: Any
     openBrace: Token
+
 class StructuredAssignmentPatternExpression(AssignmentPatternExpressionBase):
-    class IndexSetter:
+    class IndexSetter(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def index(self) -> Expression:
-            ...
-    class MemberSetter:
+        def index(self) -> Expression: ...
+
+    class MemberSetter(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def member(self) -> Any:
-            ...
-    class TypeSetter:
+        def member(self) -> Any: ...
+
+    class TypeSetter(metaclass=_metaclass):
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
         @property
-        def type(self) -> Any:
-            ...
+        def type(self) -> Any: ...
+
     @property
-    def defaultSetter(self) -> Expression:
-        ...
+    def defaultSetter(self) -> Expression: ...
     @property
-    def indexSetters(self) -> List[Any]:
-        ...
+    def indexSetters(self) -> list[Any]: ...
     @property
-    def memberSetters(self) -> List[Any]:
-        ...
+    def memberSetters(self) -> list[Any]: ...
     @property
-    def typeSetters(self) -> List[Any]:
-        ...
+    def typeSetters(self) -> list[Any]: ...
+
 class StructuredAssignmentPatternSyntax(AssignmentPatternSyntax):
     closeBrace: Token
     items: Any
     openBrace: Token
-class SubroutineKind:
-    """
-    Members:
 
-      Function
+class SubroutineKind(metaclass=_metaclass):
+    Function: ClassVar[SubroutineKind]
+    """Value = 0"""
+    Task: ClassVar[SubroutineKind]
+    """Value = 1"""
 
-      Task
-    """
-    Function: typing.ClassVar[SubroutineKind]  # value = <SubroutineKind.Function: 0>
-    Task: typing.ClassVar[SubroutineKind]  # value = <SubroutineKind.Task: 1>
-    __members__: typing.ClassVar[dict[str, SubroutineKind]]  # value = {'Function': <SubroutineKind.Function: 0>, 'Task': <SubroutineKind.Task: 1>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class SubroutineSymbol(Symbol, Scope):
     @property
-    def arguments(self) -> List[FormalArgumentSymbol]:
-        ...
+    def arguments(self) -> list[FormalArgumentSymbol]: ...
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def defaultLifetime(self) -> VariableLifetime:
-        ...
+    def defaultLifetime(self) -> VariableLifetime: ...
     @property
-    def flags(self) -> MethodFlags:
-        ...
+    def flags(self) -> MethodFlags: ...
     @property
-    def isVirtual(self) -> bool:
-        ...
+    def isVirtual(self) -> bool: ...
     @property
-    def override(self) -> SubroutineSymbol:
-        ...
+    def override(self) -> SubroutineSymbol: ...
     @property
-    def prototype(self) -> Any:
-        ...
+    def prototype(self) -> Any: ...
     @property
-    def returnType(self) -> Any:
-        ...
+    def returnType(self) -> Any: ...
     @property
-    def subroutineKind(self) -> SubroutineKind:
-        ...
+    def subroutineKind(self) -> SubroutineKind: ...
     @property
-    def visibility(self) -> Visibility:
-        ...
+    def visibility(self) -> Visibility: ...
+
 class SuperNewDefaultedArgsExpressionSyntax(ExpressionSyntax):
     closeParen: Token
     defaultKeyword: Token
     openParen: Token
     scopedNew: NameSyntax
-class Symbol:
-    def __repr__(self) -> str:
-        ...
+
+class Symbol(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
     @typing.overload
-    def isDeclaredBefore(self, target: Symbol) -> bool | None:
-        ...
+    def isDeclaredBefore(self, target: Symbol) -> bool | None: ...
     @typing.overload
-    def isDeclaredBefore(self, location: LookupLocation) -> bool | None:
-        ...
+    def isDeclaredBefore(self, location: LookupLocation) -> bool | None: ...
     def visit(self, f: typing.Any) -> None:
+        """Visit a pyslang object with a callback function `f`.
+        The callback function `f` should take a single argument, which is the current node being
+            visited.
+        The return value of `f` determines the next node to visit.
+        If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional
+            nodes are visited.
+        If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are
+            visited. For any other return value, including `pyslang.VisitAction.Advance`,
+            the return value is ignored, and the walk continues.
         """
-        Visit a pyslang object with a callback function `f`.
-
-        The callback function `f` should take a single argument, which is the current node being visited.
-
-        The return value of `f` determines the next node to visit. If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional nodes are visited. If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are visited. For any other return value, including `pyslang.VisitAction.Advance`, the return value is ignored, and the walk continues.
-        """
     @property
-    def declaredType(self) -> Any:
-        ...
+    def declaredType(self) -> Any: ...
     @property
-    def declaringDefinition(self) -> Any:
-        ...
+    def declaringDefinition(self) -> Any: ...
     @property
-    def hierarchicalPath(self) -> str:
-        ...
+    def hierarchicalPath(self) -> str: ...
     @property
-    def isScope(self) -> bool:
-        ...
+    def isScope(self) -> bool: ...
     @property
-    def isType(self) -> bool:
-        ...
+    def isType(self) -> bool: ...
     @property
-    def isValue(self) -> bool:
-        ...
+    def isValue(self) -> bool: ...
     @property
-    def kind(self) -> SymbolKind:
-        ...
+    def kind(self) -> SymbolKind: ...
     @property
-    def lexicalPath(self) -> str:
-        ...
+    def lexicalPath(self) -> str: ...
     @property
-    def location(self) -> SourceLocation:
-        ...
+    def location(self) -> SourceLocation: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def nextSibling(self) -> Symbol:
-        ...
+    def nextSibling(self) -> Symbol: ...
     @property
-    def parentScope(self) -> Any:
-        ...
+    def parentScope(self) -> Any: ...
     @property
-    def randMode(self) -> RandMode:
-        ...
+    def randMode(self) -> RandMode: ...
     @property
-    def sourceLibrary(self) -> SourceLibrary:
-        ...
+    def sourceLibrary(self) -> SourceLibrary: ...
     @property
-    def syntax(self) -> Any:
-        ...
-class SymbolKind:
-    """
-    Members:
-
-      Unknown
-
-      Root
-
-      Definition
-
-      CompilationUnit
-
-      DeferredMember
-
-      TransparentMember
-
-      EmptyMember
-
-      PredefinedIntegerType
-
-      ScalarType
-
-      FloatingType
-
-      EnumType
-
-      EnumValue
-
-      PackedArrayType
-
-      FixedSizeUnpackedArrayType
-
-      DynamicArrayType
-
-      DPIOpenArrayType
-
-      AssociativeArrayType
-
-      QueueType
-
-      PackedStructType
-
-      UnpackedStructType
-
-      PackedUnionType
-
-      UnpackedUnionType
-
-      ClassType
-
-      CovergroupType
-
-      VoidType
-
-      NullType
-
-      CHandleType
-
-      StringType
-
-      EventType
-
-      UnboundedType
-
-      TypeRefType
-
-      UntypedType
-
-      SequenceType
-
-      PropertyType
-
-      VirtualInterfaceType
-
-      TypeAlias
-
-      ErrorType
-
-      ForwardingTypedef
-
-      NetType
-
-      Parameter
-
-      TypeParameter
-
-      Port
-
-      MultiPort
-
-      InterfacePort
-
-      Modport
-
-      ModportPort
-
-      ModportClocking
-
-      Instance
-
-      InstanceBody
-
-      InstanceArray
-
-      Package
-
-      ExplicitImport
-
-      WildcardImport
-
-      Attribute
-
-      Genvar
-
-      GenerateBlock
-
-      GenerateBlockArray
-
-      ProceduralBlock
-
-      StatementBlock
-
-      Net
-
-      Variable
-
-      FormalArgument
-
-      Field
-
-      ClassProperty
-
-      Subroutine
-
-      ContinuousAssign
-
-      ElabSystemTask
-
-      GenericClassDef
-
-      MethodPrototype
-
-      UninstantiatedDef
-
-      Iterator
-
-      PatternVar
-
-      ConstraintBlock
-
-      DefParam
-
-      Specparam
-
-      Primitive
-
-      PrimitivePort
-
-      PrimitiveInstance
-
-      SpecifyBlock
-
-      Sequence
-
-      Property
-
-      AssertionPort
-
-      ClockingBlock
-
-      ClockVar
-
-      LocalAssertionVar
-
-      LetDecl
-
-      Checker
-
-      CheckerInstance
-
-      CheckerInstanceBody
-
-      RandSeqProduction
-
-      CovergroupBody
-
-      Coverpoint
-
-      CoverCross
-
-      CoverCrossBody
-
-      CoverageBin
-
-      TimingPath
-
-      PulseStyle
-
-      SystemTimingCheck
-
-      AnonymousProgram
-
-      NetAlias
-
-      ConfigBlock
-    """
-    AnonymousProgram: typing.ClassVar[SymbolKind]  # value = <SymbolKind.AnonymousProgram: 98>
-    AssertionPort: typing.ClassVar[SymbolKind]  # value = <SymbolKind.AssertionPort: 81>
-    AssociativeArrayType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.AssociativeArrayType: 16>
-    Attribute: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Attribute: 53>
-    CHandleType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CHandleType: 26>
-    Checker: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Checker: 86>
-    CheckerInstance: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CheckerInstance: 87>
-    CheckerInstanceBody: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CheckerInstanceBody: 88>
-    ClassProperty: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ClassProperty: 63>
-    ClassType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ClassType: 22>
-    ClockVar: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ClockVar: 83>
-    ClockingBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ClockingBlock: 82>
-    CompilationUnit: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CompilationUnit: 3>
-    ConfigBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ConfigBlock: 100>
-    ConstraintBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ConstraintBlock: 72>
-    ContinuousAssign: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ContinuousAssign: 65>
-    CoverCross: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CoverCross: 92>
-    CoverCrossBody: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CoverCrossBody: 93>
-    CoverageBin: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CoverageBin: 94>
-    CovergroupBody: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CovergroupBody: 90>
-    CovergroupType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.CovergroupType: 23>
-    Coverpoint: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Coverpoint: 91>
-    DPIOpenArrayType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.DPIOpenArrayType: 15>
-    DefParam: typing.ClassVar[SymbolKind]  # value = <SymbolKind.DefParam: 73>
-    DeferredMember: typing.ClassVar[SymbolKind]  # value = <SymbolKind.DeferredMember: 4>
-    Definition: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Definition: 2>
-    DynamicArrayType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.DynamicArrayType: 14>
-    ElabSystemTask: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ElabSystemTask: 66>
-    EmptyMember: typing.ClassVar[SymbolKind]  # value = <SymbolKind.EmptyMember: 6>
-    EnumType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.EnumType: 10>
-    EnumValue: typing.ClassVar[SymbolKind]  # value = <SymbolKind.EnumValue: 11>
-    ErrorType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ErrorType: 36>
-    EventType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.EventType: 28>
-    ExplicitImport: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ExplicitImport: 51>
-    Field: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Field: 62>
-    FixedSizeUnpackedArrayType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.FixedSizeUnpackedArrayType: 13>
-    FloatingType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.FloatingType: 9>
-    FormalArgument: typing.ClassVar[SymbolKind]  # value = <SymbolKind.FormalArgument: 61>
-    ForwardingTypedef: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ForwardingTypedef: 37>
-    GenerateBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.GenerateBlock: 55>
-    GenerateBlockArray: typing.ClassVar[SymbolKind]  # value = <SymbolKind.GenerateBlockArray: 56>
-    GenericClassDef: typing.ClassVar[SymbolKind]  # value = <SymbolKind.GenericClassDef: 67>
-    Genvar: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Genvar: 54>
-    Instance: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Instance: 47>
-    InstanceArray: typing.ClassVar[SymbolKind]  # value = <SymbolKind.InstanceArray: 49>
-    InstanceBody: typing.ClassVar[SymbolKind]  # value = <SymbolKind.InstanceBody: 48>
-    InterfacePort: typing.ClassVar[SymbolKind]  # value = <SymbolKind.InterfacePort: 43>
-    Iterator: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Iterator: 70>
-    LetDecl: typing.ClassVar[SymbolKind]  # value = <SymbolKind.LetDecl: 85>
-    LocalAssertionVar: typing.ClassVar[SymbolKind]  # value = <SymbolKind.LocalAssertionVar: 84>
-    MethodPrototype: typing.ClassVar[SymbolKind]  # value = <SymbolKind.MethodPrototype: 68>
-    Modport: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Modport: 44>
-    ModportClocking: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ModportClocking: 46>
-    ModportPort: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ModportPort: 45>
-    MultiPort: typing.ClassVar[SymbolKind]  # value = <SymbolKind.MultiPort: 42>
-    Net: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Net: 59>
-    NetAlias: typing.ClassVar[SymbolKind]  # value = <SymbolKind.NetAlias: 99>
-    NetType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.NetType: 38>
-    NullType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.NullType: 25>
-    Package: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Package: 50>
-    PackedArrayType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PackedArrayType: 12>
-    PackedStructType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PackedStructType: 18>
-    PackedUnionType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PackedUnionType: 20>
-    Parameter: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Parameter: 39>
-    PatternVar: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PatternVar: 71>
-    Port: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Port: 41>
-    PredefinedIntegerType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PredefinedIntegerType: 7>
-    Primitive: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Primitive: 75>
-    PrimitiveInstance: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PrimitiveInstance: 77>
-    PrimitivePort: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PrimitivePort: 76>
-    ProceduralBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ProceduralBlock: 57>
-    Property: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Property: 80>
-    PropertyType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PropertyType: 33>
-    PulseStyle: typing.ClassVar[SymbolKind]  # value = <SymbolKind.PulseStyle: 96>
-    QueueType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.QueueType: 17>
-    RandSeqProduction: typing.ClassVar[SymbolKind]  # value = <SymbolKind.RandSeqProduction: 89>
-    Root: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Root: 1>
-    ScalarType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.ScalarType: 8>
-    Sequence: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Sequence: 79>
-    SequenceType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.SequenceType: 32>
-    SpecifyBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.SpecifyBlock: 78>
-    Specparam: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Specparam: 74>
-    StatementBlock: typing.ClassVar[SymbolKind]  # value = <SymbolKind.StatementBlock: 58>
-    StringType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.StringType: 27>
-    Subroutine: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Subroutine: 64>
-    SystemTimingCheck: typing.ClassVar[SymbolKind]  # value = <SymbolKind.SystemTimingCheck: 97>
-    TimingPath: typing.ClassVar[SymbolKind]  # value = <SymbolKind.TimingPath: 95>
-    TransparentMember: typing.ClassVar[SymbolKind]  # value = <SymbolKind.TransparentMember: 5>
-    TypeAlias: typing.ClassVar[SymbolKind]  # value = <SymbolKind.TypeAlias: 35>
-    TypeParameter: typing.ClassVar[SymbolKind]  # value = <SymbolKind.TypeParameter: 40>
-    TypeRefType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.TypeRefType: 30>
-    UnboundedType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.UnboundedType: 29>
-    UninstantiatedDef: typing.ClassVar[SymbolKind]  # value = <SymbolKind.UninstantiatedDef: 69>
-    Unknown: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Unknown: 0>
-    UnpackedStructType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.UnpackedStructType: 19>
-    UnpackedUnionType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.UnpackedUnionType: 21>
-    UntypedType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.UntypedType: 31>
-    Variable: typing.ClassVar[SymbolKind]  # value = <SymbolKind.Variable: 60>
-    VirtualInterfaceType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.VirtualInterfaceType: 34>
-    VoidType: typing.ClassVar[SymbolKind]  # value = <SymbolKind.VoidType: 24>
-    WildcardImport: typing.ClassVar[SymbolKind]  # value = <SymbolKind.WildcardImport: 52>
-    __members__: typing.ClassVar[dict[str, SymbolKind]]  # value = {'Unknown': <SymbolKind.Unknown: 0>, 'Root': <SymbolKind.Root: 1>, 'Definition': <SymbolKind.Definition: 2>, 'CompilationUnit': <SymbolKind.CompilationUnit: 3>, 'DeferredMember': <SymbolKind.DeferredMember: 4>, 'TransparentMember': <SymbolKind.TransparentMember: 5>, 'EmptyMember': <SymbolKind.EmptyMember: 6>, 'PredefinedIntegerType': <SymbolKind.PredefinedIntegerType: 7>, 'ScalarType': <SymbolKind.ScalarType: 8>, 'FloatingType': <SymbolKind.FloatingType: 9>, 'EnumType': <SymbolKind.EnumType: 10>, 'EnumValue': <SymbolKind.EnumValue: 11>, 'PackedArrayType': <SymbolKind.PackedArrayType: 12>, 'FixedSizeUnpackedArrayType': <SymbolKind.FixedSizeUnpackedArrayType: 13>, 'DynamicArrayType': <SymbolKind.DynamicArrayType: 14>, 'DPIOpenArrayType': <SymbolKind.DPIOpenArrayType: 15>, 'AssociativeArrayType': <SymbolKind.AssociativeArrayType: 16>, 'QueueType': <SymbolKind.QueueType: 17>, 'PackedStructType': <SymbolKind.PackedStructType: 18>, 'UnpackedStructType': <SymbolKind.UnpackedStructType: 19>, 'PackedUnionType': <SymbolKind.PackedUnionType: 20>, 'UnpackedUnionType': <SymbolKind.UnpackedUnionType: 21>, 'ClassType': <SymbolKind.ClassType: 22>, 'CovergroupType': <SymbolKind.CovergroupType: 23>, 'VoidType': <SymbolKind.VoidType: 24>, 'NullType': <SymbolKind.NullType: 25>, 'CHandleType': <SymbolKind.CHandleType: 26>, 'StringType': <SymbolKind.StringType: 27>, 'EventType': <SymbolKind.EventType: 28>, 'UnboundedType': <SymbolKind.UnboundedType: 29>, 'TypeRefType': <SymbolKind.TypeRefType: 30>, 'UntypedType': <SymbolKind.UntypedType: 31>, 'SequenceType': <SymbolKind.SequenceType: 32>, 'PropertyType': <SymbolKind.PropertyType: 33>, 'VirtualInterfaceType': <SymbolKind.VirtualInterfaceType: 34>, 'TypeAlias': <SymbolKind.TypeAlias: 35>, 'ErrorType': <SymbolKind.ErrorType: 36>, 'ForwardingTypedef': <SymbolKind.ForwardingTypedef: 37>, 'NetType': <SymbolKind.NetType: 38>, 'Parameter': <SymbolKind.Parameter: 39>, 'TypeParameter': <SymbolKind.TypeParameter: 40>, 'Port': <SymbolKind.Port: 41>, 'MultiPort': <SymbolKind.MultiPort: 42>, 'InterfacePort': <SymbolKind.InterfacePort: 43>, 'Modport': <SymbolKind.Modport: 44>, 'ModportPort': <SymbolKind.ModportPort: 45>, 'ModportClocking': <SymbolKind.ModportClocking: 46>, 'Instance': <SymbolKind.Instance: 47>, 'InstanceBody': <SymbolKind.InstanceBody: 48>, 'InstanceArray': <SymbolKind.InstanceArray: 49>, 'Package': <SymbolKind.Package: 50>, 'ExplicitImport': <SymbolKind.ExplicitImport: 51>, 'WildcardImport': <SymbolKind.WildcardImport: 52>, 'Attribute': <SymbolKind.Attribute: 53>, 'Genvar': <SymbolKind.Genvar: 54>, 'GenerateBlock': <SymbolKind.GenerateBlock: 55>, 'GenerateBlockArray': <SymbolKind.GenerateBlockArray: 56>, 'ProceduralBlock': <SymbolKind.ProceduralBlock: 57>, 'StatementBlock': <SymbolKind.StatementBlock: 58>, 'Net': <SymbolKind.Net: 59>, 'Variable': <SymbolKind.Variable: 60>, 'FormalArgument': <SymbolKind.FormalArgument: 61>, 'Field': <SymbolKind.Field: 62>, 'ClassProperty': <SymbolKind.ClassProperty: 63>, 'Subroutine': <SymbolKind.Subroutine: 64>, 'ContinuousAssign': <SymbolKind.ContinuousAssign: 65>, 'ElabSystemTask': <SymbolKind.ElabSystemTask: 66>, 'GenericClassDef': <SymbolKind.GenericClassDef: 67>, 'MethodPrototype': <SymbolKind.MethodPrototype: 68>, 'UninstantiatedDef': <SymbolKind.UninstantiatedDef: 69>, 'Iterator': <SymbolKind.Iterator: 70>, 'PatternVar': <SymbolKind.PatternVar: 71>, 'ConstraintBlock': <SymbolKind.ConstraintBlock: 72>, 'DefParam': <SymbolKind.DefParam: 73>, 'Specparam': <SymbolKind.Specparam: 74>, 'Primitive': <SymbolKind.Primitive: 75>, 'PrimitivePort': <SymbolKind.PrimitivePort: 76>, 'PrimitiveInstance': <SymbolKind.PrimitiveInstance: 77>, 'SpecifyBlock': <SymbolKind.SpecifyBlock: 78>, 'Sequence': <SymbolKind.Sequence: 79>, 'Property': <SymbolKind.Property: 80>, 'AssertionPort': <SymbolKind.AssertionPort: 81>, 'ClockingBlock': <SymbolKind.ClockingBlock: 82>, 'ClockVar': <SymbolKind.ClockVar: 83>, 'LocalAssertionVar': <SymbolKind.LocalAssertionVar: 84>, 'LetDecl': <SymbolKind.LetDecl: 85>, 'Checker': <SymbolKind.Checker: 86>, 'CheckerInstance': <SymbolKind.CheckerInstance: 87>, 'CheckerInstanceBody': <SymbolKind.CheckerInstanceBody: 88>, 'RandSeqProduction': <SymbolKind.RandSeqProduction: 89>, 'CovergroupBody': <SymbolKind.CovergroupBody: 90>, 'Coverpoint': <SymbolKind.Coverpoint: 91>, 'CoverCross': <SymbolKind.CoverCross: 92>, 'CoverCrossBody': <SymbolKind.CoverCrossBody: 93>, 'CoverageBin': <SymbolKind.CoverageBin: 94>, 'TimingPath': <SymbolKind.TimingPath: 95>, 'PulseStyle': <SymbolKind.PulseStyle: 96>, 'SystemTimingCheck': <SymbolKind.SystemTimingCheck: 97>, 'AnonymousProgram': <SymbolKind.AnonymousProgram: 98>, 'NetAlias': <SymbolKind.NetAlias: 99>, 'ConfigBlock': <SymbolKind.ConfigBlock: 100>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def syntax(self) -> Any: ...
+
+class SymbolKind(metaclass=_metaclass):
+    AnonymousProgram: ClassVar[SymbolKind]
+    """Value = 98"""
+    AssertionPort: ClassVar[SymbolKind]
+    """Value = 81"""
+    AssociativeArrayType: ClassVar[SymbolKind]
+    """Value = 16"""
+    Attribute: ClassVar[SymbolKind]
+    """Value = 53"""
+    CHandleType: ClassVar[SymbolKind]
+    """Value = 26"""
+    Checker: ClassVar[SymbolKind]
+    """Value = 86"""
+    CheckerInstance: ClassVar[SymbolKind]
+    """Value = 87"""
+    CheckerInstanceBody: ClassVar[SymbolKind]
+    """Value = 88"""
+    ClassProperty: ClassVar[SymbolKind]
+    """Value = 63"""
+    ClassType: ClassVar[SymbolKind]
+    """Value = 22"""
+    ClockVar: ClassVar[SymbolKind]
+    """Value = 83"""
+    ClockingBlock: ClassVar[SymbolKind]
+    """Value = 82"""
+    CompilationUnit: ClassVar[SymbolKind]
+    """Value = 3"""
+    ConfigBlock: ClassVar[SymbolKind]
+    """Value = 100"""
+    ConstraintBlock: ClassVar[SymbolKind]
+    """Value = 72"""
+    ContinuousAssign: ClassVar[SymbolKind]
+    """Value = 65"""
+    CoverCross: ClassVar[SymbolKind]
+    """Value = 92"""
+    CoverCrossBody: ClassVar[SymbolKind]
+    """Value = 93"""
+    CoverageBin: ClassVar[SymbolKind]
+    """Value = 94"""
+    CovergroupBody: ClassVar[SymbolKind]
+    """Value = 90"""
+    CovergroupType: ClassVar[SymbolKind]
+    """Value = 23"""
+    Coverpoint: ClassVar[SymbolKind]
+    """Value = 91"""
+    DPIOpenArrayType: ClassVar[SymbolKind]
+    """Value = 15"""
+    DefParam: ClassVar[SymbolKind]
+    """Value = 73"""
+    DeferredMember: ClassVar[SymbolKind]
+    """Value = 4"""
+    Definition: ClassVar[SymbolKind]
+    """Value = 2"""
+    DynamicArrayType: ClassVar[SymbolKind]
+    """Value = 14"""
+    ElabSystemTask: ClassVar[SymbolKind]
+    """Value = 66"""
+    EmptyMember: ClassVar[SymbolKind]
+    """Value = 6"""
+    EnumType: ClassVar[SymbolKind]
+    """Value = 10"""
+    EnumValue: ClassVar[SymbolKind]
+    """Value = 11"""
+    ErrorType: ClassVar[SymbolKind]
+    """Value = 36"""
+    EventType: ClassVar[SymbolKind]
+    """Value = 28"""
+    ExplicitImport: ClassVar[SymbolKind]
+    """Value = 51"""
+    Field: ClassVar[SymbolKind]
+    """Value = 62"""
+    FixedSizeUnpackedArrayType: ClassVar[SymbolKind]
+    """Value = 13"""
+    FloatingType: ClassVar[SymbolKind]
+    """Value = 9"""
+    FormalArgument: ClassVar[SymbolKind]
+    """Value = 61"""
+    ForwardingTypedef: ClassVar[SymbolKind]
+    """Value = 37"""
+    GenerateBlock: ClassVar[SymbolKind]
+    """Value = 55"""
+    GenerateBlockArray: ClassVar[SymbolKind]
+    """Value = 56"""
+    GenericClassDef: ClassVar[SymbolKind]
+    """Value = 67"""
+    Genvar: ClassVar[SymbolKind]
+    """Value = 54"""
+    Instance: ClassVar[SymbolKind]
+    """Value = 47"""
+    InstanceArray: ClassVar[SymbolKind]
+    """Value = 49"""
+    InstanceBody: ClassVar[SymbolKind]
+    """Value = 48"""
+    InterfacePort: ClassVar[SymbolKind]
+    """Value = 43"""
+    Iterator: ClassVar[SymbolKind]
+    """Value = 70"""
+    LetDecl: ClassVar[SymbolKind]
+    """Value = 85"""
+    LocalAssertionVar: ClassVar[SymbolKind]
+    """Value = 84"""
+    MethodPrototype: ClassVar[SymbolKind]
+    """Value = 68"""
+    Modport: ClassVar[SymbolKind]
+    """Value = 44"""
+    ModportClocking: ClassVar[SymbolKind]
+    """Value = 46"""
+    ModportPort: ClassVar[SymbolKind]
+    """Value = 45"""
+    MultiPort: ClassVar[SymbolKind]
+    """Value = 42"""
+    Net: ClassVar[SymbolKind]
+    """Value = 59"""
+    NetAlias: ClassVar[SymbolKind]
+    """Value = 99"""
+    NetType: ClassVar[SymbolKind]
+    """Value = 38"""
+    NullType: ClassVar[SymbolKind]
+    """Value = 25"""
+    Package: ClassVar[SymbolKind]
+    """Value = 50"""
+    PackedArrayType: ClassVar[SymbolKind]
+    """Value = 12"""
+    PackedStructType: ClassVar[SymbolKind]
+    """Value = 18"""
+    PackedUnionType: ClassVar[SymbolKind]
+    """Value = 20"""
+    Parameter: ClassVar[SymbolKind]
+    """Value = 39"""
+    PatternVar: ClassVar[SymbolKind]
+    """Value = 71"""
+    Port: ClassVar[SymbolKind]
+    """Value = 41"""
+    PredefinedIntegerType: ClassVar[SymbolKind]
+    """Value = 7"""
+    Primitive: ClassVar[SymbolKind]
+    """Value = 75"""
+    PrimitiveInstance: ClassVar[SymbolKind]
+    """Value = 77"""
+    PrimitivePort: ClassVar[SymbolKind]
+    """Value = 76"""
+    ProceduralBlock: ClassVar[SymbolKind]
+    """Value = 57"""
+    Property: ClassVar[SymbolKind]
+    """Value = 80"""
+    PropertyType: ClassVar[SymbolKind]
+    """Value = 33"""
+    PulseStyle: ClassVar[SymbolKind]
+    """Value = 96"""
+    QueueType: ClassVar[SymbolKind]
+    """Value = 17"""
+    RandSeqProduction: ClassVar[SymbolKind]
+    """Value = 89"""
+    Root: ClassVar[SymbolKind]
+    """Value = 1"""
+    ScalarType: ClassVar[SymbolKind]
+    """Value = 8"""
+    Sequence: ClassVar[SymbolKind]
+    """Value = 79"""
+    SequenceType: ClassVar[SymbolKind]
+    """Value = 32"""
+    SpecifyBlock: ClassVar[SymbolKind]
+    """Value = 78"""
+    Specparam: ClassVar[SymbolKind]
+    """Value = 74"""
+    StatementBlock: ClassVar[SymbolKind]
+    """Value = 58"""
+    StringType: ClassVar[SymbolKind]
+    """Value = 27"""
+    Subroutine: ClassVar[SymbolKind]
+    """Value = 64"""
+    SystemTimingCheck: ClassVar[SymbolKind]
+    """Value = 97"""
+    TimingPath: ClassVar[SymbolKind]
+    """Value = 95"""
+    TransparentMember: ClassVar[SymbolKind]
+    """Value = 5"""
+    TypeAlias: ClassVar[SymbolKind]
+    """Value = 35"""
+    TypeParameter: ClassVar[SymbolKind]
+    """Value = 40"""
+    TypeRefType: ClassVar[SymbolKind]
+    """Value = 30"""
+    UnboundedType: ClassVar[SymbolKind]
+    """Value = 29"""
+    UninstantiatedDef: ClassVar[SymbolKind]
+    """Value = 69"""
+    Unknown: ClassVar[SymbolKind]
+    """Value = 0"""
+    UnpackedStructType: ClassVar[SymbolKind]
+    """Value = 19"""
+    UnpackedUnionType: ClassVar[SymbolKind]
+    """Value = 21"""
+    UntypedType: ClassVar[SymbolKind]
+    """Value = 31"""
+    Variable: ClassVar[SymbolKind]
+    """Value = 60"""
+    VirtualInterfaceType: ClassVar[SymbolKind]
+    """Value = 34"""
+    VoidType: ClassVar[SymbolKind]
+    """Value = 24"""
+    WildcardImport: ClassVar[SymbolKind]
+    """Value = 52"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class SyntaxKind:
-    """
-    Members:
-
-      Unknown
-
-      SyntaxList
-
-      TokenList
-
-      SeparatedList
-
-      AcceptOnPropertyExpr
-
-      ActionBlock
-
-      AddAssignmentExpression
-
-      AddExpression
-
-      AlwaysBlock
-
-      AlwaysCombBlock
-
-      AlwaysFFBlock
-
-      AlwaysLatchBlock
-
-      AndAssignmentExpression
-
-      AndPropertyExpr
-
-      AndSequenceExpr
-
-      AnonymousProgram
-
-      AnsiPortList
-
-      AnsiUdpPortList
-
-      ArgumentList
-
-      ArithmeticLeftShiftAssignmentExpression
-
-      ArithmeticRightShiftAssignmentExpression
-
-      ArithmeticShiftLeftExpression
-
-      ArithmeticShiftRightExpression
-
-      ArrayAndMethod
-
-      ArrayOrMethod
-
-      ArrayOrRandomizeMethodExpression
-
-      ArrayUniqueMethod
-
-      ArrayXorMethod
-
-      AscendingRangeSelect
-
-      AssertPropertyStatement
-
-      AssertionItemPort
-
-      AssertionItemPortList
-
-      AssignmentExpression
-
-      AssignmentPatternExpression
-
-      AssignmentPatternItem
-
-      AssumePropertyStatement
-
-      AttributeInstance
-
-      AttributeSpec
-
-      BadExpression
-
-      BeginKeywordsDirective
-
-      BinSelectWithFilterExpr
-
-      BinaryAndExpression
-
-      BinaryBinsSelectExpr
-
-      BinaryBlockEventExpression
-
-      BinaryConditionalDirectiveExpression
-
-      BinaryEventExpression
-
-      BinaryOrExpression
-
-      BinaryXnorExpression
-
-      BinaryXorExpression
-
-      BindDirective
-
-      BindTargetList
-
-      BinsSelectConditionExpr
-
-      BinsSelection
-
-      BitSelect
-
-      BitType
-
-      BlockCoverageEvent
-
-      BlockingEventTriggerStatement
-
-      ByteType
-
-      CHandleType
-
-      CaseEqualityExpression
-
-      CaseGenerate
-
-      CaseInequalityExpression
-
-      CasePropertyExpr
-
-      CaseStatement
-
-      CastExpression
-
-      CellConfigRule
-
-      CellDefineDirective
-
-      ChargeStrength
-
-      CheckerDataDeclaration
-
-      CheckerDeclaration
-
-      CheckerInstanceStatement
-
-      CheckerInstantiation
-
-      ClassDeclaration
-
-      ClassMethodDeclaration
-
-      ClassMethodPrototype
-
-      ClassName
-
-      ClassPropertyDeclaration
-
-      ClassSpecifier
-
-      ClockingDeclaration
-
-      ClockingDirection
-
-      ClockingItem
-
-      ClockingPropertyExpr
-
-      ClockingSequenceExpr
-
-      ClockingSkew
-
-      ColonExpressionClause
-
-      CompilationUnit
-
-      ConcatenationExpression
-
-      ConcurrentAssertionMember
-
-      ConditionalConstraint
-
-      ConditionalExpression
-
-      ConditionalPathDeclaration
-
-      ConditionalPattern
-
-      ConditionalPredicate
-
-      ConditionalPropertyExpr
-
-      ConditionalStatement
-
-      ConfigCellIdentifier
-
-      ConfigDeclaration
-
-      ConfigInstanceIdentifier
-
-      ConfigLiblist
-
-      ConfigUseClause
-
-      ConstraintBlock
-
-      ConstraintDeclaration
-
-      ConstraintPrototype
-
-      ConstructorName
-
-      ContinuousAssign
-
-      CopyClassExpression
-
-      CoverCross
-
-      CoverPropertyStatement
-
-      CoverSequenceStatement
-
-      CoverageBins
-
-      CoverageBinsArraySize
-
-      CoverageIffClause
-
-      CoverageOption
-
-      CovergroupDeclaration
-
-      Coverpoint
-
-      CycleDelay
-
-      DPIExport
-
-      DPIImport
-
-      DataDeclaration
-
-      Declarator
-
-      DefParam
-
-      DefParamAssignment
-
-      DefaultCaseItem
-
-      DefaultClockingReference
-
-      DefaultConfigRule
-
-      DefaultCoverageBinInitializer
-
-      DefaultDecayTimeDirective
-
-      DefaultDisableDeclaration
-
-      DefaultDistItem
-
-      DefaultExtendsClauseArg
-
-      DefaultFunctionPort
-
-      DefaultNetTypeDirective
-
-      DefaultPatternKeyExpression
-
-      DefaultPropertyCaseItem
-
-      DefaultRsCaseItem
-
-      DefaultSkewItem
-
-      DefaultTriregStrengthDirective
-
-      DeferredAssertion
-
-      DefineDirective
-
-      Delay3
-
-      DelayControl
-
-      DelayModeDistributedDirective
-
-      DelayModePathDirective
-
-      DelayModeUnitDirective
-
-      DelayModeZeroDirective
-
-      DelayedSequenceElement
-
-      DelayedSequenceExpr
-
-      DescendingRangeSelect
-
-      DisableConstraint
-
-      DisableForkStatement
-
-      DisableIff
-
-      DisableStatement
-
-      DistConstraintList
-
-      DistItem
-
-      DistWeight
-
-      DivideAssignmentExpression
-
-      DivideExpression
-
-      DividerClause
-
-      DoWhileStatement
-
-      DotMemberClause
-
-      DriveStrength
-
-      EdgeControlSpecifier
-
-      EdgeDescriptor
-
-      EdgeSensitivePathSuffix
-
-      ElabSystemTask
-
-      ElementSelect
-
-      ElementSelectExpression
-
-      ElsIfDirective
-
-      ElseClause
-
-      ElseConstraintClause
-
-      ElseDirective
-
-      ElsePropertyClause
-
-      EmptyArgument
-
-      EmptyIdentifierName
-
-      EmptyMember
-
-      EmptyNonAnsiPort
-
-      EmptyPortConnection
-
-      EmptyQueueExpression
-
-      EmptyStatement
-
-      EmptyTimingCheckArg
-
-      EndCellDefineDirective
-
-      EndIfDirective
-
-      EndKeywordsDirective
-
-      EndProtectDirective
-
-      EndProtectedDirective
-
-      EnumType
-
-      EqualityExpression
-
-      EqualsAssertionArgClause
-
-      EqualsTypeClause
-
-      EqualsValueClause
-
-      EventControl
-
-      EventControlWithExpression
-
-      EventType
-
-      ExpectPropertyStatement
-
-      ExplicitAnsiPort
-
-      ExplicitNonAnsiPort
-
-      ExpressionConstraint
-
-      ExpressionCoverageBinInitializer
-
-      ExpressionOrDist
-
-      ExpressionPattern
-
-      ExpressionStatement
-
-      ExpressionTimingCheckArg
-
-      ExtendsClause
-
-      ExternInterfaceMethod
-
-      ExternModuleDecl
-
-      ExternUdpDecl
-
-      FilePathSpec
-
-      FinalBlock
-
-      FirstMatchSequenceExpr
-
-      FollowedByPropertyExpr
-
-      ForLoopStatement
-
-      ForVariableDeclaration
-
-      ForeachLoopList
-
-      ForeachLoopStatement
-
-      ForeverStatement
-
-      ForwardTypeRestriction
-
-      ForwardTypedefDeclaration
-
-      FunctionDeclaration
-
-      FunctionPort
-
-      FunctionPortList
-
-      FunctionPrototype
-
-      GenerateBlock
-
-      GenerateRegion
-
-      GenvarDeclaration
-
-      GreaterThanEqualExpression
-
-      GreaterThanExpression
-
-      HierarchicalInstance
-
-      HierarchyInstantiation
-
-      IdWithExprCoverageBinInitializer
-
-      IdentifierName
-
-      IdentifierSelectName
-
-      IfDefDirective
-
-      IfGenerate
-
-      IfNDefDirective
-
-      IfNonePathDeclaration
-
-      IffEventClause
-
-      IffPropertyExpr
-
-      ImmediateAssertStatement
-
-      ImmediateAssertionMember
-
-      ImmediateAssumeStatement
-
-      ImmediateCoverStatement
-
-      ImplementsClause
-
-      ImplicationConstraint
-
-      ImplicationPropertyExpr
-
-      ImplicitAnsiPort
-
-      ImplicitEventControl
-
-      ImplicitNonAnsiPort
-
-      ImplicitType
-
-      ImpliesPropertyExpr
-
-      IncludeDirective
-
-      InequalityExpression
-
-      InitialBlock
-
-      InsideExpression
-
-      InstanceConfigRule
-
-      InstanceName
-
-      IntType
-
-      IntegerLiteralExpression
-
-      IntegerType
-
-      IntegerVectorExpression
-
-      InterfaceDeclaration
-
-      InterfaceHeader
-
-      InterfacePortHeader
-
-      IntersectClause
-
-      IntersectSequenceExpr
-
-      InvocationExpression
-
-      JumpStatement
-
-      LessThanEqualExpression
-
-      LessThanExpression
-
-      LetDeclaration
-
-      LibraryDeclaration
-
-      LibraryIncDirClause
-
-      LibraryIncludeStatement
-
-      LibraryMap
-
-      LineDirective
-
-      LocalScope
-
-      LocalVariableDeclaration
-
-      LogicType
-
-      LogicalAndExpression
-
-      LogicalEquivalenceExpression
-
-      LogicalImplicationExpression
-
-      LogicalLeftShiftAssignmentExpression
-
-      LogicalOrExpression
-
-      LogicalRightShiftAssignmentExpression
-
-      LogicalShiftLeftExpression
-
-      LogicalShiftRightExpression
-
-      LongIntType
-
-      LoopConstraint
-
-      LoopGenerate
-
-      LoopStatement
-
-      MacroActualArgument
-
-      MacroActualArgumentList
-
-      MacroArgumentDefault
-
-      MacroFormalArgument
-
-      MacroFormalArgumentList
-
-      MacroUsage
-
-      MatchesClause
-
-      MemberAccessExpression
-
-      MinTypMaxExpression
-
-      ModAssignmentExpression
-
-      ModExpression
-
-      ModportClockingPort
-
-      ModportDeclaration
-
-      ModportExplicitPort
-
-      ModportItem
-
-      ModportNamedPort
-
-      ModportSimplePortList
-
-      ModportSubroutinePort
-
-      ModportSubroutinePortList
-
-      ModuleDeclaration
-
-      ModuleHeader
-
-      MultipleConcatenationExpression
-
-      MultiplyAssignmentExpression
-
-      MultiplyExpression
-
-      NameValuePragmaExpression
-
-      NamedArgument
-
-      NamedBlockClause
-
-      NamedConditionalDirectiveExpression
-
-      NamedLabel
-
-      NamedParamAssignment
-
-      NamedPortConnection
-
-      NamedStructurePatternMember
-
-      NamedType
-
-      NetAlias
-
-      NetDeclaration
-
-      NetPortHeader
-
-      NetTypeDeclaration
-
-      NewArrayExpression
-
-      NewClassExpression
-
-      NoUnconnectedDriveDirective
-
-      NonAnsiPortList
-
-      NonAnsiUdpPortList
-
-      NonblockingAssignmentExpression
-
-      NonblockingEventTriggerStatement
-
-      NullLiteralExpression
-
-      NumberPragmaExpression
-
-      OneStepDelay
-
-      OrAssignmentExpression
-
-      OrPropertyExpr
-
-      OrSequenceExpr
-
-      OrderedArgument
-
-      OrderedParamAssignment
-
-      OrderedPortConnection
-
-      OrderedStructurePatternMember
-
-      PackageDeclaration
-
-      PackageExportAllDeclaration
-
-      PackageExportDeclaration
-
-      PackageHeader
-
-      PackageImportDeclaration
-
-      PackageImportItem
-
-      ParallelBlockStatement
-
-      ParameterDeclaration
-
-      ParameterDeclarationStatement
-
-      ParameterPortList
-
-      ParameterValueAssignment
-
-      ParenExpressionList
-
-      ParenPragmaExpression
-
-      ParenthesizedBinsSelectExpr
-
-      ParenthesizedConditionalDirectiveExpression
-
-      ParenthesizedEventExpression
-
-      ParenthesizedExpression
-
-      ParenthesizedPattern
-
-      ParenthesizedPropertyExpr
-
-      ParenthesizedSequenceExpr
-
-      PathDeclaration
-
-      PathDescription
-
-      PatternCaseItem
-
-      PortConcatenation
-
-      PortDeclaration
-
-      PortReference
-
-      PostdecrementExpression
-
-      PostincrementExpression
-
-      PowerExpression
-
-      PragmaDirective
-
-      PrimaryBlockEventExpression
-
-      PrimitiveInstantiation
-
-      ProceduralAssignStatement
-
-      ProceduralDeassignStatement
-
-      ProceduralForceStatement
-
-      ProceduralReleaseStatement
-
-      Production
-
-      ProgramDeclaration
-
-      ProgramHeader
-
-      PropertyDeclaration
-
-      PropertySpec
-
-      PropertyType
-
-      ProtectDirective
-
-      ProtectedDirective
-
-      PullStrength
-
-      PulseStyleDeclaration
-
-      QueueDimensionSpecifier
-
-      RandCaseItem
-
-      RandCaseStatement
-
-      RandJoinClause
-
-      RandSequenceStatement
-
-      RangeCoverageBinInitializer
-
-      RangeDimensionSpecifier
-
-      RangeList
-
-      RealLiteralExpression
-
-      RealTimeType
-
-      RealType
-
-      RegType
-
-      RepeatedEventControl
-
-      ReplicatedAssignmentPattern
-
-      ResetAllDirective
-
-      RestrictPropertyStatement
-
-      ReturnStatement
-
-      RootScope
-
-      RsCase
-
-      RsCodeBlock
-
-      RsElseClause
-
-      RsIfElse
-
-      RsProdItem
-
-      RsRepeat
-
-      RsRule
-
-      RsWeightClause
-
-      SUntilPropertyExpr
-
-      SUntilWithPropertyExpr
-
-      ScopedName
-
-      SequenceDeclaration
-
-      SequenceMatchList
-
-      SequenceRepetition
-
-      SequenceType
-
-      SequentialBlockStatement
-
-      ShortIntType
-
-      ShortRealType
-
-      SignalEventExpression
-
-      SignedCastExpression
-
-      SimpleAssignmentPattern
-
-      SimpleBinsSelectExpr
-
-      SimplePathSuffix
-
-      SimplePragmaExpression
-
-      SimplePropertyExpr
-
-      SimpleRangeSelect
-
-      SimpleSequenceExpr
-
-      SolveBeforeConstraint
-
-      SpecifyBlock
-
-      SpecparamDeclaration
-
-      SpecparamDeclarator
-
-      StandardCaseItem
-
-      StandardPropertyCaseItem
-
-      StandardRsCaseItem
-
-      StreamExpression
-
-      StreamExpressionWithRange
-
-      StreamingConcatenationExpression
-
-      StringLiteralExpression
-
-      StringType
-
-      StrongWeakPropertyExpr
-
-      StructType
-
-      StructUnionMember
-
-      StructurePattern
-
-      StructuredAssignmentPattern
-
-      SubtractAssignmentExpression
-
-      SubtractExpression
-
-      SuperHandle
-
-      SuperNewDefaultedArgsExpression
-
-      SystemName
-
-      SystemTimingCheck
-
-      TaggedPattern
-
-      TaggedUnionExpression
-
-      TaskDeclaration
-
-      ThisHandle
-
-      ThroughoutSequenceExpr
-
-      TimeLiteralExpression
-
-      TimeScaleDirective
-
-      TimeType
-
-      TimeUnitsDeclaration
-
-      TimingCheckEventArg
-
-      TimingCheckEventCondition
-
-      TimingControlExpression
-
-      TimingControlStatement
-
-      TransListCoverageBinInitializer
-
-      TransRange
-
-      TransRepeatRange
-
-      TransSet
-
-      TypeAssignment
-
-      TypeParameterDeclaration
-
-      TypeReference
-
-      TypedefDeclaration
-
-      UdpBody
-
-      UdpDeclaration
-
-      UdpEdgeField
-
-      UdpEntry
-
-      UdpInitialStmt
-
-      UdpInputPortDecl
-
-      UdpOutputPortDecl
-
-      UdpSimpleField
-
-      UnaryBinsSelectExpr
-
-      UnaryBitwiseAndExpression
-
-      UnaryBitwiseNandExpression
-
-      UnaryBitwiseNorExpression
-
-      UnaryBitwiseNotExpression
-
-      UnaryBitwiseOrExpression
-
-      UnaryBitwiseXnorExpression
-
-      UnaryBitwiseXorExpression
-
-      UnaryConditionalDirectiveExpression
-
-      UnaryLogicalNotExpression
-
-      UnaryMinusExpression
-
-      UnaryPlusExpression
-
-      UnaryPredecrementExpression
-
-      UnaryPreincrementExpression
-
-      UnaryPropertyExpr
-
-      UnarySelectPropertyExpr
-
-      UnbasedUnsizedLiteralExpression
-
-      UnconnectedDriveDirective
-
-      UndefDirective
-
-      UndefineAllDirective
-
-      UnionType
-
-      UniquenessConstraint
-
-      UnitScope
-
-      UntilPropertyExpr
-
-      UntilWithPropertyExpr
-
-      Untyped
-
-      UserDefinedNetDeclaration
-
-      ValueRangeExpression
-
-      VariableDimension
-
-      VariablePattern
-
-      VariablePortHeader
-
-      VirtualInterfaceType
-
-      VoidCastedCallStatement
-
-      VoidType
-
-      WaitForkStatement
-
-      WaitOrderStatement
-
-      WaitStatement
-
-      WildcardDimensionSpecifier
-
-      WildcardEqualityExpression
-
-      WildcardInequalityExpression
-
-      WildcardLiteralExpression
-
-      WildcardPattern
-
-      WildcardPortConnection
-
-      WildcardPortList
-
-      WildcardUdpPortList
-
-      WithClause
-
-      WithFunctionClause
-
-      WithFunctionSample
-
-      WithinSequenceExpr
-
-      XorAssignmentExpression
-    """
-    AcceptOnPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AcceptOnPropertyExpr: 4>
-    ActionBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ActionBlock: 5>
-    AddAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AddAssignmentExpression: 6>
-    AddExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AddExpression: 7>
-    AlwaysBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AlwaysBlock: 8>
-    AlwaysCombBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AlwaysCombBlock: 9>
-    AlwaysFFBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AlwaysFFBlock: 10>
-    AlwaysLatchBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AlwaysLatchBlock: 11>
-    AndAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AndAssignmentExpression: 12>
-    AndPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AndPropertyExpr: 13>
-    AndSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AndSequenceExpr: 14>
-    AnonymousProgram: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AnonymousProgram: 15>
-    AnsiPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AnsiPortList: 16>
-    AnsiUdpPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AnsiUdpPortList: 17>
-    ArgumentList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArgumentList: 18>
-    ArithmeticLeftShiftAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArithmeticLeftShiftAssignmentExpression: 19>
-    ArithmeticRightShiftAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArithmeticRightShiftAssignmentExpression: 20>
-    ArithmeticShiftLeftExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArithmeticShiftLeftExpression: 21>
-    ArithmeticShiftRightExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArithmeticShiftRightExpression: 22>
-    ArrayAndMethod: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArrayAndMethod: 23>
-    ArrayOrMethod: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArrayOrMethod: 24>
-    ArrayOrRandomizeMethodExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArrayOrRandomizeMethodExpression: 25>
-    ArrayUniqueMethod: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArrayUniqueMethod: 26>
-    ArrayXorMethod: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ArrayXorMethod: 27>
-    AscendingRangeSelect: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AscendingRangeSelect: 28>
-    AssertPropertyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssertPropertyStatement: 29>
-    AssertionItemPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssertionItemPort: 30>
-    AssertionItemPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssertionItemPortList: 31>
-    AssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssignmentExpression: 32>
-    AssignmentPatternExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssignmentPatternExpression: 33>
-    AssignmentPatternItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssignmentPatternItem: 34>
-    AssumePropertyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AssumePropertyStatement: 35>
-    AttributeInstance: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AttributeInstance: 36>
-    AttributeSpec: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.AttributeSpec: 37>
-    BadExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BadExpression: 38>
-    BeginKeywordsDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BeginKeywordsDirective: 39>
-    BinSelectWithFilterExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinSelectWithFilterExpr: 40>
-    BinaryAndExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryAndExpression: 41>
-    BinaryBinsSelectExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryBinsSelectExpr: 42>
-    BinaryBlockEventExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryBlockEventExpression: 43>
-    BinaryConditionalDirectiveExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryConditionalDirectiveExpression: 44>
-    BinaryEventExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryEventExpression: 45>
-    BinaryOrExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryOrExpression: 46>
-    BinaryXnorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryXnorExpression: 47>
-    BinaryXorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinaryXorExpression: 48>
-    BindDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BindDirective: 49>
-    BindTargetList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BindTargetList: 50>
-    BinsSelectConditionExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinsSelectConditionExpr: 51>
-    BinsSelection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BinsSelection: 52>
-    BitSelect: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BitSelect: 53>
-    BitType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BitType: 54>
-    BlockCoverageEvent: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BlockCoverageEvent: 55>
-    BlockingEventTriggerStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.BlockingEventTriggerStatement: 56>
-    ByteType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ByteType: 57>
-    CHandleType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CHandleType: 58>
-    CaseEqualityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CaseEqualityExpression: 59>
-    CaseGenerate: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CaseGenerate: 60>
-    CaseInequalityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CaseInequalityExpression: 61>
-    CasePropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CasePropertyExpr: 62>
-    CaseStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CaseStatement: 63>
-    CastExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CastExpression: 64>
-    CellConfigRule: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CellConfigRule: 65>
-    CellDefineDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CellDefineDirective: 66>
-    ChargeStrength: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ChargeStrength: 67>
-    CheckerDataDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CheckerDataDeclaration: 68>
-    CheckerDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CheckerDeclaration: 69>
-    CheckerInstanceStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CheckerInstanceStatement: 70>
-    CheckerInstantiation: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CheckerInstantiation: 71>
-    ClassDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassDeclaration: 72>
-    ClassMethodDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassMethodDeclaration: 73>
-    ClassMethodPrototype: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassMethodPrototype: 74>
-    ClassName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassName: 75>
-    ClassPropertyDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassPropertyDeclaration: 76>
-    ClassSpecifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClassSpecifier: 77>
-    ClockingDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingDeclaration: 78>
-    ClockingDirection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingDirection: 79>
-    ClockingItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingItem: 80>
-    ClockingPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingPropertyExpr: 81>
-    ClockingSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingSequenceExpr: 82>
-    ClockingSkew: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ClockingSkew: 83>
-    ColonExpressionClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ColonExpressionClause: 84>
-    CompilationUnit: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CompilationUnit: 85>
-    ConcatenationExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConcatenationExpression: 86>
-    ConcurrentAssertionMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConcurrentAssertionMember: 87>
-    ConditionalConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalConstraint: 88>
-    ConditionalExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalExpression: 89>
-    ConditionalPathDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalPathDeclaration: 90>
-    ConditionalPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalPattern: 91>
-    ConditionalPredicate: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalPredicate: 92>
-    ConditionalPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalPropertyExpr: 93>
-    ConditionalStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConditionalStatement: 94>
-    ConfigCellIdentifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConfigCellIdentifier: 95>
-    ConfigDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConfigDeclaration: 96>
-    ConfigInstanceIdentifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConfigInstanceIdentifier: 97>
-    ConfigLiblist: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConfigLiblist: 98>
-    ConfigUseClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConfigUseClause: 99>
-    ConstraintBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConstraintBlock: 100>
-    ConstraintDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConstraintDeclaration: 101>
-    ConstraintPrototype: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConstraintPrototype: 102>
-    ConstructorName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ConstructorName: 103>
-    ContinuousAssign: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ContinuousAssign: 104>
-    CopyClassExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CopyClassExpression: 105>
-    CoverCross: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverCross: 106>
-    CoverPropertyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverPropertyStatement: 107>
-    CoverSequenceStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverSequenceStatement: 108>
-    CoverageBins: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverageBins: 109>
-    CoverageBinsArraySize: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverageBinsArraySize: 110>
-    CoverageIffClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverageIffClause: 111>
-    CoverageOption: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CoverageOption: 112>
-    CovergroupDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CovergroupDeclaration: 113>
-    Coverpoint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Coverpoint: 114>
-    CycleDelay: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.CycleDelay: 115>
-    DPIExport: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DPIExport: 116>
-    DPIImport: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DPIImport: 117>
-    DataDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DataDeclaration: 118>
-    Declarator: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Declarator: 119>
-    DefParam: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefParam: 120>
-    DefParamAssignment: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefParamAssignment: 121>
-    DefaultCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultCaseItem: 122>
-    DefaultClockingReference: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultClockingReference: 123>
-    DefaultConfigRule: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultConfigRule: 124>
-    DefaultCoverageBinInitializer: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultCoverageBinInitializer: 125>
-    DefaultDecayTimeDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultDecayTimeDirective: 126>
-    DefaultDisableDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultDisableDeclaration: 127>
-    DefaultDistItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultDistItem: 128>
-    DefaultExtendsClauseArg: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultExtendsClauseArg: 129>
-    DefaultFunctionPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultFunctionPort: 130>
-    DefaultNetTypeDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultNetTypeDirective: 131>
-    DefaultPatternKeyExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultPatternKeyExpression: 132>
-    DefaultPropertyCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultPropertyCaseItem: 133>
-    DefaultRsCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultRsCaseItem: 134>
-    DefaultSkewItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultSkewItem: 135>
-    DefaultTriregStrengthDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefaultTriregStrengthDirective: 136>
-    DeferredAssertion: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DeferredAssertion: 137>
-    DefineDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DefineDirective: 138>
-    Delay3: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Delay3: 139>
-    DelayControl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayControl: 140>
-    DelayModeDistributedDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayModeDistributedDirective: 141>
-    DelayModePathDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayModePathDirective: 142>
-    DelayModeUnitDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayModeUnitDirective: 143>
-    DelayModeZeroDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayModeZeroDirective: 144>
-    DelayedSequenceElement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayedSequenceElement: 145>
-    DelayedSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DelayedSequenceExpr: 146>
-    DescendingRangeSelect: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DescendingRangeSelect: 147>
-    DisableConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DisableConstraint: 148>
-    DisableForkStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DisableForkStatement: 149>
-    DisableIff: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DisableIff: 150>
-    DisableStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DisableStatement: 151>
-    DistConstraintList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DistConstraintList: 152>
-    DistItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DistItem: 153>
-    DistWeight: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DistWeight: 154>
-    DivideAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DivideAssignmentExpression: 155>
-    DivideExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DivideExpression: 156>
-    DividerClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DividerClause: 157>
-    DoWhileStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DoWhileStatement: 158>
-    DotMemberClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DotMemberClause: 159>
-    DriveStrength: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.DriveStrength: 160>
-    EdgeControlSpecifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EdgeControlSpecifier: 161>
-    EdgeDescriptor: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EdgeDescriptor: 162>
-    EdgeSensitivePathSuffix: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EdgeSensitivePathSuffix: 163>
-    ElabSystemTask: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElabSystemTask: 164>
-    ElementSelect: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElementSelect: 165>
-    ElementSelectExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElementSelectExpression: 166>
-    ElsIfDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElsIfDirective: 167>
-    ElseClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElseClause: 168>
-    ElseConstraintClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElseConstraintClause: 169>
-    ElseDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElseDirective: 170>
-    ElsePropertyClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ElsePropertyClause: 171>
-    EmptyArgument: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyArgument: 172>
-    EmptyIdentifierName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyIdentifierName: 173>
-    EmptyMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyMember: 174>
-    EmptyNonAnsiPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyNonAnsiPort: 175>
-    EmptyPortConnection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyPortConnection: 176>
-    EmptyQueueExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyQueueExpression: 177>
-    EmptyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyStatement: 178>
-    EmptyTimingCheckArg: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EmptyTimingCheckArg: 179>
-    EndCellDefineDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EndCellDefineDirective: 180>
-    EndIfDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EndIfDirective: 181>
-    EndKeywordsDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EndKeywordsDirective: 182>
-    EndProtectDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EndProtectDirective: 183>
-    EndProtectedDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EndProtectedDirective: 184>
-    EnumType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EnumType: 185>
-    EqualityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EqualityExpression: 186>
-    EqualsAssertionArgClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EqualsAssertionArgClause: 187>
-    EqualsTypeClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EqualsTypeClause: 188>
-    EqualsValueClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EqualsValueClause: 189>
-    EventControl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EventControl: 190>
-    EventControlWithExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EventControlWithExpression: 191>
-    EventType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.EventType: 192>
-    ExpectPropertyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpectPropertyStatement: 193>
-    ExplicitAnsiPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExplicitAnsiPort: 194>
-    ExplicitNonAnsiPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExplicitNonAnsiPort: 195>
-    ExpressionConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionConstraint: 196>
-    ExpressionCoverageBinInitializer: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionCoverageBinInitializer: 197>
-    ExpressionOrDist: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionOrDist: 198>
-    ExpressionPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionPattern: 199>
-    ExpressionStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionStatement: 200>
-    ExpressionTimingCheckArg: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExpressionTimingCheckArg: 201>
-    ExtendsClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExtendsClause: 202>
-    ExternInterfaceMethod: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExternInterfaceMethod: 203>
-    ExternModuleDecl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExternModuleDecl: 204>
-    ExternUdpDecl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ExternUdpDecl: 205>
-    FilePathSpec: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FilePathSpec: 206>
-    FinalBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FinalBlock: 207>
-    FirstMatchSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FirstMatchSequenceExpr: 208>
-    FollowedByPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FollowedByPropertyExpr: 209>
-    ForLoopStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForLoopStatement: 210>
-    ForVariableDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForVariableDeclaration: 211>
-    ForeachLoopList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForeachLoopList: 212>
-    ForeachLoopStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForeachLoopStatement: 213>
-    ForeverStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForeverStatement: 214>
-    ForwardTypeRestriction: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForwardTypeRestriction: 215>
-    ForwardTypedefDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ForwardTypedefDeclaration: 216>
-    FunctionDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FunctionDeclaration: 217>
-    FunctionPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FunctionPort: 218>
-    FunctionPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FunctionPortList: 219>
-    FunctionPrototype: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.FunctionPrototype: 220>
-    GenerateBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.GenerateBlock: 221>
-    GenerateRegion: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.GenerateRegion: 222>
-    GenvarDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.GenvarDeclaration: 223>
-    GreaterThanEqualExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.GreaterThanEqualExpression: 224>
-    GreaterThanExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.GreaterThanExpression: 225>
-    HierarchicalInstance: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.HierarchicalInstance: 226>
-    HierarchyInstantiation: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.HierarchyInstantiation: 227>
-    IdWithExprCoverageBinInitializer: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IdWithExprCoverageBinInitializer: 228>
-    IdentifierName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IdentifierName: 229>
-    IdentifierSelectName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IdentifierSelectName: 230>
-    IfDefDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IfDefDirective: 231>
-    IfGenerate: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IfGenerate: 232>
-    IfNDefDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IfNDefDirective: 233>
-    IfNonePathDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IfNonePathDeclaration: 234>
-    IffEventClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IffEventClause: 235>
-    IffPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IffPropertyExpr: 236>
-    ImmediateAssertStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImmediateAssertStatement: 237>
-    ImmediateAssertionMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImmediateAssertionMember: 238>
-    ImmediateAssumeStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImmediateAssumeStatement: 239>
-    ImmediateCoverStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImmediateCoverStatement: 240>
-    ImplementsClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplementsClause: 241>
-    ImplicationConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicationConstraint: 242>
-    ImplicationPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicationPropertyExpr: 243>
-    ImplicitAnsiPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicitAnsiPort: 244>
-    ImplicitEventControl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicitEventControl: 245>
-    ImplicitNonAnsiPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicitNonAnsiPort: 246>
-    ImplicitType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImplicitType: 247>
-    ImpliesPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ImpliesPropertyExpr: 248>
-    IncludeDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IncludeDirective: 249>
-    InequalityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InequalityExpression: 250>
-    InitialBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InitialBlock: 251>
-    InsideExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InsideExpression: 252>
-    InstanceConfigRule: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InstanceConfigRule: 253>
-    InstanceName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InstanceName: 254>
-    IntType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntType: 255>
-    IntegerLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntegerLiteralExpression: 256>
-    IntegerType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntegerType: 257>
-    IntegerVectorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntegerVectorExpression: 258>
-    InterfaceDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InterfaceDeclaration: 259>
-    InterfaceHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InterfaceHeader: 260>
-    InterfacePortHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InterfacePortHeader: 261>
-    IntersectClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntersectClause: 262>
-    IntersectSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.IntersectSequenceExpr: 263>
-    InvocationExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.InvocationExpression: 264>
-    JumpStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.JumpStatement: 265>
-    LessThanEqualExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LessThanEqualExpression: 266>
-    LessThanExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LessThanExpression: 267>
-    LetDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LetDeclaration: 268>
-    LibraryDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LibraryDeclaration: 269>
-    LibraryIncDirClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LibraryIncDirClause: 270>
-    LibraryIncludeStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LibraryIncludeStatement: 271>
-    LibraryMap: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LibraryMap: 272>
-    LineDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LineDirective: 273>
-    LocalScope: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LocalScope: 274>
-    LocalVariableDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LocalVariableDeclaration: 275>
-    LogicType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicType: 276>
-    LogicalAndExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalAndExpression: 277>
-    LogicalEquivalenceExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalEquivalenceExpression: 278>
-    LogicalImplicationExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalImplicationExpression: 279>
-    LogicalLeftShiftAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalLeftShiftAssignmentExpression: 280>
-    LogicalOrExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalOrExpression: 281>
-    LogicalRightShiftAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalRightShiftAssignmentExpression: 282>
-    LogicalShiftLeftExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalShiftLeftExpression: 283>
-    LogicalShiftRightExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LogicalShiftRightExpression: 284>
-    LongIntType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LongIntType: 285>
-    LoopConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LoopConstraint: 286>
-    LoopGenerate: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LoopGenerate: 287>
-    LoopStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.LoopStatement: 288>
-    MacroActualArgument: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroActualArgument: 289>
-    MacroActualArgumentList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroActualArgumentList: 290>
-    MacroArgumentDefault: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroArgumentDefault: 291>
-    MacroFormalArgument: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroFormalArgument: 292>
-    MacroFormalArgumentList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroFormalArgumentList: 293>
-    MacroUsage: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MacroUsage: 294>
-    MatchesClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MatchesClause: 295>
-    MemberAccessExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MemberAccessExpression: 296>
-    MinTypMaxExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MinTypMaxExpression: 297>
-    ModAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModAssignmentExpression: 298>
-    ModExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModExpression: 299>
-    ModportClockingPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportClockingPort: 300>
-    ModportDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportDeclaration: 301>
-    ModportExplicitPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportExplicitPort: 302>
-    ModportItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportItem: 303>
-    ModportNamedPort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportNamedPort: 304>
-    ModportSimplePortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportSimplePortList: 305>
-    ModportSubroutinePort: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportSubroutinePort: 306>
-    ModportSubroutinePortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModportSubroutinePortList: 307>
-    ModuleDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModuleDeclaration: 308>
-    ModuleHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ModuleHeader: 309>
-    MultipleConcatenationExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MultipleConcatenationExpression: 310>
-    MultiplyAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MultiplyAssignmentExpression: 311>
-    MultiplyExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.MultiplyExpression: 312>
-    NameValuePragmaExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NameValuePragmaExpression: 313>
-    NamedArgument: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedArgument: 314>
-    NamedBlockClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedBlockClause: 315>
-    NamedConditionalDirectiveExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedConditionalDirectiveExpression: 316>
-    NamedLabel: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedLabel: 317>
-    NamedParamAssignment: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedParamAssignment: 318>
-    NamedPortConnection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedPortConnection: 319>
-    NamedStructurePatternMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedStructurePatternMember: 320>
-    NamedType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NamedType: 321>
-    NetAlias: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NetAlias: 322>
-    NetDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NetDeclaration: 323>
-    NetPortHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NetPortHeader: 324>
-    NetTypeDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NetTypeDeclaration: 325>
-    NewArrayExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NewArrayExpression: 326>
-    NewClassExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NewClassExpression: 327>
-    NoUnconnectedDriveDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NoUnconnectedDriveDirective: 328>
-    NonAnsiPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NonAnsiPortList: 329>
-    NonAnsiUdpPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NonAnsiUdpPortList: 330>
-    NonblockingAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NonblockingAssignmentExpression: 331>
-    NonblockingEventTriggerStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NonblockingEventTriggerStatement: 332>
-    NullLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NullLiteralExpression: 333>
-    NumberPragmaExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.NumberPragmaExpression: 334>
-    OneStepDelay: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OneStepDelay: 335>
-    OrAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrAssignmentExpression: 336>
-    OrPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrPropertyExpr: 337>
-    OrSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrSequenceExpr: 338>
-    OrderedArgument: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrderedArgument: 339>
-    OrderedParamAssignment: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrderedParamAssignment: 340>
-    OrderedPortConnection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrderedPortConnection: 341>
-    OrderedStructurePatternMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.OrderedStructurePatternMember: 342>
-    PackageDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageDeclaration: 343>
-    PackageExportAllDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageExportAllDeclaration: 344>
-    PackageExportDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageExportDeclaration: 345>
-    PackageHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageHeader: 346>
-    PackageImportDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageImportDeclaration: 347>
-    PackageImportItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PackageImportItem: 348>
-    ParallelBlockStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParallelBlockStatement: 349>
-    ParameterDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParameterDeclaration: 350>
-    ParameterDeclarationStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParameterDeclarationStatement: 351>
-    ParameterPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParameterPortList: 352>
-    ParameterValueAssignment: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParameterValueAssignment: 353>
-    ParenExpressionList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenExpressionList: 354>
-    ParenPragmaExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenPragmaExpression: 355>
-    ParenthesizedBinsSelectExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedBinsSelectExpr: 356>
-    ParenthesizedConditionalDirectiveExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedConditionalDirectiveExpression: 357>
-    ParenthesizedEventExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedEventExpression: 358>
-    ParenthesizedExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedExpression: 359>
-    ParenthesizedPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedPattern: 360>
-    ParenthesizedPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedPropertyExpr: 361>
-    ParenthesizedSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ParenthesizedSequenceExpr: 362>
-    PathDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PathDeclaration: 363>
-    PathDescription: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PathDescription: 364>
-    PatternCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PatternCaseItem: 365>
-    PortConcatenation: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PortConcatenation: 366>
-    PortDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PortDeclaration: 367>
-    PortReference: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PortReference: 368>
-    PostdecrementExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PostdecrementExpression: 369>
-    PostincrementExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PostincrementExpression: 370>
-    PowerExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PowerExpression: 371>
-    PragmaDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PragmaDirective: 372>
-    PrimaryBlockEventExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PrimaryBlockEventExpression: 373>
-    PrimitiveInstantiation: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PrimitiveInstantiation: 374>
-    ProceduralAssignStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProceduralAssignStatement: 375>
-    ProceduralDeassignStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProceduralDeassignStatement: 376>
-    ProceduralForceStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProceduralForceStatement: 377>
-    ProceduralReleaseStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProceduralReleaseStatement: 378>
-    Production: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Production: 379>
-    ProgramDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProgramDeclaration: 380>
-    ProgramHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProgramHeader: 381>
-    PropertyDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PropertyDeclaration: 382>
-    PropertySpec: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PropertySpec: 383>
-    PropertyType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PropertyType: 384>
-    ProtectDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProtectDirective: 385>
-    ProtectedDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ProtectedDirective: 386>
-    PullStrength: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PullStrength: 387>
-    PulseStyleDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.PulseStyleDeclaration: 388>
-    QueueDimensionSpecifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.QueueDimensionSpecifier: 389>
-    RandCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RandCaseItem: 390>
-    RandCaseStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RandCaseStatement: 391>
-    RandJoinClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RandJoinClause: 392>
-    RandSequenceStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RandSequenceStatement: 393>
-    RangeCoverageBinInitializer: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RangeCoverageBinInitializer: 394>
-    RangeDimensionSpecifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RangeDimensionSpecifier: 395>
-    RangeList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RangeList: 396>
-    RealLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RealLiteralExpression: 397>
-    RealTimeType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RealTimeType: 398>
-    RealType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RealType: 399>
-    RegType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RegType: 400>
-    RepeatedEventControl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RepeatedEventControl: 401>
-    ReplicatedAssignmentPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ReplicatedAssignmentPattern: 402>
-    ResetAllDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ResetAllDirective: 403>
-    RestrictPropertyStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RestrictPropertyStatement: 404>
-    ReturnStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ReturnStatement: 405>
-    RootScope: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RootScope: 406>
-    RsCase: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsCase: 407>
-    RsCodeBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsCodeBlock: 408>
-    RsElseClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsElseClause: 409>
-    RsIfElse: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsIfElse: 410>
-    RsProdItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsProdItem: 411>
-    RsRepeat: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsRepeat: 412>
-    RsRule: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsRule: 413>
-    RsWeightClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.RsWeightClause: 414>
-    SUntilPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SUntilPropertyExpr: 415>
-    SUntilWithPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SUntilWithPropertyExpr: 416>
-    ScopedName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ScopedName: 417>
-    SeparatedList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SeparatedList: 3>
-    SequenceDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SequenceDeclaration: 418>
-    SequenceMatchList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SequenceMatchList: 419>
-    SequenceRepetition: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SequenceRepetition: 420>
-    SequenceType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SequenceType: 421>
-    SequentialBlockStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SequentialBlockStatement: 422>
-    ShortIntType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ShortIntType: 423>
-    ShortRealType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ShortRealType: 424>
-    SignalEventExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SignalEventExpression: 425>
-    SignedCastExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SignedCastExpression: 426>
-    SimpleAssignmentPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimpleAssignmentPattern: 427>
-    SimpleBinsSelectExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimpleBinsSelectExpr: 428>
-    SimplePathSuffix: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimplePathSuffix: 429>
-    SimplePragmaExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimplePragmaExpression: 430>
-    SimplePropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimplePropertyExpr: 431>
-    SimpleRangeSelect: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimpleRangeSelect: 432>
-    SimpleSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SimpleSequenceExpr: 433>
-    SolveBeforeConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SolveBeforeConstraint: 434>
-    SpecifyBlock: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SpecifyBlock: 435>
-    SpecparamDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SpecparamDeclaration: 436>
-    SpecparamDeclarator: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SpecparamDeclarator: 437>
-    StandardCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StandardCaseItem: 438>
-    StandardPropertyCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StandardPropertyCaseItem: 439>
-    StandardRsCaseItem: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StandardRsCaseItem: 440>
-    StreamExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StreamExpression: 441>
-    StreamExpressionWithRange: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StreamExpressionWithRange: 442>
-    StreamingConcatenationExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StreamingConcatenationExpression: 443>
-    StringLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StringLiteralExpression: 444>
-    StringType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StringType: 445>
-    StrongWeakPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StrongWeakPropertyExpr: 446>
-    StructType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StructType: 447>
-    StructUnionMember: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StructUnionMember: 448>
-    StructurePattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StructurePattern: 449>
-    StructuredAssignmentPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.StructuredAssignmentPattern: 450>
-    SubtractAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SubtractAssignmentExpression: 451>
-    SubtractExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SubtractExpression: 452>
-    SuperHandle: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SuperHandle: 453>
-    SuperNewDefaultedArgsExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SuperNewDefaultedArgsExpression: 454>
-    SyntaxList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SyntaxList: 1>
-    SystemName: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SystemName: 455>
-    SystemTimingCheck: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.SystemTimingCheck: 456>
-    TaggedPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TaggedPattern: 457>
-    TaggedUnionExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TaggedUnionExpression: 458>
-    TaskDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TaskDeclaration: 459>
-    ThisHandle: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ThisHandle: 460>
-    ThroughoutSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ThroughoutSequenceExpr: 461>
-    TimeLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimeLiteralExpression: 462>
-    TimeScaleDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimeScaleDirective: 463>
-    TimeType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimeType: 464>
-    TimeUnitsDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimeUnitsDeclaration: 465>
-    TimingCheckEventArg: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimingCheckEventArg: 466>
-    TimingCheckEventCondition: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimingCheckEventCondition: 467>
-    TimingControlExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimingControlExpression: 468>
-    TimingControlStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TimingControlStatement: 469>
-    TokenList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TokenList: 2>
-    TransListCoverageBinInitializer: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TransListCoverageBinInitializer: 470>
-    TransRange: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TransRange: 471>
-    TransRepeatRange: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TransRepeatRange: 472>
-    TransSet: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TransSet: 473>
-    TypeAssignment: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TypeAssignment: 474>
-    TypeParameterDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TypeParameterDeclaration: 475>
-    TypeReference: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TypeReference: 476>
-    TypedefDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.TypedefDeclaration: 477>
-    UdpBody: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpBody: 478>
-    UdpDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpDeclaration: 479>
-    UdpEdgeField: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpEdgeField: 480>
-    UdpEntry: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpEntry: 481>
-    UdpInitialStmt: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpInitialStmt: 482>
-    UdpInputPortDecl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpInputPortDecl: 483>
-    UdpOutputPortDecl: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpOutputPortDecl: 484>
-    UdpSimpleField: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UdpSimpleField: 485>
-    UnaryBinsSelectExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBinsSelectExpr: 486>
-    UnaryBitwiseAndExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseAndExpression: 487>
-    UnaryBitwiseNandExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseNandExpression: 488>
-    UnaryBitwiseNorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseNorExpression: 489>
-    UnaryBitwiseNotExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseNotExpression: 490>
-    UnaryBitwiseOrExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseOrExpression: 491>
-    UnaryBitwiseXnorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseXnorExpression: 492>
-    UnaryBitwiseXorExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryBitwiseXorExpression: 493>
-    UnaryConditionalDirectiveExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryConditionalDirectiveExpression: 494>
-    UnaryLogicalNotExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryLogicalNotExpression: 495>
-    UnaryMinusExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryMinusExpression: 496>
-    UnaryPlusExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryPlusExpression: 497>
-    UnaryPredecrementExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryPredecrementExpression: 498>
-    UnaryPreincrementExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryPreincrementExpression: 499>
-    UnaryPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnaryPropertyExpr: 500>
-    UnarySelectPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnarySelectPropertyExpr: 501>
-    UnbasedUnsizedLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnbasedUnsizedLiteralExpression: 502>
-    UnconnectedDriveDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnconnectedDriveDirective: 503>
-    UndefDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UndefDirective: 504>
-    UndefineAllDirective: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UndefineAllDirective: 505>
-    UnionType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnionType: 506>
-    UniquenessConstraint: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UniquenessConstraint: 507>
-    UnitScope: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UnitScope: 508>
-    Unknown: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Unknown: 0>
-    UntilPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UntilPropertyExpr: 509>
-    UntilWithPropertyExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UntilWithPropertyExpr: 510>
-    Untyped: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.Untyped: 511>
-    UserDefinedNetDeclaration: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.UserDefinedNetDeclaration: 512>
-    ValueRangeExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.ValueRangeExpression: 513>
-    VariableDimension: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VariableDimension: 514>
-    VariablePattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VariablePattern: 515>
-    VariablePortHeader: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VariablePortHeader: 516>
-    VirtualInterfaceType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VirtualInterfaceType: 517>
-    VoidCastedCallStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VoidCastedCallStatement: 518>
-    VoidType: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.VoidType: 519>
-    WaitForkStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WaitForkStatement: 520>
-    WaitOrderStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WaitOrderStatement: 521>
-    WaitStatement: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WaitStatement: 522>
-    WildcardDimensionSpecifier: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardDimensionSpecifier: 523>
-    WildcardEqualityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardEqualityExpression: 524>
-    WildcardInequalityExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardInequalityExpression: 525>
-    WildcardLiteralExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardLiteralExpression: 526>
-    WildcardPattern: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardPattern: 527>
-    WildcardPortConnection: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardPortConnection: 528>
-    WildcardPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardPortList: 529>
-    WildcardUdpPortList: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WildcardUdpPortList: 530>
-    WithClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WithClause: 531>
-    WithFunctionClause: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WithFunctionClause: 532>
-    WithFunctionSample: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WithFunctionSample: 533>
-    WithinSequenceExpr: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.WithinSequenceExpr: 534>
-    XorAssignmentExpression: typing.ClassVar[SyntaxKind]  # value = <SyntaxKind.XorAssignmentExpression: 535>
-    __members__: typing.ClassVar[dict[str, SyntaxKind]]  # value = {'Unknown': <SyntaxKind.Unknown: 0>, 'SyntaxList': <SyntaxKind.SyntaxList: 1>, 'TokenList': <SyntaxKind.TokenList: 2>, 'SeparatedList': <SyntaxKind.SeparatedList: 3>, 'AcceptOnPropertyExpr': <SyntaxKind.AcceptOnPropertyExpr: 4>, 'ActionBlock': <SyntaxKind.ActionBlock: 5>, 'AddAssignmentExpression': <SyntaxKind.AddAssignmentExpression: 6>, 'AddExpression': <SyntaxKind.AddExpression: 7>, 'AlwaysBlock': <SyntaxKind.AlwaysBlock: 8>, 'AlwaysCombBlock': <SyntaxKind.AlwaysCombBlock: 9>, 'AlwaysFFBlock': <SyntaxKind.AlwaysFFBlock: 10>, 'AlwaysLatchBlock': <SyntaxKind.AlwaysLatchBlock: 11>, 'AndAssignmentExpression': <SyntaxKind.AndAssignmentExpression: 12>, 'AndPropertyExpr': <SyntaxKind.AndPropertyExpr: 13>, 'AndSequenceExpr': <SyntaxKind.AndSequenceExpr: 14>, 'AnonymousProgram': <SyntaxKind.AnonymousProgram: 15>, 'AnsiPortList': <SyntaxKind.AnsiPortList: 16>, 'AnsiUdpPortList': <SyntaxKind.AnsiUdpPortList: 17>, 'ArgumentList': <SyntaxKind.ArgumentList: 18>, 'ArithmeticLeftShiftAssignmentExpression': <SyntaxKind.ArithmeticLeftShiftAssignmentExpression: 19>, 'ArithmeticRightShiftAssignmentExpression': <SyntaxKind.ArithmeticRightShiftAssignmentExpression: 20>, 'ArithmeticShiftLeftExpression': <SyntaxKind.ArithmeticShiftLeftExpression: 21>, 'ArithmeticShiftRightExpression': <SyntaxKind.ArithmeticShiftRightExpression: 22>, 'ArrayAndMethod': <SyntaxKind.ArrayAndMethod: 23>, 'ArrayOrMethod': <SyntaxKind.ArrayOrMethod: 24>, 'ArrayOrRandomizeMethodExpression': <SyntaxKind.ArrayOrRandomizeMethodExpression: 25>, 'ArrayUniqueMethod': <SyntaxKind.ArrayUniqueMethod: 26>, 'ArrayXorMethod': <SyntaxKind.ArrayXorMethod: 27>, 'AscendingRangeSelect': <SyntaxKind.AscendingRangeSelect: 28>, 'AssertPropertyStatement': <SyntaxKind.AssertPropertyStatement: 29>, 'AssertionItemPort': <SyntaxKind.AssertionItemPort: 30>, 'AssertionItemPortList': <SyntaxKind.AssertionItemPortList: 31>, 'AssignmentExpression': <SyntaxKind.AssignmentExpression: 32>, 'AssignmentPatternExpression': <SyntaxKind.AssignmentPatternExpression: 33>, 'AssignmentPatternItem': <SyntaxKind.AssignmentPatternItem: 34>, 'AssumePropertyStatement': <SyntaxKind.AssumePropertyStatement: 35>, 'AttributeInstance': <SyntaxKind.AttributeInstance: 36>, 'AttributeSpec': <SyntaxKind.AttributeSpec: 37>, 'BadExpression': <SyntaxKind.BadExpression: 38>, 'BeginKeywordsDirective': <SyntaxKind.BeginKeywordsDirective: 39>, 'BinSelectWithFilterExpr': <SyntaxKind.BinSelectWithFilterExpr: 40>, 'BinaryAndExpression': <SyntaxKind.BinaryAndExpression: 41>, 'BinaryBinsSelectExpr': <SyntaxKind.BinaryBinsSelectExpr: 42>, 'BinaryBlockEventExpression': <SyntaxKind.BinaryBlockEventExpression: 43>, 'BinaryConditionalDirectiveExpression': <SyntaxKind.BinaryConditionalDirectiveExpression: 44>, 'BinaryEventExpression': <SyntaxKind.BinaryEventExpression: 45>, 'BinaryOrExpression': <SyntaxKind.BinaryOrExpression: 46>, 'BinaryXnorExpression': <SyntaxKind.BinaryXnorExpression: 47>, 'BinaryXorExpression': <SyntaxKind.BinaryXorExpression: 48>, 'BindDirective': <SyntaxKind.BindDirective: 49>, 'BindTargetList': <SyntaxKind.BindTargetList: 50>, 'BinsSelectConditionExpr': <SyntaxKind.BinsSelectConditionExpr: 51>, 'BinsSelection': <SyntaxKind.BinsSelection: 52>, 'BitSelect': <SyntaxKind.BitSelect: 53>, 'BitType': <SyntaxKind.BitType: 54>, 'BlockCoverageEvent': <SyntaxKind.BlockCoverageEvent: 55>, 'BlockingEventTriggerStatement': <SyntaxKind.BlockingEventTriggerStatement: 56>, 'ByteType': <SyntaxKind.ByteType: 57>, 'CHandleType': <SyntaxKind.CHandleType: 58>, 'CaseEqualityExpression': <SyntaxKind.CaseEqualityExpression: 59>, 'CaseGenerate': <SyntaxKind.CaseGenerate: 60>, 'CaseInequalityExpression': <SyntaxKind.CaseInequalityExpression: 61>, 'CasePropertyExpr': <SyntaxKind.CasePropertyExpr: 62>, 'CaseStatement': <SyntaxKind.CaseStatement: 63>, 'CastExpression': <SyntaxKind.CastExpression: 64>, 'CellConfigRule': <SyntaxKind.CellConfigRule: 65>, 'CellDefineDirective': <SyntaxKind.CellDefineDirective: 66>, 'ChargeStrength': <SyntaxKind.ChargeStrength: 67>, 'CheckerDataDeclaration': <SyntaxKind.CheckerDataDeclaration: 68>, 'CheckerDeclaration': <SyntaxKind.CheckerDeclaration: 69>, 'CheckerInstanceStatement': <SyntaxKind.CheckerInstanceStatement: 70>, 'CheckerInstantiation': <SyntaxKind.CheckerInstantiation: 71>, 'ClassDeclaration': <SyntaxKind.ClassDeclaration: 72>, 'ClassMethodDeclaration': <SyntaxKind.ClassMethodDeclaration: 73>, 'ClassMethodPrototype': <SyntaxKind.ClassMethodPrototype: 74>, 'ClassName': <SyntaxKind.ClassName: 75>, 'ClassPropertyDeclaration': <SyntaxKind.ClassPropertyDeclaration: 76>, 'ClassSpecifier': <SyntaxKind.ClassSpecifier: 77>, 'ClockingDeclaration': <SyntaxKind.ClockingDeclaration: 78>, 'ClockingDirection': <SyntaxKind.ClockingDirection: 79>, 'ClockingItem': <SyntaxKind.ClockingItem: 80>, 'ClockingPropertyExpr': <SyntaxKind.ClockingPropertyExpr: 81>, 'ClockingSequenceExpr': <SyntaxKind.ClockingSequenceExpr: 82>, 'ClockingSkew': <SyntaxKind.ClockingSkew: 83>, 'ColonExpressionClause': <SyntaxKind.ColonExpressionClause: 84>, 'CompilationUnit': <SyntaxKind.CompilationUnit: 85>, 'ConcatenationExpression': <SyntaxKind.ConcatenationExpression: 86>, 'ConcurrentAssertionMember': <SyntaxKind.ConcurrentAssertionMember: 87>, 'ConditionalConstraint': <SyntaxKind.ConditionalConstraint: 88>, 'ConditionalExpression': <SyntaxKind.ConditionalExpression: 89>, 'ConditionalPathDeclaration': <SyntaxKind.ConditionalPathDeclaration: 90>, 'ConditionalPattern': <SyntaxKind.ConditionalPattern: 91>, 'ConditionalPredicate': <SyntaxKind.ConditionalPredicate: 92>, 'ConditionalPropertyExpr': <SyntaxKind.ConditionalPropertyExpr: 93>, 'ConditionalStatement': <SyntaxKind.ConditionalStatement: 94>, 'ConfigCellIdentifier': <SyntaxKind.ConfigCellIdentifier: 95>, 'ConfigDeclaration': <SyntaxKind.ConfigDeclaration: 96>, 'ConfigInstanceIdentifier': <SyntaxKind.ConfigInstanceIdentifier: 97>, 'ConfigLiblist': <SyntaxKind.ConfigLiblist: 98>, 'ConfigUseClause': <SyntaxKind.ConfigUseClause: 99>, 'ConstraintBlock': <SyntaxKind.ConstraintBlock: 100>, 'ConstraintDeclaration': <SyntaxKind.ConstraintDeclaration: 101>, 'ConstraintPrototype': <SyntaxKind.ConstraintPrototype: 102>, 'ConstructorName': <SyntaxKind.ConstructorName: 103>, 'ContinuousAssign': <SyntaxKind.ContinuousAssign: 104>, 'CopyClassExpression': <SyntaxKind.CopyClassExpression: 105>, 'CoverCross': <SyntaxKind.CoverCross: 106>, 'CoverPropertyStatement': <SyntaxKind.CoverPropertyStatement: 107>, 'CoverSequenceStatement': <SyntaxKind.CoverSequenceStatement: 108>, 'CoverageBins': <SyntaxKind.CoverageBins: 109>, 'CoverageBinsArraySize': <SyntaxKind.CoverageBinsArraySize: 110>, 'CoverageIffClause': <SyntaxKind.CoverageIffClause: 111>, 'CoverageOption': <SyntaxKind.CoverageOption: 112>, 'CovergroupDeclaration': <SyntaxKind.CovergroupDeclaration: 113>, 'Coverpoint': <SyntaxKind.Coverpoint: 114>, 'CycleDelay': <SyntaxKind.CycleDelay: 115>, 'DPIExport': <SyntaxKind.DPIExport: 116>, 'DPIImport': <SyntaxKind.DPIImport: 117>, 'DataDeclaration': <SyntaxKind.DataDeclaration: 118>, 'Declarator': <SyntaxKind.Declarator: 119>, 'DefParam': <SyntaxKind.DefParam: 120>, 'DefParamAssignment': <SyntaxKind.DefParamAssignment: 121>, 'DefaultCaseItem': <SyntaxKind.DefaultCaseItem: 122>, 'DefaultClockingReference': <SyntaxKind.DefaultClockingReference: 123>, 'DefaultConfigRule': <SyntaxKind.DefaultConfigRule: 124>, 'DefaultCoverageBinInitializer': <SyntaxKind.DefaultCoverageBinInitializer: 125>, 'DefaultDecayTimeDirective': <SyntaxKind.DefaultDecayTimeDirective: 126>, 'DefaultDisableDeclaration': <SyntaxKind.DefaultDisableDeclaration: 127>, 'DefaultDistItem': <SyntaxKind.DefaultDistItem: 128>, 'DefaultExtendsClauseArg': <SyntaxKind.DefaultExtendsClauseArg: 129>, 'DefaultFunctionPort': <SyntaxKind.DefaultFunctionPort: 130>, 'DefaultNetTypeDirective': <SyntaxKind.DefaultNetTypeDirective: 131>, 'DefaultPatternKeyExpression': <SyntaxKind.DefaultPatternKeyExpression: 132>, 'DefaultPropertyCaseItem': <SyntaxKind.DefaultPropertyCaseItem: 133>, 'DefaultRsCaseItem': <SyntaxKind.DefaultRsCaseItem: 134>, 'DefaultSkewItem': <SyntaxKind.DefaultSkewItem: 135>, 'DefaultTriregStrengthDirective': <SyntaxKind.DefaultTriregStrengthDirective: 136>, 'DeferredAssertion': <SyntaxKind.DeferredAssertion: 137>, 'DefineDirective': <SyntaxKind.DefineDirective: 138>, 'Delay3': <SyntaxKind.Delay3: 139>, 'DelayControl': <SyntaxKind.DelayControl: 140>, 'DelayModeDistributedDirective': <SyntaxKind.DelayModeDistributedDirective: 141>, 'DelayModePathDirective': <SyntaxKind.DelayModePathDirective: 142>, 'DelayModeUnitDirective': <SyntaxKind.DelayModeUnitDirective: 143>, 'DelayModeZeroDirective': <SyntaxKind.DelayModeZeroDirective: 144>, 'DelayedSequenceElement': <SyntaxKind.DelayedSequenceElement: 145>, 'DelayedSequenceExpr': <SyntaxKind.DelayedSequenceExpr: 146>, 'DescendingRangeSelect': <SyntaxKind.DescendingRangeSelect: 147>, 'DisableConstraint': <SyntaxKind.DisableConstraint: 148>, 'DisableForkStatement': <SyntaxKind.DisableForkStatement: 149>, 'DisableIff': <SyntaxKind.DisableIff: 150>, 'DisableStatement': <SyntaxKind.DisableStatement: 151>, 'DistConstraintList': <SyntaxKind.DistConstraintList: 152>, 'DistItem': <SyntaxKind.DistItem: 153>, 'DistWeight': <SyntaxKind.DistWeight: 154>, 'DivideAssignmentExpression': <SyntaxKind.DivideAssignmentExpression: 155>, 'DivideExpression': <SyntaxKind.DivideExpression: 156>, 'DividerClause': <SyntaxKind.DividerClause: 157>, 'DoWhileStatement': <SyntaxKind.DoWhileStatement: 158>, 'DotMemberClause': <SyntaxKind.DotMemberClause: 159>, 'DriveStrength': <SyntaxKind.DriveStrength: 160>, 'EdgeControlSpecifier': <SyntaxKind.EdgeControlSpecifier: 161>, 'EdgeDescriptor': <SyntaxKind.EdgeDescriptor: 162>, 'EdgeSensitivePathSuffix': <SyntaxKind.EdgeSensitivePathSuffix: 163>, 'ElabSystemTask': <SyntaxKind.ElabSystemTask: 164>, 'ElementSelect': <SyntaxKind.ElementSelect: 165>, 'ElementSelectExpression': <SyntaxKind.ElementSelectExpression: 166>, 'ElsIfDirective': <SyntaxKind.ElsIfDirective: 167>, 'ElseClause': <SyntaxKind.ElseClause: 168>, 'ElseConstraintClause': <SyntaxKind.ElseConstraintClause: 169>, 'ElseDirective': <SyntaxKind.ElseDirective: 170>, 'ElsePropertyClause': <SyntaxKind.ElsePropertyClause: 171>, 'EmptyArgument': <SyntaxKind.EmptyArgument: 172>, 'EmptyIdentifierName': <SyntaxKind.EmptyIdentifierName: 173>, 'EmptyMember': <SyntaxKind.EmptyMember: 174>, 'EmptyNonAnsiPort': <SyntaxKind.EmptyNonAnsiPort: 175>, 'EmptyPortConnection': <SyntaxKind.EmptyPortConnection: 176>, 'EmptyQueueExpression': <SyntaxKind.EmptyQueueExpression: 177>, 'EmptyStatement': <SyntaxKind.EmptyStatement: 178>, 'EmptyTimingCheckArg': <SyntaxKind.EmptyTimingCheckArg: 179>, 'EndCellDefineDirective': <SyntaxKind.EndCellDefineDirective: 180>, 'EndIfDirective': <SyntaxKind.EndIfDirective: 181>, 'EndKeywordsDirective': <SyntaxKind.EndKeywordsDirective: 182>, 'EndProtectDirective': <SyntaxKind.EndProtectDirective: 183>, 'EndProtectedDirective': <SyntaxKind.EndProtectedDirective: 184>, 'EnumType': <SyntaxKind.EnumType: 185>, 'EqualityExpression': <SyntaxKind.EqualityExpression: 186>, 'EqualsAssertionArgClause': <SyntaxKind.EqualsAssertionArgClause: 187>, 'EqualsTypeClause': <SyntaxKind.EqualsTypeClause: 188>, 'EqualsValueClause': <SyntaxKind.EqualsValueClause: 189>, 'EventControl': <SyntaxKind.EventControl: 190>, 'EventControlWithExpression': <SyntaxKind.EventControlWithExpression: 191>, 'EventType': <SyntaxKind.EventType: 192>, 'ExpectPropertyStatement': <SyntaxKind.ExpectPropertyStatement: 193>, 'ExplicitAnsiPort': <SyntaxKind.ExplicitAnsiPort: 194>, 'ExplicitNonAnsiPort': <SyntaxKind.ExplicitNonAnsiPort: 195>, 'ExpressionConstraint': <SyntaxKind.ExpressionConstraint: 196>, 'ExpressionCoverageBinInitializer': <SyntaxKind.ExpressionCoverageBinInitializer: 197>, 'ExpressionOrDist': <SyntaxKind.ExpressionOrDist: 198>, 'ExpressionPattern': <SyntaxKind.ExpressionPattern: 199>, 'ExpressionStatement': <SyntaxKind.ExpressionStatement: 200>, 'ExpressionTimingCheckArg': <SyntaxKind.ExpressionTimingCheckArg: 201>, 'ExtendsClause': <SyntaxKind.ExtendsClause: 202>, 'ExternInterfaceMethod': <SyntaxKind.ExternInterfaceMethod: 203>, 'ExternModuleDecl': <SyntaxKind.ExternModuleDecl: 204>, 'ExternUdpDecl': <SyntaxKind.ExternUdpDecl: 205>, 'FilePathSpec': <SyntaxKind.FilePathSpec: 206>, 'FinalBlock': <SyntaxKind.FinalBlock: 207>, 'FirstMatchSequenceExpr': <SyntaxKind.FirstMatchSequenceExpr: 208>, 'FollowedByPropertyExpr': <SyntaxKind.FollowedByPropertyExpr: 209>, 'ForLoopStatement': <SyntaxKind.ForLoopStatement: 210>, 'ForVariableDeclaration': <SyntaxKind.ForVariableDeclaration: 211>, 'ForeachLoopList': <SyntaxKind.ForeachLoopList: 212>, 'ForeachLoopStatement': <SyntaxKind.ForeachLoopStatement: 213>, 'ForeverStatement': <SyntaxKind.ForeverStatement: 214>, 'ForwardTypeRestriction': <SyntaxKind.ForwardTypeRestriction: 215>, 'ForwardTypedefDeclaration': <SyntaxKind.ForwardTypedefDeclaration: 216>, 'FunctionDeclaration': <SyntaxKind.FunctionDeclaration: 217>, 'FunctionPort': <SyntaxKind.FunctionPort: 218>, 'FunctionPortList': <SyntaxKind.FunctionPortList: 219>, 'FunctionPrototype': <SyntaxKind.FunctionPrototype: 220>, 'GenerateBlock': <SyntaxKind.GenerateBlock: 221>, 'GenerateRegion': <SyntaxKind.GenerateRegion: 222>, 'GenvarDeclaration': <SyntaxKind.GenvarDeclaration: 223>, 'GreaterThanEqualExpression': <SyntaxKind.GreaterThanEqualExpression: 224>, 'GreaterThanExpression': <SyntaxKind.GreaterThanExpression: 225>, 'HierarchicalInstance': <SyntaxKind.HierarchicalInstance: 226>, 'HierarchyInstantiation': <SyntaxKind.HierarchyInstantiation: 227>, 'IdWithExprCoverageBinInitializer': <SyntaxKind.IdWithExprCoverageBinInitializer: 228>, 'IdentifierName': <SyntaxKind.IdentifierName: 229>, 'IdentifierSelectName': <SyntaxKind.IdentifierSelectName: 230>, 'IfDefDirective': <SyntaxKind.IfDefDirective: 231>, 'IfGenerate': <SyntaxKind.IfGenerate: 232>, 'IfNDefDirective': <SyntaxKind.IfNDefDirective: 233>, 'IfNonePathDeclaration': <SyntaxKind.IfNonePathDeclaration: 234>, 'IffEventClause': <SyntaxKind.IffEventClause: 235>, 'IffPropertyExpr': <SyntaxKind.IffPropertyExpr: 236>, 'ImmediateAssertStatement': <SyntaxKind.ImmediateAssertStatement: 237>, 'ImmediateAssertionMember': <SyntaxKind.ImmediateAssertionMember: 238>, 'ImmediateAssumeStatement': <SyntaxKind.ImmediateAssumeStatement: 239>, 'ImmediateCoverStatement': <SyntaxKind.ImmediateCoverStatement: 240>, 'ImplementsClause': <SyntaxKind.ImplementsClause: 241>, 'ImplicationConstraint': <SyntaxKind.ImplicationConstraint: 242>, 'ImplicationPropertyExpr': <SyntaxKind.ImplicationPropertyExpr: 243>, 'ImplicitAnsiPort': <SyntaxKind.ImplicitAnsiPort: 244>, 'ImplicitEventControl': <SyntaxKind.ImplicitEventControl: 245>, 'ImplicitNonAnsiPort': <SyntaxKind.ImplicitNonAnsiPort: 246>, 'ImplicitType': <SyntaxKind.ImplicitType: 247>, 'ImpliesPropertyExpr': <SyntaxKind.ImpliesPropertyExpr: 248>, 'IncludeDirective': <SyntaxKind.IncludeDirective: 249>, 'InequalityExpression': <SyntaxKind.InequalityExpression: 250>, 'InitialBlock': <SyntaxKind.InitialBlock: 251>, 'InsideExpression': <SyntaxKind.InsideExpression: 252>, 'InstanceConfigRule': <SyntaxKind.InstanceConfigRule: 253>, 'InstanceName': <SyntaxKind.InstanceName: 254>, 'IntType': <SyntaxKind.IntType: 255>, 'IntegerLiteralExpression': <SyntaxKind.IntegerLiteralExpression: 256>, 'IntegerType': <SyntaxKind.IntegerType: 257>, 'IntegerVectorExpression': <SyntaxKind.IntegerVectorExpression: 258>, 'InterfaceDeclaration': <SyntaxKind.InterfaceDeclaration: 259>, 'InterfaceHeader': <SyntaxKind.InterfaceHeader: 260>, 'InterfacePortHeader': <SyntaxKind.InterfacePortHeader: 261>, 'IntersectClause': <SyntaxKind.IntersectClause: 262>, 'IntersectSequenceExpr': <SyntaxKind.IntersectSequenceExpr: 263>, 'InvocationExpression': <SyntaxKind.InvocationExpression: 264>, 'JumpStatement': <SyntaxKind.JumpStatement: 265>, 'LessThanEqualExpression': <SyntaxKind.LessThanEqualExpression: 266>, 'LessThanExpression': <SyntaxKind.LessThanExpression: 267>, 'LetDeclaration': <SyntaxKind.LetDeclaration: 268>, 'LibraryDeclaration': <SyntaxKind.LibraryDeclaration: 269>, 'LibraryIncDirClause': <SyntaxKind.LibraryIncDirClause: 270>, 'LibraryIncludeStatement': <SyntaxKind.LibraryIncludeStatement: 271>, 'LibraryMap': <SyntaxKind.LibraryMap: 272>, 'LineDirective': <SyntaxKind.LineDirective: 273>, 'LocalScope': <SyntaxKind.LocalScope: 274>, 'LocalVariableDeclaration': <SyntaxKind.LocalVariableDeclaration: 275>, 'LogicType': <SyntaxKind.LogicType: 276>, 'LogicalAndExpression': <SyntaxKind.LogicalAndExpression: 277>, 'LogicalEquivalenceExpression': <SyntaxKind.LogicalEquivalenceExpression: 278>, 'LogicalImplicationExpression': <SyntaxKind.LogicalImplicationExpression: 279>, 'LogicalLeftShiftAssignmentExpression': <SyntaxKind.LogicalLeftShiftAssignmentExpression: 280>, 'LogicalOrExpression': <SyntaxKind.LogicalOrExpression: 281>, 'LogicalRightShiftAssignmentExpression': <SyntaxKind.LogicalRightShiftAssignmentExpression: 282>, 'LogicalShiftLeftExpression': <SyntaxKind.LogicalShiftLeftExpression: 283>, 'LogicalShiftRightExpression': <SyntaxKind.LogicalShiftRightExpression: 284>, 'LongIntType': <SyntaxKind.LongIntType: 285>, 'LoopConstraint': <SyntaxKind.LoopConstraint: 286>, 'LoopGenerate': <SyntaxKind.LoopGenerate: 287>, 'LoopStatement': <SyntaxKind.LoopStatement: 288>, 'MacroActualArgument': <SyntaxKind.MacroActualArgument: 289>, 'MacroActualArgumentList': <SyntaxKind.MacroActualArgumentList: 290>, 'MacroArgumentDefault': <SyntaxKind.MacroArgumentDefault: 291>, 'MacroFormalArgument': <SyntaxKind.MacroFormalArgument: 292>, 'MacroFormalArgumentList': <SyntaxKind.MacroFormalArgumentList: 293>, 'MacroUsage': <SyntaxKind.MacroUsage: 294>, 'MatchesClause': <SyntaxKind.MatchesClause: 295>, 'MemberAccessExpression': <SyntaxKind.MemberAccessExpression: 296>, 'MinTypMaxExpression': <SyntaxKind.MinTypMaxExpression: 297>, 'ModAssignmentExpression': <SyntaxKind.ModAssignmentExpression: 298>, 'ModExpression': <SyntaxKind.ModExpression: 299>, 'ModportClockingPort': <SyntaxKind.ModportClockingPort: 300>, 'ModportDeclaration': <SyntaxKind.ModportDeclaration: 301>, 'ModportExplicitPort': <SyntaxKind.ModportExplicitPort: 302>, 'ModportItem': <SyntaxKind.ModportItem: 303>, 'ModportNamedPort': <SyntaxKind.ModportNamedPort: 304>, 'ModportSimplePortList': <SyntaxKind.ModportSimplePortList: 305>, 'ModportSubroutinePort': <SyntaxKind.ModportSubroutinePort: 306>, 'ModportSubroutinePortList': <SyntaxKind.ModportSubroutinePortList: 307>, 'ModuleDeclaration': <SyntaxKind.ModuleDeclaration: 308>, 'ModuleHeader': <SyntaxKind.ModuleHeader: 309>, 'MultipleConcatenationExpression': <SyntaxKind.MultipleConcatenationExpression: 310>, 'MultiplyAssignmentExpression': <SyntaxKind.MultiplyAssignmentExpression: 311>, 'MultiplyExpression': <SyntaxKind.MultiplyExpression: 312>, 'NameValuePragmaExpression': <SyntaxKind.NameValuePragmaExpression: 313>, 'NamedArgument': <SyntaxKind.NamedArgument: 314>, 'NamedBlockClause': <SyntaxKind.NamedBlockClause: 315>, 'NamedConditionalDirectiveExpression': <SyntaxKind.NamedConditionalDirectiveExpression: 316>, 'NamedLabel': <SyntaxKind.NamedLabel: 317>, 'NamedParamAssignment': <SyntaxKind.NamedParamAssignment: 318>, 'NamedPortConnection': <SyntaxKind.NamedPortConnection: 319>, 'NamedStructurePatternMember': <SyntaxKind.NamedStructurePatternMember: 320>, 'NamedType': <SyntaxKind.NamedType: 321>, 'NetAlias': <SyntaxKind.NetAlias: 322>, 'NetDeclaration': <SyntaxKind.NetDeclaration: 323>, 'NetPortHeader': <SyntaxKind.NetPortHeader: 324>, 'NetTypeDeclaration': <SyntaxKind.NetTypeDeclaration: 325>, 'NewArrayExpression': <SyntaxKind.NewArrayExpression: 326>, 'NewClassExpression': <SyntaxKind.NewClassExpression: 327>, 'NoUnconnectedDriveDirective': <SyntaxKind.NoUnconnectedDriveDirective: 328>, 'NonAnsiPortList': <SyntaxKind.NonAnsiPortList: 329>, 'NonAnsiUdpPortList': <SyntaxKind.NonAnsiUdpPortList: 330>, 'NonblockingAssignmentExpression': <SyntaxKind.NonblockingAssignmentExpression: 331>, 'NonblockingEventTriggerStatement': <SyntaxKind.NonblockingEventTriggerStatement: 332>, 'NullLiteralExpression': <SyntaxKind.NullLiteralExpression: 333>, 'NumberPragmaExpression': <SyntaxKind.NumberPragmaExpression: 334>, 'OneStepDelay': <SyntaxKind.OneStepDelay: 335>, 'OrAssignmentExpression': <SyntaxKind.OrAssignmentExpression: 336>, 'OrPropertyExpr': <SyntaxKind.OrPropertyExpr: 337>, 'OrSequenceExpr': <SyntaxKind.OrSequenceExpr: 338>, 'OrderedArgument': <SyntaxKind.OrderedArgument: 339>, 'OrderedParamAssignment': <SyntaxKind.OrderedParamAssignment: 340>, 'OrderedPortConnection': <SyntaxKind.OrderedPortConnection: 341>, 'OrderedStructurePatternMember': <SyntaxKind.OrderedStructurePatternMember: 342>, 'PackageDeclaration': <SyntaxKind.PackageDeclaration: 343>, 'PackageExportAllDeclaration': <SyntaxKind.PackageExportAllDeclaration: 344>, 'PackageExportDeclaration': <SyntaxKind.PackageExportDeclaration: 345>, 'PackageHeader': <SyntaxKind.PackageHeader: 346>, 'PackageImportDeclaration': <SyntaxKind.PackageImportDeclaration: 347>, 'PackageImportItem': <SyntaxKind.PackageImportItem: 348>, 'ParallelBlockStatement': <SyntaxKind.ParallelBlockStatement: 349>, 'ParameterDeclaration': <SyntaxKind.ParameterDeclaration: 350>, 'ParameterDeclarationStatement': <SyntaxKind.ParameterDeclarationStatement: 351>, 'ParameterPortList': <SyntaxKind.ParameterPortList: 352>, 'ParameterValueAssignment': <SyntaxKind.ParameterValueAssignment: 353>, 'ParenExpressionList': <SyntaxKind.ParenExpressionList: 354>, 'ParenPragmaExpression': <SyntaxKind.ParenPragmaExpression: 355>, 'ParenthesizedBinsSelectExpr': <SyntaxKind.ParenthesizedBinsSelectExpr: 356>, 'ParenthesizedConditionalDirectiveExpression': <SyntaxKind.ParenthesizedConditionalDirectiveExpression: 357>, 'ParenthesizedEventExpression': <SyntaxKind.ParenthesizedEventExpression: 358>, 'ParenthesizedExpression': <SyntaxKind.ParenthesizedExpression: 359>, 'ParenthesizedPattern': <SyntaxKind.ParenthesizedPattern: 360>, 'ParenthesizedPropertyExpr': <SyntaxKind.ParenthesizedPropertyExpr: 361>, 'ParenthesizedSequenceExpr': <SyntaxKind.ParenthesizedSequenceExpr: 362>, 'PathDeclaration': <SyntaxKind.PathDeclaration: 363>, 'PathDescription': <SyntaxKind.PathDescription: 364>, 'PatternCaseItem': <SyntaxKind.PatternCaseItem: 365>, 'PortConcatenation': <SyntaxKind.PortConcatenation: 366>, 'PortDeclaration': <SyntaxKind.PortDeclaration: 367>, 'PortReference': <SyntaxKind.PortReference: 368>, 'PostdecrementExpression': <SyntaxKind.PostdecrementExpression: 369>, 'PostincrementExpression': <SyntaxKind.PostincrementExpression: 370>, 'PowerExpression': <SyntaxKind.PowerExpression: 371>, 'PragmaDirective': <SyntaxKind.PragmaDirective: 372>, 'PrimaryBlockEventExpression': <SyntaxKind.PrimaryBlockEventExpression: 373>, 'PrimitiveInstantiation': <SyntaxKind.PrimitiveInstantiation: 374>, 'ProceduralAssignStatement': <SyntaxKind.ProceduralAssignStatement: 375>, 'ProceduralDeassignStatement': <SyntaxKind.ProceduralDeassignStatement: 376>, 'ProceduralForceStatement': <SyntaxKind.ProceduralForceStatement: 377>, 'ProceduralReleaseStatement': <SyntaxKind.ProceduralReleaseStatement: 378>, 'Production': <SyntaxKind.Production: 379>, 'ProgramDeclaration': <SyntaxKind.ProgramDeclaration: 380>, 'ProgramHeader': <SyntaxKind.ProgramHeader: 381>, 'PropertyDeclaration': <SyntaxKind.PropertyDeclaration: 382>, 'PropertySpec': <SyntaxKind.PropertySpec: 383>, 'PropertyType': <SyntaxKind.PropertyType: 384>, 'ProtectDirective': <SyntaxKind.ProtectDirective: 385>, 'ProtectedDirective': <SyntaxKind.ProtectedDirective: 386>, 'PullStrength': <SyntaxKind.PullStrength: 387>, 'PulseStyleDeclaration': <SyntaxKind.PulseStyleDeclaration: 388>, 'QueueDimensionSpecifier': <SyntaxKind.QueueDimensionSpecifier: 389>, 'RandCaseItem': <SyntaxKind.RandCaseItem: 390>, 'RandCaseStatement': <SyntaxKind.RandCaseStatement: 391>, 'RandJoinClause': <SyntaxKind.RandJoinClause: 392>, 'RandSequenceStatement': <SyntaxKind.RandSequenceStatement: 393>, 'RangeCoverageBinInitializer': <SyntaxKind.RangeCoverageBinInitializer: 394>, 'RangeDimensionSpecifier': <SyntaxKind.RangeDimensionSpecifier: 395>, 'RangeList': <SyntaxKind.RangeList: 396>, 'RealLiteralExpression': <SyntaxKind.RealLiteralExpression: 397>, 'RealTimeType': <SyntaxKind.RealTimeType: 398>, 'RealType': <SyntaxKind.RealType: 399>, 'RegType': <SyntaxKind.RegType: 400>, 'RepeatedEventControl': <SyntaxKind.RepeatedEventControl: 401>, 'ReplicatedAssignmentPattern': <SyntaxKind.ReplicatedAssignmentPattern: 402>, 'ResetAllDirective': <SyntaxKind.ResetAllDirective: 403>, 'RestrictPropertyStatement': <SyntaxKind.RestrictPropertyStatement: 404>, 'ReturnStatement': <SyntaxKind.ReturnStatement: 405>, 'RootScope': <SyntaxKind.RootScope: 406>, 'RsCase': <SyntaxKind.RsCase: 407>, 'RsCodeBlock': <SyntaxKind.RsCodeBlock: 408>, 'RsElseClause': <SyntaxKind.RsElseClause: 409>, 'RsIfElse': <SyntaxKind.RsIfElse: 410>, 'RsProdItem': <SyntaxKind.RsProdItem: 411>, 'RsRepeat': <SyntaxKind.RsRepeat: 412>, 'RsRule': <SyntaxKind.RsRule: 413>, 'RsWeightClause': <SyntaxKind.RsWeightClause: 414>, 'SUntilPropertyExpr': <SyntaxKind.SUntilPropertyExpr: 415>, 'SUntilWithPropertyExpr': <SyntaxKind.SUntilWithPropertyExpr: 416>, 'ScopedName': <SyntaxKind.ScopedName: 417>, 'SequenceDeclaration': <SyntaxKind.SequenceDeclaration: 418>, 'SequenceMatchList': <SyntaxKind.SequenceMatchList: 419>, 'SequenceRepetition': <SyntaxKind.SequenceRepetition: 420>, 'SequenceType': <SyntaxKind.SequenceType: 421>, 'SequentialBlockStatement': <SyntaxKind.SequentialBlockStatement: 422>, 'ShortIntType': <SyntaxKind.ShortIntType: 423>, 'ShortRealType': <SyntaxKind.ShortRealType: 424>, 'SignalEventExpression': <SyntaxKind.SignalEventExpression: 425>, 'SignedCastExpression': <SyntaxKind.SignedCastExpression: 426>, 'SimpleAssignmentPattern': <SyntaxKind.SimpleAssignmentPattern: 427>, 'SimpleBinsSelectExpr': <SyntaxKind.SimpleBinsSelectExpr: 428>, 'SimplePathSuffix': <SyntaxKind.SimplePathSuffix: 429>, 'SimplePragmaExpression': <SyntaxKind.SimplePragmaExpression: 430>, 'SimplePropertyExpr': <SyntaxKind.SimplePropertyExpr: 431>, 'SimpleRangeSelect': <SyntaxKind.SimpleRangeSelect: 432>, 'SimpleSequenceExpr': <SyntaxKind.SimpleSequenceExpr: 433>, 'SolveBeforeConstraint': <SyntaxKind.SolveBeforeConstraint: 434>, 'SpecifyBlock': <SyntaxKind.SpecifyBlock: 435>, 'SpecparamDeclaration': <SyntaxKind.SpecparamDeclaration: 436>, 'SpecparamDeclarator': <SyntaxKind.SpecparamDeclarator: 437>, 'StandardCaseItem': <SyntaxKind.StandardCaseItem: 438>, 'StandardPropertyCaseItem': <SyntaxKind.StandardPropertyCaseItem: 439>, 'StandardRsCaseItem': <SyntaxKind.StandardRsCaseItem: 440>, 'StreamExpression': <SyntaxKind.StreamExpression: 441>, 'StreamExpressionWithRange': <SyntaxKind.StreamExpressionWithRange: 442>, 'StreamingConcatenationExpression': <SyntaxKind.StreamingConcatenationExpression: 443>, 'StringLiteralExpression': <SyntaxKind.StringLiteralExpression: 444>, 'StringType': <SyntaxKind.StringType: 445>, 'StrongWeakPropertyExpr': <SyntaxKind.StrongWeakPropertyExpr: 446>, 'StructType': <SyntaxKind.StructType: 447>, 'StructUnionMember': <SyntaxKind.StructUnionMember: 448>, 'StructurePattern': <SyntaxKind.StructurePattern: 449>, 'StructuredAssignmentPattern': <SyntaxKind.StructuredAssignmentPattern: 450>, 'SubtractAssignmentExpression': <SyntaxKind.SubtractAssignmentExpression: 451>, 'SubtractExpression': <SyntaxKind.SubtractExpression: 452>, 'SuperHandle': <SyntaxKind.SuperHandle: 453>, 'SuperNewDefaultedArgsExpression': <SyntaxKind.SuperNewDefaultedArgsExpression: 454>, 'SystemName': <SyntaxKind.SystemName: 455>, 'SystemTimingCheck': <SyntaxKind.SystemTimingCheck: 456>, 'TaggedPattern': <SyntaxKind.TaggedPattern: 457>, 'TaggedUnionExpression': <SyntaxKind.TaggedUnionExpression: 458>, 'TaskDeclaration': <SyntaxKind.TaskDeclaration: 459>, 'ThisHandle': <SyntaxKind.ThisHandle: 460>, 'ThroughoutSequenceExpr': <SyntaxKind.ThroughoutSequenceExpr: 461>, 'TimeLiteralExpression': <SyntaxKind.TimeLiteralExpression: 462>, 'TimeScaleDirective': <SyntaxKind.TimeScaleDirective: 463>, 'TimeType': <SyntaxKind.TimeType: 464>, 'TimeUnitsDeclaration': <SyntaxKind.TimeUnitsDeclaration: 465>, 'TimingCheckEventArg': <SyntaxKind.TimingCheckEventArg: 466>, 'TimingCheckEventCondition': <SyntaxKind.TimingCheckEventCondition: 467>, 'TimingControlExpression': <SyntaxKind.TimingControlExpression: 468>, 'TimingControlStatement': <SyntaxKind.TimingControlStatement: 469>, 'TransListCoverageBinInitializer': <SyntaxKind.TransListCoverageBinInitializer: 470>, 'TransRange': <SyntaxKind.TransRange: 471>, 'TransRepeatRange': <SyntaxKind.TransRepeatRange: 472>, 'TransSet': <SyntaxKind.TransSet: 473>, 'TypeAssignment': <SyntaxKind.TypeAssignment: 474>, 'TypeParameterDeclaration': <SyntaxKind.TypeParameterDeclaration: 475>, 'TypeReference': <SyntaxKind.TypeReference: 476>, 'TypedefDeclaration': <SyntaxKind.TypedefDeclaration: 477>, 'UdpBody': <SyntaxKind.UdpBody: 478>, 'UdpDeclaration': <SyntaxKind.UdpDeclaration: 479>, 'UdpEdgeField': <SyntaxKind.UdpEdgeField: 480>, 'UdpEntry': <SyntaxKind.UdpEntry: 481>, 'UdpInitialStmt': <SyntaxKind.UdpInitialStmt: 482>, 'UdpInputPortDecl': <SyntaxKind.UdpInputPortDecl: 483>, 'UdpOutputPortDecl': <SyntaxKind.UdpOutputPortDecl: 484>, 'UdpSimpleField': <SyntaxKind.UdpSimpleField: 485>, 'UnaryBinsSelectExpr': <SyntaxKind.UnaryBinsSelectExpr: 486>, 'UnaryBitwiseAndExpression': <SyntaxKind.UnaryBitwiseAndExpression: 487>, 'UnaryBitwiseNandExpression': <SyntaxKind.UnaryBitwiseNandExpression: 488>, 'UnaryBitwiseNorExpression': <SyntaxKind.UnaryBitwiseNorExpression: 489>, 'UnaryBitwiseNotExpression': <SyntaxKind.UnaryBitwiseNotExpression: 490>, 'UnaryBitwiseOrExpression': <SyntaxKind.UnaryBitwiseOrExpression: 491>, 'UnaryBitwiseXnorExpression': <SyntaxKind.UnaryBitwiseXnorExpression: 492>, 'UnaryBitwiseXorExpression': <SyntaxKind.UnaryBitwiseXorExpression: 493>, 'UnaryConditionalDirectiveExpression': <SyntaxKind.UnaryConditionalDirectiveExpression: 494>, 'UnaryLogicalNotExpression': <SyntaxKind.UnaryLogicalNotExpression: 495>, 'UnaryMinusExpression': <SyntaxKind.UnaryMinusExpression: 496>, 'UnaryPlusExpression': <SyntaxKind.UnaryPlusExpression: 497>, 'UnaryPredecrementExpression': <SyntaxKind.UnaryPredecrementExpression: 498>, 'UnaryPreincrementExpression': <SyntaxKind.UnaryPreincrementExpression: 499>, 'UnaryPropertyExpr': <SyntaxKind.UnaryPropertyExpr: 500>, 'UnarySelectPropertyExpr': <SyntaxKind.UnarySelectPropertyExpr: 501>, 'UnbasedUnsizedLiteralExpression': <SyntaxKind.UnbasedUnsizedLiteralExpression: 502>, 'UnconnectedDriveDirective': <SyntaxKind.UnconnectedDriveDirective: 503>, 'UndefDirective': <SyntaxKind.UndefDirective: 504>, 'UndefineAllDirective': <SyntaxKind.UndefineAllDirective: 505>, 'UnionType': <SyntaxKind.UnionType: 506>, 'UniquenessConstraint': <SyntaxKind.UniquenessConstraint: 507>, 'UnitScope': <SyntaxKind.UnitScope: 508>, 'UntilPropertyExpr': <SyntaxKind.UntilPropertyExpr: 509>, 'UntilWithPropertyExpr': <SyntaxKind.UntilWithPropertyExpr: 510>, 'Untyped': <SyntaxKind.Untyped: 511>, 'UserDefinedNetDeclaration': <SyntaxKind.UserDefinedNetDeclaration: 512>, 'ValueRangeExpression': <SyntaxKind.ValueRangeExpression: 513>, 'VariableDimension': <SyntaxKind.VariableDimension: 514>, 'VariablePattern': <SyntaxKind.VariablePattern: 515>, 'VariablePortHeader': <SyntaxKind.VariablePortHeader: 516>, 'VirtualInterfaceType': <SyntaxKind.VirtualInterfaceType: 517>, 'VoidCastedCallStatement': <SyntaxKind.VoidCastedCallStatement: 518>, 'VoidType': <SyntaxKind.VoidType: 519>, 'WaitForkStatement': <SyntaxKind.WaitForkStatement: 520>, 'WaitOrderStatement': <SyntaxKind.WaitOrderStatement: 521>, 'WaitStatement': <SyntaxKind.WaitStatement: 522>, 'WildcardDimensionSpecifier': <SyntaxKind.WildcardDimensionSpecifier: 523>, 'WildcardEqualityExpression': <SyntaxKind.WildcardEqualityExpression: 524>, 'WildcardInequalityExpression': <SyntaxKind.WildcardInequalityExpression: 525>, 'WildcardLiteralExpression': <SyntaxKind.WildcardLiteralExpression: 526>, 'WildcardPattern': <SyntaxKind.WildcardPattern: 527>, 'WildcardPortConnection': <SyntaxKind.WildcardPortConnection: 528>, 'WildcardPortList': <SyntaxKind.WildcardPortList: 529>, 'WildcardUdpPortList': <SyntaxKind.WildcardUdpPortList: 530>, 'WithClause': <SyntaxKind.WithClause: 531>, 'WithFunctionClause': <SyntaxKind.WithFunctionClause: 532>, 'WithFunctionSample': <SyntaxKind.WithFunctionSample: 533>, 'WithinSequenceExpr': <SyntaxKind.WithinSequenceExpr: 534>, 'XorAssignmentExpression': <SyntaxKind.XorAssignmentExpression: 535>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def value(self) -> int: ...
+
+class SyntaxKind(metaclass=_metaclass):
+    AcceptOnPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 4"""
+    ActionBlock: ClassVar[SyntaxKind]
+    """Value = 5"""
+    AddAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 6"""
+    AddExpression: ClassVar[SyntaxKind]
+    """Value = 7"""
+    AlwaysBlock: ClassVar[SyntaxKind]
+    """Value = 8"""
+    AlwaysCombBlock: ClassVar[SyntaxKind]
+    """Value = 9"""
+    AlwaysFFBlock: ClassVar[SyntaxKind]
+    """Value = 10"""
+    AlwaysLatchBlock: ClassVar[SyntaxKind]
+    """Value = 11"""
+    AndAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 12"""
+    AndPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 13"""
+    AndSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 14"""
+    AnonymousProgram: ClassVar[SyntaxKind]
+    """Value = 15"""
+    AnsiPortList: ClassVar[SyntaxKind]
+    """Value = 16"""
+    AnsiUdpPortList: ClassVar[SyntaxKind]
+    """Value = 17"""
+    ArgumentList: ClassVar[SyntaxKind]
+    """Value = 18"""
+    ArithmeticLeftShiftAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 19"""
+    ArithmeticRightShiftAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 20"""
+    ArithmeticShiftLeftExpression: ClassVar[SyntaxKind]
+    """Value = 21"""
+    ArithmeticShiftRightExpression: ClassVar[SyntaxKind]
+    """Value = 22"""
+    ArrayAndMethod: ClassVar[SyntaxKind]
+    """Value = 23"""
+    ArrayOrMethod: ClassVar[SyntaxKind]
+    """Value = 24"""
+    ArrayOrRandomizeMethodExpression: ClassVar[SyntaxKind]
+    """Value = 25"""
+    ArrayUniqueMethod: ClassVar[SyntaxKind]
+    """Value = 26"""
+    ArrayXorMethod: ClassVar[SyntaxKind]
+    """Value = 27"""
+    AscendingRangeSelect: ClassVar[SyntaxKind]
+    """Value = 28"""
+    AssertPropertyStatement: ClassVar[SyntaxKind]
+    """Value = 29"""
+    AssertionItemPort: ClassVar[SyntaxKind]
+    """Value = 30"""
+    AssertionItemPortList: ClassVar[SyntaxKind]
+    """Value = 31"""
+    AssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 32"""
+    AssignmentPatternExpression: ClassVar[SyntaxKind]
+    """Value = 33"""
+    AssignmentPatternItem: ClassVar[SyntaxKind]
+    """Value = 34"""
+    AssumePropertyStatement: ClassVar[SyntaxKind]
+    """Value = 35"""
+    AttributeInstance: ClassVar[SyntaxKind]
+    """Value = 36"""
+    AttributeSpec: ClassVar[SyntaxKind]
+    """Value = 37"""
+    BadExpression: ClassVar[SyntaxKind]
+    """Value = 38"""
+    BeginKeywordsDirective: ClassVar[SyntaxKind]
+    """Value = 39"""
+    BinSelectWithFilterExpr: ClassVar[SyntaxKind]
+    """Value = 40"""
+    BinaryAndExpression: ClassVar[SyntaxKind]
+    """Value = 41"""
+    BinaryBinsSelectExpr: ClassVar[SyntaxKind]
+    """Value = 42"""
+    BinaryBlockEventExpression: ClassVar[SyntaxKind]
+    """Value = 43"""
+    BinaryConditionalDirectiveExpression: ClassVar[SyntaxKind]
+    """Value = 44"""
+    BinaryEventExpression: ClassVar[SyntaxKind]
+    """Value = 45"""
+    BinaryOrExpression: ClassVar[SyntaxKind]
+    """Value = 46"""
+    BinaryXnorExpression: ClassVar[SyntaxKind]
+    """Value = 47"""
+    BinaryXorExpression: ClassVar[SyntaxKind]
+    """Value = 48"""
+    BindDirective: ClassVar[SyntaxKind]
+    """Value = 49"""
+    BindTargetList: ClassVar[SyntaxKind]
+    """Value = 50"""
+    BinsSelectConditionExpr: ClassVar[SyntaxKind]
+    """Value = 51"""
+    BinsSelection: ClassVar[SyntaxKind]
+    """Value = 52"""
+    BitSelect: ClassVar[SyntaxKind]
+    """Value = 53"""
+    BitType: ClassVar[SyntaxKind]
+    """Value = 54"""
+    BlockCoverageEvent: ClassVar[SyntaxKind]
+    """Value = 55"""
+    BlockingEventTriggerStatement: ClassVar[SyntaxKind]
+    """Value = 56"""
+    ByteType: ClassVar[SyntaxKind]
+    """Value = 57"""
+    CHandleType: ClassVar[SyntaxKind]
+    """Value = 58"""
+    CaseEqualityExpression: ClassVar[SyntaxKind]
+    """Value = 59"""
+    CaseGenerate: ClassVar[SyntaxKind]
+    """Value = 60"""
+    CaseInequalityExpression: ClassVar[SyntaxKind]
+    """Value = 61"""
+    CasePropertyExpr: ClassVar[SyntaxKind]
+    """Value = 62"""
+    CaseStatement: ClassVar[SyntaxKind]
+    """Value = 63"""
+    CastExpression: ClassVar[SyntaxKind]
+    """Value = 64"""
+    CellConfigRule: ClassVar[SyntaxKind]
+    """Value = 65"""
+    CellDefineDirective: ClassVar[SyntaxKind]
+    """Value = 66"""
+    ChargeStrength: ClassVar[SyntaxKind]
+    """Value = 67"""
+    CheckerDataDeclaration: ClassVar[SyntaxKind]
+    """Value = 68"""
+    CheckerDeclaration: ClassVar[SyntaxKind]
+    """Value = 69"""
+    CheckerInstanceStatement: ClassVar[SyntaxKind]
+    """Value = 70"""
+    CheckerInstantiation: ClassVar[SyntaxKind]
+    """Value = 71"""
+    ClassDeclaration: ClassVar[SyntaxKind]
+    """Value = 72"""
+    ClassMethodDeclaration: ClassVar[SyntaxKind]
+    """Value = 73"""
+    ClassMethodPrototype: ClassVar[SyntaxKind]
+    """Value = 74"""
+    ClassName: ClassVar[SyntaxKind]
+    """Value = 75"""
+    ClassPropertyDeclaration: ClassVar[SyntaxKind]
+    """Value = 76"""
+    ClassSpecifier: ClassVar[SyntaxKind]
+    """Value = 77"""
+    ClockingDeclaration: ClassVar[SyntaxKind]
+    """Value = 78"""
+    ClockingDirection: ClassVar[SyntaxKind]
+    """Value = 79"""
+    ClockingItem: ClassVar[SyntaxKind]
+    """Value = 80"""
+    ClockingPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 81"""
+    ClockingSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 82"""
+    ClockingSkew: ClassVar[SyntaxKind]
+    """Value = 83"""
+    ColonExpressionClause: ClassVar[SyntaxKind]
+    """Value = 84"""
+    CompilationUnit: ClassVar[SyntaxKind]
+    """Value = 85"""
+    ConcatenationExpression: ClassVar[SyntaxKind]
+    """Value = 86"""
+    ConcurrentAssertionMember: ClassVar[SyntaxKind]
+    """Value = 87"""
+    ConditionalConstraint: ClassVar[SyntaxKind]
+    """Value = 88"""
+    ConditionalExpression: ClassVar[SyntaxKind]
+    """Value = 89"""
+    ConditionalPathDeclaration: ClassVar[SyntaxKind]
+    """Value = 90"""
+    ConditionalPattern: ClassVar[SyntaxKind]
+    """Value = 91"""
+    ConditionalPredicate: ClassVar[SyntaxKind]
+    """Value = 92"""
+    ConditionalPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 93"""
+    ConditionalStatement: ClassVar[SyntaxKind]
+    """Value = 94"""
+    ConfigCellIdentifier: ClassVar[SyntaxKind]
+    """Value = 95"""
+    ConfigDeclaration: ClassVar[SyntaxKind]
+    """Value = 96"""
+    ConfigInstanceIdentifier: ClassVar[SyntaxKind]
+    """Value = 97"""
+    ConfigLiblist: ClassVar[SyntaxKind]
+    """Value = 98"""
+    ConfigUseClause: ClassVar[SyntaxKind]
+    """Value = 99"""
+    ConstraintBlock: ClassVar[SyntaxKind]
+    """Value = 100"""
+    ConstraintDeclaration: ClassVar[SyntaxKind]
+    """Value = 101"""
+    ConstraintPrototype: ClassVar[SyntaxKind]
+    """Value = 102"""
+    ConstructorName: ClassVar[SyntaxKind]
+    """Value = 103"""
+    ContinuousAssign: ClassVar[SyntaxKind]
+    """Value = 104"""
+    CopyClassExpression: ClassVar[SyntaxKind]
+    """Value = 105"""
+    CoverCross: ClassVar[SyntaxKind]
+    """Value = 106"""
+    CoverPropertyStatement: ClassVar[SyntaxKind]
+    """Value = 107"""
+    CoverSequenceStatement: ClassVar[SyntaxKind]
+    """Value = 108"""
+    CoverageBins: ClassVar[SyntaxKind]
+    """Value = 109"""
+    CoverageBinsArraySize: ClassVar[SyntaxKind]
+    """Value = 110"""
+    CoverageIffClause: ClassVar[SyntaxKind]
+    """Value = 111"""
+    CoverageOption: ClassVar[SyntaxKind]
+    """Value = 112"""
+    CovergroupDeclaration: ClassVar[SyntaxKind]
+    """Value = 113"""
+    Coverpoint: ClassVar[SyntaxKind]
+    """Value = 114"""
+    CycleDelay: ClassVar[SyntaxKind]
+    """Value = 115"""
+    DPIExport: ClassVar[SyntaxKind]
+    """Value = 116"""
+    DPIImport: ClassVar[SyntaxKind]
+    """Value = 117"""
+    DataDeclaration: ClassVar[SyntaxKind]
+    """Value = 118"""
+    Declarator: ClassVar[SyntaxKind]
+    """Value = 119"""
+    DefParam: ClassVar[SyntaxKind]
+    """Value = 120"""
+    DefParamAssignment: ClassVar[SyntaxKind]
+    """Value = 121"""
+    DefaultCaseItem: ClassVar[SyntaxKind]
+    """Value = 122"""
+    DefaultClockingReference: ClassVar[SyntaxKind]
+    """Value = 123"""
+    DefaultConfigRule: ClassVar[SyntaxKind]
+    """Value = 124"""
+    DefaultCoverageBinInitializer: ClassVar[SyntaxKind]
+    """Value = 125"""
+    DefaultDecayTimeDirective: ClassVar[SyntaxKind]
+    """Value = 126"""
+    DefaultDisableDeclaration: ClassVar[SyntaxKind]
+    """Value = 127"""
+    DefaultDistItem: ClassVar[SyntaxKind]
+    """Value = 128"""
+    DefaultExtendsClauseArg: ClassVar[SyntaxKind]
+    """Value = 129"""
+    DefaultFunctionPort: ClassVar[SyntaxKind]
+    """Value = 130"""
+    DefaultNetTypeDirective: ClassVar[SyntaxKind]
+    """Value = 131"""
+    DefaultPatternKeyExpression: ClassVar[SyntaxKind]
+    """Value = 132"""
+    DefaultPropertyCaseItem: ClassVar[SyntaxKind]
+    """Value = 133"""
+    DefaultRsCaseItem: ClassVar[SyntaxKind]
+    """Value = 134"""
+    DefaultSkewItem: ClassVar[SyntaxKind]
+    """Value = 135"""
+    DefaultTriregStrengthDirective: ClassVar[SyntaxKind]
+    """Value = 136"""
+    DeferredAssertion: ClassVar[SyntaxKind]
+    """Value = 137"""
+    DefineDirective: ClassVar[SyntaxKind]
+    """Value = 138"""
+    Delay3: ClassVar[SyntaxKind]
+    """Value = 139"""
+    DelayControl: ClassVar[SyntaxKind]
+    """Value = 140"""
+    DelayModeDistributedDirective: ClassVar[SyntaxKind]
+    """Value = 141"""
+    DelayModePathDirective: ClassVar[SyntaxKind]
+    """Value = 142"""
+    DelayModeUnitDirective: ClassVar[SyntaxKind]
+    """Value = 143"""
+    DelayModeZeroDirective: ClassVar[SyntaxKind]
+    """Value = 144"""
+    DelayedSequenceElement: ClassVar[SyntaxKind]
+    """Value = 145"""
+    DelayedSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 146"""
+    DescendingRangeSelect: ClassVar[SyntaxKind]
+    """Value = 147"""
+    DisableConstraint: ClassVar[SyntaxKind]
+    """Value = 148"""
+    DisableForkStatement: ClassVar[SyntaxKind]
+    """Value = 149"""
+    DisableIff: ClassVar[SyntaxKind]
+    """Value = 150"""
+    DisableStatement: ClassVar[SyntaxKind]
+    """Value = 151"""
+    DistConstraintList: ClassVar[SyntaxKind]
+    """Value = 152"""
+    DistItem: ClassVar[SyntaxKind]
+    """Value = 153"""
+    DistWeight: ClassVar[SyntaxKind]
+    """Value = 154"""
+    DivideAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 155"""
+    DivideExpression: ClassVar[SyntaxKind]
+    """Value = 156"""
+    DividerClause: ClassVar[SyntaxKind]
+    """Value = 157"""
+    DoWhileStatement: ClassVar[SyntaxKind]
+    """Value = 158"""
+    DotMemberClause: ClassVar[SyntaxKind]
+    """Value = 159"""
+    DriveStrength: ClassVar[SyntaxKind]
+    """Value = 160"""
+    EdgeControlSpecifier: ClassVar[SyntaxKind]
+    """Value = 161"""
+    EdgeDescriptor: ClassVar[SyntaxKind]
+    """Value = 162"""
+    EdgeSensitivePathSuffix: ClassVar[SyntaxKind]
+    """Value = 163"""
+    ElabSystemTask: ClassVar[SyntaxKind]
+    """Value = 164"""
+    ElementSelect: ClassVar[SyntaxKind]
+    """Value = 165"""
+    ElementSelectExpression: ClassVar[SyntaxKind]
+    """Value = 166"""
+    ElsIfDirective: ClassVar[SyntaxKind]
+    """Value = 167"""
+    ElseClause: ClassVar[SyntaxKind]
+    """Value = 168"""
+    ElseConstraintClause: ClassVar[SyntaxKind]
+    """Value = 169"""
+    ElseDirective: ClassVar[SyntaxKind]
+    """Value = 170"""
+    ElsePropertyClause: ClassVar[SyntaxKind]
+    """Value = 171"""
+    EmptyArgument: ClassVar[SyntaxKind]
+    """Value = 172"""
+    EmptyIdentifierName: ClassVar[SyntaxKind]
+    """Value = 173"""
+    EmptyMember: ClassVar[SyntaxKind]
+    """Value = 174"""
+    EmptyNonAnsiPort: ClassVar[SyntaxKind]
+    """Value = 175"""
+    EmptyPortConnection: ClassVar[SyntaxKind]
+    """Value = 176"""
+    EmptyQueueExpression: ClassVar[SyntaxKind]
+    """Value = 177"""
+    EmptyStatement: ClassVar[SyntaxKind]
+    """Value = 178"""
+    EmptyTimingCheckArg: ClassVar[SyntaxKind]
+    """Value = 179"""
+    EndCellDefineDirective: ClassVar[SyntaxKind]
+    """Value = 180"""
+    EndIfDirective: ClassVar[SyntaxKind]
+    """Value = 181"""
+    EndKeywordsDirective: ClassVar[SyntaxKind]
+    """Value = 182"""
+    EndProtectDirective: ClassVar[SyntaxKind]
+    """Value = 183"""
+    EndProtectedDirective: ClassVar[SyntaxKind]
+    """Value = 184"""
+    EnumType: ClassVar[SyntaxKind]
+    """Value = 185"""
+    EqualityExpression: ClassVar[SyntaxKind]
+    """Value = 186"""
+    EqualsAssertionArgClause: ClassVar[SyntaxKind]
+    """Value = 187"""
+    EqualsTypeClause: ClassVar[SyntaxKind]
+    """Value = 188"""
+    EqualsValueClause: ClassVar[SyntaxKind]
+    """Value = 189"""
+    EventControl: ClassVar[SyntaxKind]
+    """Value = 190"""
+    EventControlWithExpression: ClassVar[SyntaxKind]
+    """Value = 191"""
+    EventType: ClassVar[SyntaxKind]
+    """Value = 192"""
+    ExpectPropertyStatement: ClassVar[SyntaxKind]
+    """Value = 193"""
+    ExplicitAnsiPort: ClassVar[SyntaxKind]
+    """Value = 194"""
+    ExplicitNonAnsiPort: ClassVar[SyntaxKind]
+    """Value = 195"""
+    ExpressionConstraint: ClassVar[SyntaxKind]
+    """Value = 196"""
+    ExpressionCoverageBinInitializer: ClassVar[SyntaxKind]
+    """Value = 197"""
+    ExpressionOrDist: ClassVar[SyntaxKind]
+    """Value = 198"""
+    ExpressionPattern: ClassVar[SyntaxKind]
+    """Value = 199"""
+    ExpressionStatement: ClassVar[SyntaxKind]
+    """Value = 200"""
+    ExpressionTimingCheckArg: ClassVar[SyntaxKind]
+    """Value = 201"""
+    ExtendsClause: ClassVar[SyntaxKind]
+    """Value = 202"""
+    ExternInterfaceMethod: ClassVar[SyntaxKind]
+    """Value = 203"""
+    ExternModuleDecl: ClassVar[SyntaxKind]
+    """Value = 204"""
+    ExternUdpDecl: ClassVar[SyntaxKind]
+    """Value = 205"""
+    FilePathSpec: ClassVar[SyntaxKind]
+    """Value = 206"""
+    FinalBlock: ClassVar[SyntaxKind]
+    """Value = 207"""
+    FirstMatchSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 208"""
+    FollowedByPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 209"""
+    ForLoopStatement: ClassVar[SyntaxKind]
+    """Value = 210"""
+    ForVariableDeclaration: ClassVar[SyntaxKind]
+    """Value = 211"""
+    ForeachLoopList: ClassVar[SyntaxKind]
+    """Value = 212"""
+    ForeachLoopStatement: ClassVar[SyntaxKind]
+    """Value = 213"""
+    ForeverStatement: ClassVar[SyntaxKind]
+    """Value = 214"""
+    ForwardTypeRestriction: ClassVar[SyntaxKind]
+    """Value = 215"""
+    ForwardTypedefDeclaration: ClassVar[SyntaxKind]
+    """Value = 216"""
+    FunctionDeclaration: ClassVar[SyntaxKind]
+    """Value = 217"""
+    FunctionPort: ClassVar[SyntaxKind]
+    """Value = 218"""
+    FunctionPortList: ClassVar[SyntaxKind]
+    """Value = 219"""
+    FunctionPrototype: ClassVar[SyntaxKind]
+    """Value = 220"""
+    GenerateBlock: ClassVar[SyntaxKind]
+    """Value = 221"""
+    GenerateRegion: ClassVar[SyntaxKind]
+    """Value = 222"""
+    GenvarDeclaration: ClassVar[SyntaxKind]
+    """Value = 223"""
+    GreaterThanEqualExpression: ClassVar[SyntaxKind]
+    """Value = 224"""
+    GreaterThanExpression: ClassVar[SyntaxKind]
+    """Value = 225"""
+    HierarchicalInstance: ClassVar[SyntaxKind]
+    """Value = 226"""
+    HierarchyInstantiation: ClassVar[SyntaxKind]
+    """Value = 227"""
+    IdWithExprCoverageBinInitializer: ClassVar[SyntaxKind]
+    """Value = 228"""
+    IdentifierName: ClassVar[SyntaxKind]
+    """Value = 229"""
+    IdentifierSelectName: ClassVar[SyntaxKind]
+    """Value = 230"""
+    IfDefDirective: ClassVar[SyntaxKind]
+    """Value = 231"""
+    IfGenerate: ClassVar[SyntaxKind]
+    """Value = 232"""
+    IfNDefDirective: ClassVar[SyntaxKind]
+    """Value = 233"""
+    IfNonePathDeclaration: ClassVar[SyntaxKind]
+    """Value = 234"""
+    IffEventClause: ClassVar[SyntaxKind]
+    """Value = 235"""
+    IffPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 236"""
+    ImmediateAssertStatement: ClassVar[SyntaxKind]
+    """Value = 237"""
+    ImmediateAssertionMember: ClassVar[SyntaxKind]
+    """Value = 238"""
+    ImmediateAssumeStatement: ClassVar[SyntaxKind]
+    """Value = 239"""
+    ImmediateCoverStatement: ClassVar[SyntaxKind]
+    """Value = 240"""
+    ImplementsClause: ClassVar[SyntaxKind]
+    """Value = 241"""
+    ImplicationConstraint: ClassVar[SyntaxKind]
+    """Value = 242"""
+    ImplicationPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 243"""
+    ImplicitAnsiPort: ClassVar[SyntaxKind]
+    """Value = 244"""
+    ImplicitEventControl: ClassVar[SyntaxKind]
+    """Value = 245"""
+    ImplicitNonAnsiPort: ClassVar[SyntaxKind]
+    """Value = 246"""
+    ImplicitType: ClassVar[SyntaxKind]
+    """Value = 247"""
+    ImpliesPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 248"""
+    IncludeDirective: ClassVar[SyntaxKind]
+    """Value = 249"""
+    InequalityExpression: ClassVar[SyntaxKind]
+    """Value = 250"""
+    InitialBlock: ClassVar[SyntaxKind]
+    """Value = 251"""
+    InsideExpression: ClassVar[SyntaxKind]
+    """Value = 252"""
+    InstanceConfigRule: ClassVar[SyntaxKind]
+    """Value = 253"""
+    InstanceName: ClassVar[SyntaxKind]
+    """Value = 254"""
+    IntType: ClassVar[SyntaxKind]
+    """Value = 255"""
+    IntegerLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 256"""
+    IntegerType: ClassVar[SyntaxKind]
+    """Value = 257"""
+    IntegerVectorExpression: ClassVar[SyntaxKind]
+    """Value = 258"""
+    InterfaceDeclaration: ClassVar[SyntaxKind]
+    """Value = 259"""
+    InterfaceHeader: ClassVar[SyntaxKind]
+    """Value = 260"""
+    InterfacePortHeader: ClassVar[SyntaxKind]
+    """Value = 261"""
+    IntersectClause: ClassVar[SyntaxKind]
+    """Value = 262"""
+    IntersectSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 263"""
+    InvocationExpression: ClassVar[SyntaxKind]
+    """Value = 264"""
+    JumpStatement: ClassVar[SyntaxKind]
+    """Value = 265"""
+    LessThanEqualExpression: ClassVar[SyntaxKind]
+    """Value = 266"""
+    LessThanExpression: ClassVar[SyntaxKind]
+    """Value = 267"""
+    LetDeclaration: ClassVar[SyntaxKind]
+    """Value = 268"""
+    LibraryDeclaration: ClassVar[SyntaxKind]
+    """Value = 269"""
+    LibraryIncDirClause: ClassVar[SyntaxKind]
+    """Value = 270"""
+    LibraryIncludeStatement: ClassVar[SyntaxKind]
+    """Value = 271"""
+    LibraryMap: ClassVar[SyntaxKind]
+    """Value = 272"""
+    LineDirective: ClassVar[SyntaxKind]
+    """Value = 273"""
+    LocalScope: ClassVar[SyntaxKind]
+    """Value = 274"""
+    LocalVariableDeclaration: ClassVar[SyntaxKind]
+    """Value = 275"""
+    LogicType: ClassVar[SyntaxKind]
+    """Value = 276"""
+    LogicalAndExpression: ClassVar[SyntaxKind]
+    """Value = 277"""
+    LogicalEquivalenceExpression: ClassVar[SyntaxKind]
+    """Value = 278"""
+    LogicalImplicationExpression: ClassVar[SyntaxKind]
+    """Value = 279"""
+    LogicalLeftShiftAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 280"""
+    LogicalOrExpression: ClassVar[SyntaxKind]
+    """Value = 281"""
+    LogicalRightShiftAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 282"""
+    LogicalShiftLeftExpression: ClassVar[SyntaxKind]
+    """Value = 283"""
+    LogicalShiftRightExpression: ClassVar[SyntaxKind]
+    """Value = 284"""
+    LongIntType: ClassVar[SyntaxKind]
+    """Value = 285"""
+    LoopConstraint: ClassVar[SyntaxKind]
+    """Value = 286"""
+    LoopGenerate: ClassVar[SyntaxKind]
+    """Value = 287"""
+    LoopStatement: ClassVar[SyntaxKind]
+    """Value = 288"""
+    MacroActualArgument: ClassVar[SyntaxKind]
+    """Value = 289"""
+    MacroActualArgumentList: ClassVar[SyntaxKind]
+    """Value = 290"""
+    MacroArgumentDefault: ClassVar[SyntaxKind]
+    """Value = 291"""
+    MacroFormalArgument: ClassVar[SyntaxKind]
+    """Value = 292"""
+    MacroFormalArgumentList: ClassVar[SyntaxKind]
+    """Value = 293"""
+    MacroUsage: ClassVar[SyntaxKind]
+    """Value = 294"""
+    MatchesClause: ClassVar[SyntaxKind]
+    """Value = 295"""
+    MemberAccessExpression: ClassVar[SyntaxKind]
+    """Value = 296"""
+    MinTypMaxExpression: ClassVar[SyntaxKind]
+    """Value = 297"""
+    ModAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 298"""
+    ModExpression: ClassVar[SyntaxKind]
+    """Value = 299"""
+    ModportClockingPort: ClassVar[SyntaxKind]
+    """Value = 300"""
+    ModportDeclaration: ClassVar[SyntaxKind]
+    """Value = 301"""
+    ModportExplicitPort: ClassVar[SyntaxKind]
+    """Value = 302"""
+    ModportItem: ClassVar[SyntaxKind]
+    """Value = 303"""
+    ModportNamedPort: ClassVar[SyntaxKind]
+    """Value = 304"""
+    ModportSimplePortList: ClassVar[SyntaxKind]
+    """Value = 305"""
+    ModportSubroutinePort: ClassVar[SyntaxKind]
+    """Value = 306"""
+    ModportSubroutinePortList: ClassVar[SyntaxKind]
+    """Value = 307"""
+    ModuleDeclaration: ClassVar[SyntaxKind]
+    """Value = 308"""
+    ModuleHeader: ClassVar[SyntaxKind]
+    """Value = 309"""
+    MultipleConcatenationExpression: ClassVar[SyntaxKind]
+    """Value = 310"""
+    MultiplyAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 311"""
+    MultiplyExpression: ClassVar[SyntaxKind]
+    """Value = 312"""
+    NameValuePragmaExpression: ClassVar[SyntaxKind]
+    """Value = 313"""
+    NamedArgument: ClassVar[SyntaxKind]
+    """Value = 314"""
+    NamedBlockClause: ClassVar[SyntaxKind]
+    """Value = 315"""
+    NamedConditionalDirectiveExpression: ClassVar[SyntaxKind]
+    """Value = 316"""
+    NamedLabel: ClassVar[SyntaxKind]
+    """Value = 317"""
+    NamedParamAssignment: ClassVar[SyntaxKind]
+    """Value = 318"""
+    NamedPortConnection: ClassVar[SyntaxKind]
+    """Value = 319"""
+    NamedStructurePatternMember: ClassVar[SyntaxKind]
+    """Value = 320"""
+    NamedType: ClassVar[SyntaxKind]
+    """Value = 321"""
+    NetAlias: ClassVar[SyntaxKind]
+    """Value = 322"""
+    NetDeclaration: ClassVar[SyntaxKind]
+    """Value = 323"""
+    NetPortHeader: ClassVar[SyntaxKind]
+    """Value = 324"""
+    NetTypeDeclaration: ClassVar[SyntaxKind]
+    """Value = 325"""
+    NewArrayExpression: ClassVar[SyntaxKind]
+    """Value = 326"""
+    NewClassExpression: ClassVar[SyntaxKind]
+    """Value = 327"""
+    NoUnconnectedDriveDirective: ClassVar[SyntaxKind]
+    """Value = 328"""
+    NonAnsiPortList: ClassVar[SyntaxKind]
+    """Value = 329"""
+    NonAnsiUdpPortList: ClassVar[SyntaxKind]
+    """Value = 330"""
+    NonblockingAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 331"""
+    NonblockingEventTriggerStatement: ClassVar[SyntaxKind]
+    """Value = 332"""
+    NullLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 333"""
+    NumberPragmaExpression: ClassVar[SyntaxKind]
+    """Value = 334"""
+    OneStepDelay: ClassVar[SyntaxKind]
+    """Value = 335"""
+    OrAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 336"""
+    OrPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 337"""
+    OrSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 338"""
+    OrderedArgument: ClassVar[SyntaxKind]
+    """Value = 339"""
+    OrderedParamAssignment: ClassVar[SyntaxKind]
+    """Value = 340"""
+    OrderedPortConnection: ClassVar[SyntaxKind]
+    """Value = 341"""
+    OrderedStructurePatternMember: ClassVar[SyntaxKind]
+    """Value = 342"""
+    PackageDeclaration: ClassVar[SyntaxKind]
+    """Value = 343"""
+    PackageExportAllDeclaration: ClassVar[SyntaxKind]
+    """Value = 344"""
+    PackageExportDeclaration: ClassVar[SyntaxKind]
+    """Value = 345"""
+    PackageHeader: ClassVar[SyntaxKind]
+    """Value = 346"""
+    PackageImportDeclaration: ClassVar[SyntaxKind]
+    """Value = 347"""
+    PackageImportItem: ClassVar[SyntaxKind]
+    """Value = 348"""
+    ParallelBlockStatement: ClassVar[SyntaxKind]
+    """Value = 349"""
+    ParameterDeclaration: ClassVar[SyntaxKind]
+    """Value = 350"""
+    ParameterDeclarationStatement: ClassVar[SyntaxKind]
+    """Value = 351"""
+    ParameterPortList: ClassVar[SyntaxKind]
+    """Value = 352"""
+    ParameterValueAssignment: ClassVar[SyntaxKind]
+    """Value = 353"""
+    ParenExpressionList: ClassVar[SyntaxKind]
+    """Value = 354"""
+    ParenPragmaExpression: ClassVar[SyntaxKind]
+    """Value = 355"""
+    ParenthesizedBinsSelectExpr: ClassVar[SyntaxKind]
+    """Value = 356"""
+    ParenthesizedConditionalDirectiveExpression: ClassVar[SyntaxKind]
+    """Value = 357"""
+    ParenthesizedEventExpression: ClassVar[SyntaxKind]
+    """Value = 358"""
+    ParenthesizedExpression: ClassVar[SyntaxKind]
+    """Value = 359"""
+    ParenthesizedPattern: ClassVar[SyntaxKind]
+    """Value = 360"""
+    ParenthesizedPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 361"""
+    ParenthesizedSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 362"""
+    PathDeclaration: ClassVar[SyntaxKind]
+    """Value = 363"""
+    PathDescription: ClassVar[SyntaxKind]
+    """Value = 364"""
+    PatternCaseItem: ClassVar[SyntaxKind]
+    """Value = 365"""
+    PortConcatenation: ClassVar[SyntaxKind]
+    """Value = 366"""
+    PortDeclaration: ClassVar[SyntaxKind]
+    """Value = 367"""
+    PortReference: ClassVar[SyntaxKind]
+    """Value = 368"""
+    PostdecrementExpression: ClassVar[SyntaxKind]
+    """Value = 369"""
+    PostincrementExpression: ClassVar[SyntaxKind]
+    """Value = 370"""
+    PowerExpression: ClassVar[SyntaxKind]
+    """Value = 371"""
+    PragmaDirective: ClassVar[SyntaxKind]
+    """Value = 372"""
+    PrimaryBlockEventExpression: ClassVar[SyntaxKind]
+    """Value = 373"""
+    PrimitiveInstantiation: ClassVar[SyntaxKind]
+    """Value = 374"""
+    ProceduralAssignStatement: ClassVar[SyntaxKind]
+    """Value = 375"""
+    ProceduralDeassignStatement: ClassVar[SyntaxKind]
+    """Value = 376"""
+    ProceduralForceStatement: ClassVar[SyntaxKind]
+    """Value = 377"""
+    ProceduralReleaseStatement: ClassVar[SyntaxKind]
+    """Value = 378"""
+    Production: ClassVar[SyntaxKind]
+    """Value = 379"""
+    ProgramDeclaration: ClassVar[SyntaxKind]
+    """Value = 380"""
+    ProgramHeader: ClassVar[SyntaxKind]
+    """Value = 381"""
+    PropertyDeclaration: ClassVar[SyntaxKind]
+    """Value = 382"""
+    PropertySpec: ClassVar[SyntaxKind]
+    """Value = 383"""
+    PropertyType: ClassVar[SyntaxKind]
+    """Value = 384"""
+    ProtectDirective: ClassVar[SyntaxKind]
+    """Value = 385"""
+    ProtectedDirective: ClassVar[SyntaxKind]
+    """Value = 386"""
+    PullStrength: ClassVar[SyntaxKind]
+    """Value = 387"""
+    PulseStyleDeclaration: ClassVar[SyntaxKind]
+    """Value = 388"""
+    QueueDimensionSpecifier: ClassVar[SyntaxKind]
+    """Value = 389"""
+    RandCaseItem: ClassVar[SyntaxKind]
+    """Value = 390"""
+    RandCaseStatement: ClassVar[SyntaxKind]
+    """Value = 391"""
+    RandJoinClause: ClassVar[SyntaxKind]
+    """Value = 392"""
+    RandSequenceStatement: ClassVar[SyntaxKind]
+    """Value = 393"""
+    RangeCoverageBinInitializer: ClassVar[SyntaxKind]
+    """Value = 394"""
+    RangeDimensionSpecifier: ClassVar[SyntaxKind]
+    """Value = 395"""
+    RangeList: ClassVar[SyntaxKind]
+    """Value = 396"""
+    RealLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 397"""
+    RealTimeType: ClassVar[SyntaxKind]
+    """Value = 398"""
+    RealType: ClassVar[SyntaxKind]
+    """Value = 399"""
+    RegType: ClassVar[SyntaxKind]
+    """Value = 400"""
+    RepeatedEventControl: ClassVar[SyntaxKind]
+    """Value = 401"""
+    ReplicatedAssignmentPattern: ClassVar[SyntaxKind]
+    """Value = 402"""
+    ResetAllDirective: ClassVar[SyntaxKind]
+    """Value = 403"""
+    RestrictPropertyStatement: ClassVar[SyntaxKind]
+    """Value = 404"""
+    ReturnStatement: ClassVar[SyntaxKind]
+    """Value = 405"""
+    RootScope: ClassVar[SyntaxKind]
+    """Value = 406"""
+    RsCase: ClassVar[SyntaxKind]
+    """Value = 407"""
+    RsCodeBlock: ClassVar[SyntaxKind]
+    """Value = 408"""
+    RsElseClause: ClassVar[SyntaxKind]
+    """Value = 409"""
+    RsIfElse: ClassVar[SyntaxKind]
+    """Value = 410"""
+    RsProdItem: ClassVar[SyntaxKind]
+    """Value = 411"""
+    RsRepeat: ClassVar[SyntaxKind]
+    """Value = 412"""
+    RsRule: ClassVar[SyntaxKind]
+    """Value = 413"""
+    RsWeightClause: ClassVar[SyntaxKind]
+    """Value = 414"""
+    SUntilPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 415"""
+    SUntilWithPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 416"""
+    ScopedName: ClassVar[SyntaxKind]
+    """Value = 417"""
+    SeparatedList: ClassVar[SyntaxKind]
+    """Value = 3"""
+    SequenceDeclaration: ClassVar[SyntaxKind]
+    """Value = 418"""
+    SequenceMatchList: ClassVar[SyntaxKind]
+    """Value = 419"""
+    SequenceRepetition: ClassVar[SyntaxKind]
+    """Value = 420"""
+    SequenceType: ClassVar[SyntaxKind]
+    """Value = 421"""
+    SequentialBlockStatement: ClassVar[SyntaxKind]
+    """Value = 422"""
+    ShortIntType: ClassVar[SyntaxKind]
+    """Value = 423"""
+    ShortRealType: ClassVar[SyntaxKind]
+    """Value = 424"""
+    SignalEventExpression: ClassVar[SyntaxKind]
+    """Value = 425"""
+    SignedCastExpression: ClassVar[SyntaxKind]
+    """Value = 426"""
+    SimpleAssignmentPattern: ClassVar[SyntaxKind]
+    """Value = 427"""
+    SimpleBinsSelectExpr: ClassVar[SyntaxKind]
+    """Value = 428"""
+    SimplePathSuffix: ClassVar[SyntaxKind]
+    """Value = 429"""
+    SimplePragmaExpression: ClassVar[SyntaxKind]
+    """Value = 430"""
+    SimplePropertyExpr: ClassVar[SyntaxKind]
+    """Value = 431"""
+    SimpleRangeSelect: ClassVar[SyntaxKind]
+    """Value = 432"""
+    SimpleSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 433"""
+    SolveBeforeConstraint: ClassVar[SyntaxKind]
+    """Value = 434"""
+    SpecifyBlock: ClassVar[SyntaxKind]
+    """Value = 435"""
+    SpecparamDeclaration: ClassVar[SyntaxKind]
+    """Value = 436"""
+    SpecparamDeclarator: ClassVar[SyntaxKind]
+    """Value = 437"""
+    StandardCaseItem: ClassVar[SyntaxKind]
+    """Value = 438"""
+    StandardPropertyCaseItem: ClassVar[SyntaxKind]
+    """Value = 439"""
+    StandardRsCaseItem: ClassVar[SyntaxKind]
+    """Value = 440"""
+    StreamExpression: ClassVar[SyntaxKind]
+    """Value = 441"""
+    StreamExpressionWithRange: ClassVar[SyntaxKind]
+    """Value = 442"""
+    StreamingConcatenationExpression: ClassVar[SyntaxKind]
+    """Value = 443"""
+    StringLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 444"""
+    StringType: ClassVar[SyntaxKind]
+    """Value = 445"""
+    StrongWeakPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 446"""
+    StructType: ClassVar[SyntaxKind]
+    """Value = 447"""
+    StructUnionMember: ClassVar[SyntaxKind]
+    """Value = 448"""
+    StructurePattern: ClassVar[SyntaxKind]
+    """Value = 449"""
+    StructuredAssignmentPattern: ClassVar[SyntaxKind]
+    """Value = 450"""
+    SubtractAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 451"""
+    SubtractExpression: ClassVar[SyntaxKind]
+    """Value = 452"""
+    SuperHandle: ClassVar[SyntaxKind]
+    """Value = 453"""
+    SuperNewDefaultedArgsExpression: ClassVar[SyntaxKind]
+    """Value = 454"""
+    SyntaxList: ClassVar[SyntaxKind]
+    """Value = 1"""
+    SystemName: ClassVar[SyntaxKind]
+    """Value = 455"""
+    SystemTimingCheck: ClassVar[SyntaxKind]
+    """Value = 456"""
+    TaggedPattern: ClassVar[SyntaxKind]
+    """Value = 457"""
+    TaggedUnionExpression: ClassVar[SyntaxKind]
+    """Value = 458"""
+    TaskDeclaration: ClassVar[SyntaxKind]
+    """Value = 459"""
+    ThisHandle: ClassVar[SyntaxKind]
+    """Value = 460"""
+    ThroughoutSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 461"""
+    TimeLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 462"""
+    TimeScaleDirective: ClassVar[SyntaxKind]
+    """Value = 463"""
+    TimeType: ClassVar[SyntaxKind]
+    """Value = 464"""
+    TimeUnitsDeclaration: ClassVar[SyntaxKind]
+    """Value = 465"""
+    TimingCheckEventArg: ClassVar[SyntaxKind]
+    """Value = 466"""
+    TimingCheckEventCondition: ClassVar[SyntaxKind]
+    """Value = 467"""
+    TimingControlExpression: ClassVar[SyntaxKind]
+    """Value = 468"""
+    TimingControlStatement: ClassVar[SyntaxKind]
+    """Value = 469"""
+    TokenList: ClassVar[SyntaxKind]
+    """Value = 2"""
+    TransListCoverageBinInitializer: ClassVar[SyntaxKind]
+    """Value = 470"""
+    TransRange: ClassVar[SyntaxKind]
+    """Value = 471"""
+    TransRepeatRange: ClassVar[SyntaxKind]
+    """Value = 472"""
+    TransSet: ClassVar[SyntaxKind]
+    """Value = 473"""
+    TypeAssignment: ClassVar[SyntaxKind]
+    """Value = 474"""
+    TypeParameterDeclaration: ClassVar[SyntaxKind]
+    """Value = 475"""
+    TypeReference: ClassVar[SyntaxKind]
+    """Value = 476"""
+    TypedefDeclaration: ClassVar[SyntaxKind]
+    """Value = 477"""
+    UdpBody: ClassVar[SyntaxKind]
+    """Value = 478"""
+    UdpDeclaration: ClassVar[SyntaxKind]
+    """Value = 479"""
+    UdpEdgeField: ClassVar[SyntaxKind]
+    """Value = 480"""
+    UdpEntry: ClassVar[SyntaxKind]
+    """Value = 481"""
+    UdpInitialStmt: ClassVar[SyntaxKind]
+    """Value = 482"""
+    UdpInputPortDecl: ClassVar[SyntaxKind]
+    """Value = 483"""
+    UdpOutputPortDecl: ClassVar[SyntaxKind]
+    """Value = 484"""
+    UdpSimpleField: ClassVar[SyntaxKind]
+    """Value = 485"""
+    UnaryBinsSelectExpr: ClassVar[SyntaxKind]
+    """Value = 486"""
+    UnaryBitwiseAndExpression: ClassVar[SyntaxKind]
+    """Value = 487"""
+    UnaryBitwiseNandExpression: ClassVar[SyntaxKind]
+    """Value = 488"""
+    UnaryBitwiseNorExpression: ClassVar[SyntaxKind]
+    """Value = 489"""
+    UnaryBitwiseNotExpression: ClassVar[SyntaxKind]
+    """Value = 490"""
+    UnaryBitwiseOrExpression: ClassVar[SyntaxKind]
+    """Value = 491"""
+    UnaryBitwiseXnorExpression: ClassVar[SyntaxKind]
+    """Value = 492"""
+    UnaryBitwiseXorExpression: ClassVar[SyntaxKind]
+    """Value = 493"""
+    UnaryConditionalDirectiveExpression: ClassVar[SyntaxKind]
+    """Value = 494"""
+    UnaryLogicalNotExpression: ClassVar[SyntaxKind]
+    """Value = 495"""
+    UnaryMinusExpression: ClassVar[SyntaxKind]
+    """Value = 496"""
+    UnaryPlusExpression: ClassVar[SyntaxKind]
+    """Value = 497"""
+    UnaryPredecrementExpression: ClassVar[SyntaxKind]
+    """Value = 498"""
+    UnaryPreincrementExpression: ClassVar[SyntaxKind]
+    """Value = 499"""
+    UnaryPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 500"""
+    UnarySelectPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 501"""
+    UnbasedUnsizedLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 502"""
+    UnconnectedDriveDirective: ClassVar[SyntaxKind]
+    """Value = 503"""
+    UndefDirective: ClassVar[SyntaxKind]
+    """Value = 504"""
+    UndefineAllDirective: ClassVar[SyntaxKind]
+    """Value = 505"""
+    UnionType: ClassVar[SyntaxKind]
+    """Value = 506"""
+    UniquenessConstraint: ClassVar[SyntaxKind]
+    """Value = 507"""
+    UnitScope: ClassVar[SyntaxKind]
+    """Value = 508"""
+    Unknown: ClassVar[SyntaxKind]
+    """Value = 0"""
+    UntilPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 509"""
+    UntilWithPropertyExpr: ClassVar[SyntaxKind]
+    """Value = 510"""
+    Untyped: ClassVar[SyntaxKind]
+    """Value = 511"""
+    UserDefinedNetDeclaration: ClassVar[SyntaxKind]
+    """Value = 512"""
+    ValueRangeExpression: ClassVar[SyntaxKind]
+    """Value = 513"""
+    VariableDimension: ClassVar[SyntaxKind]
+    """Value = 514"""
+    VariablePattern: ClassVar[SyntaxKind]
+    """Value = 515"""
+    VariablePortHeader: ClassVar[SyntaxKind]
+    """Value = 516"""
+    VirtualInterfaceType: ClassVar[SyntaxKind]
+    """Value = 517"""
+    VoidCastedCallStatement: ClassVar[SyntaxKind]
+    """Value = 518"""
+    VoidType: ClassVar[SyntaxKind]
+    """Value = 519"""
+    WaitForkStatement: ClassVar[SyntaxKind]
+    """Value = 520"""
+    WaitOrderStatement: ClassVar[SyntaxKind]
+    """Value = 521"""
+    WaitStatement: ClassVar[SyntaxKind]
+    """Value = 522"""
+    WildcardDimensionSpecifier: ClassVar[SyntaxKind]
+    """Value = 523"""
+    WildcardEqualityExpression: ClassVar[SyntaxKind]
+    """Value = 524"""
+    WildcardInequalityExpression: ClassVar[SyntaxKind]
+    """Value = 525"""
+    WildcardLiteralExpression: ClassVar[SyntaxKind]
+    """Value = 526"""
+    WildcardPattern: ClassVar[SyntaxKind]
+    """Value = 527"""
+    WildcardPortConnection: ClassVar[SyntaxKind]
+    """Value = 528"""
+    WildcardPortList: ClassVar[SyntaxKind]
+    """Value = 529"""
+    WildcardUdpPortList: ClassVar[SyntaxKind]
+    """Value = 530"""
+    WithClause: ClassVar[SyntaxKind]
+    """Value = 531"""
+    WithFunctionClause: ClassVar[SyntaxKind]
+    """Value = 532"""
+    WithFunctionSample: ClassVar[SyntaxKind]
+    """Value = 533"""
+    WithinSequenceExpr: ClassVar[SyntaxKind]
+    """Value = 534"""
+    XorAssignmentExpression: ClassVar[SyntaxKind]
+    """Value = 535"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class SyntaxNode:
-    def __getitem__(self, arg0: int) -> typing.Any:
-        ...
-    def __iter__(self) -> typing.Iterator[typing.Any]:
-        ...
-    def __len__(self) -> int:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __str__(self) -> str:
-        ...
-    def getFirstToken(self) -> Token:
-        ...
-    def getLastToken(self) -> Token:
-        ...
-    def isEquivalentTo(self, other: SyntaxNode) -> bool:
-        ...
+    def value(self) -> int: ...
+
+class SyntaxNode(metaclass=_metaclass):
+    def __getitem__(self, arg0: int) -> typing.Any: ...
+    def __iter__(self) -> typing.Iterator[typing.Any]: ...
+    def __len__(self) -> int: ...
+    def __repr__(self) -> str: ...
+    def __str__(self) -> str: ...
+    def getFirstToken(self) -> Token: ...
+    def getLastToken(self) -> Token: ...
+    def isEquivalentTo(self, other: SyntaxNode) -> bool: ...
     def visit(self, f: typing.Any) -> None:
+        """Visit a pyslang object with a callback function `f`.
+        The callback function `f` should take a single argument, which is the current node being
+            visited.
+        The return value of `f` determines the next node to visit.
+        If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional
+            nodes are visited.
+        If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are
+            visited. For any other return value, including `pyslang.VisitAction.Advance`,
+            the return value is ignored, and the walk continues.
         """
-        Visit a pyslang object with a callback function `f`.
+    @property
+    def kind(self) -> SyntaxKind: ...
+    @property
+    def parent(self) -> SyntaxNode: ...
+    @property
+    def sourceRange(self) -> SourceRange: ...
 
-        The callback function `f` should take a single argument, which is the current node being visited.
+class SyntaxPrinter(metaclass=_metaclass):
+    @staticmethod
+    def printFile(tree: SyntaxTree) -> str: ...
+    @typing.overload
+    def __init__(self) -> None: ...
+    @typing.overload
+    def __init__(self, sourceManager: SourceManager) -> None: ...
+    def append(self, text: str) -> SyntaxPrinter: ...
+    @typing.overload
+    def print(self, trivia: Trivia) -> SyntaxPrinter: ...
+    @typing.overload
+    def print(self, token: Token) -> SyntaxPrinter: ...
+    @typing.overload
+    def print(self, node: SyntaxNode) -> SyntaxPrinter: ...
+    @typing.overload
+    def print(self, tree: SyntaxTree) -> SyntaxPrinter: ...
+    def setExpandIncludes(self, expand: bool) -> SyntaxPrinter: ...
+    def setExpandMacros(self, expand: bool) -> SyntaxPrinter: ...
+    def setIncludeComments(self, include: bool) -> SyntaxPrinter: ...
+    def setIncludeDirectives(self, include: bool) -> SyntaxPrinter: ...
+    def setIncludeMissing(self, include: bool) -> SyntaxPrinter: ...
+    def setIncludeSkipped(self, include: bool) -> SyntaxPrinter: ...
+    def setIncludeTrivia(self, include: bool) -> SyntaxPrinter: ...
+    def setSquashNewlines(self, include: bool) -> SyntaxPrinter: ...
+    def str(self) -> str: ...
 
-        The return value of `f` determines the next node to visit. If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional nodes are visited. If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are visited. For any other return value, including `pyslang.VisitAction.Advance`, the return value is ignored, and the walk continues.
-        """
+class SyntaxRewriter(metaclass=_metaclass):
+    def insert_after(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None: ...
+    def insert_at_back(self, list: Any, newNode: SyntaxNode, separator: Token = ...) -> None: ...
+    def insert_at_front(self, list: Any, newNode: SyntaxNode, separator: Token = ...) -> None: ...
+    def insert_before(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None: ...
+    def remove(self, arg0: SyntaxNode) -> None: ...
+    def replace(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None: ...
     @property
-    def kind(self) -> SyntaxKind:
-        ...
-    @property
-    def parent(self) -> SyntaxNode:
-        ...
-    @property
-    def sourceRange(self) -> SourceRange:
-        ...
-class SyntaxPrinter:
+    def factory(self) -> Any: ...
+
+class SyntaxTree(metaclass=_metaclass):
     @staticmethod
-    def printFile(tree: SyntaxTree) -> str:
-        ...
-    @typing.overload
-    def __init__(self) -> None:
-        ...
-    @typing.overload
-    def __init__(self, sourceManager: SourceManager) -> None:
-        ...
-    def append(self, text: str) -> SyntaxPrinter:
-        ...
-    @typing.overload
-    def print(self, trivia: Trivia) -> SyntaxPrinter:
-        ...
-    @typing.overload
-    def print(self, token: Token) -> SyntaxPrinter:
-        ...
-    @typing.overload
-    def print(self, node: SyntaxNode) -> SyntaxPrinter:
-        ...
-    @typing.overload
-    def print(self, tree: SyntaxTree) -> SyntaxPrinter:
-        ...
-    def setExpandIncludes(self, expand: bool) -> SyntaxPrinter:
-        ...
-    def setExpandMacros(self, expand: bool) -> SyntaxPrinter:
-        ...
-    def setIncludeComments(self, include: bool) -> SyntaxPrinter:
-        ...
-    def setIncludeDirectives(self, include: bool) -> SyntaxPrinter:
-        ...
-    def setIncludeMissing(self, include: bool) -> SyntaxPrinter:
-        ...
-    def setIncludeSkipped(self, include: bool) -> SyntaxPrinter:
-        ...
-    def setIncludeTrivia(self, include: bool) -> SyntaxPrinter:
-        ...
-    def setSquashNewlines(self, include: bool) -> SyntaxPrinter:
-        ...
-    def str(self) -> str:
-        ...
-class SyntaxRewriter:
-    def insert_after(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None:
-        ...
-    def insert_at_back(self, list: Any, newNode: SyntaxNode, separator: Token = ...) -> None:
-        ...
-    def insert_at_front(self, list: Any, newNode: SyntaxNode, separator: Token = ...) -> None:
-        ...
-    def insert_before(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None:
-        ...
-    def remove(self, arg0: SyntaxNode) -> None:
-        ...
-    def replace(self, arg0: SyntaxNode, arg1: SyntaxNode) -> None:
-        ...
-    @property
-    def factory(self) -> Any:
-        ...
-class SyntaxTree:
+    def fromBuffer(
+        buffer: SourceBuffer,
+        sourceManager: SourceManager,
+        options: Bag = ...,
+        inheritedMacros: list[Any] = [],
+    ) -> SyntaxTree: ...
     @staticmethod
-    def fromBuffer(buffer: SourceBuffer, sourceManager: SourceManager, options: Bag = ..., inheritedMacros: List[Any] = []) -> SyntaxTree:
-        ...
-    @staticmethod
-    def fromBuffers(buffers: List[SourceBuffer], sourceManager: SourceManager, options: Bag = ..., inheritedMacros: List[Any] = []) -> SyntaxTree:
-        ...
+    def fromBuffers(
+        buffers: list[SourceBuffer],
+        sourceManager: SourceManager,
+        options: Bag = ...,
+        inheritedMacros: list[Any] = [],
+    ) -> SyntaxTree: ...
     @staticmethod
     @typing.overload
-    def fromFile(path: str) -> SyntaxTree:
-        ...
+    def fromFile(path: str) -> SyntaxTree: ...
     @staticmethod
     @typing.overload
-    def fromFile(path: str, sourceManager: SourceManager, options: Bag = ...) -> SyntaxTree:
-        ...
+    def fromFile(path: str, sourceManager: SourceManager, options: Bag = ...) -> SyntaxTree: ...
     @staticmethod
-    def fromFileInMemory(text: str, sourceManager: SourceManager, name: str = 'source', path: str = '', options: Bag = ...) -> SyntaxTree:
-        ...
-    @staticmethod
-    @typing.overload
-    def fromFiles(paths: List[str]) -> SyntaxTree:
-        ...
-    @staticmethod
-    @typing.overload
-    def fromFiles(paths: List[str], sourceManager: SourceManager, options: Bag = ...) -> SyntaxTree:
-        ...
-    @staticmethod
-    def fromLibraryMapBuffer(buffer: SourceBuffer, sourceManager: SourceManager, options: Bag = ...) -> SyntaxTree:
-        ...
-    @staticmethod
-    def fromLibraryMapFile(path: str, sourceManager: SourceManager, options: Bag = ...) -> SyntaxTree:
-        ...
-    @staticmethod
-    def fromLibraryMapText(text: str, sourceManager: SourceManager, name: str = 'source', path: str = '', options: Bag = ...) -> SyntaxTree:
-        ...
+    def fromFileInMemory(
+        text: str,
+        sourceManager: SourceManager,
+        name: str = "source",
+        path: str = "",
+        options: Bag = ...,
+    ) -> SyntaxTree: ...
     @staticmethod
     @typing.overload
-    def fromText(text: str, name: str = 'source', path: str = '') -> SyntaxTree:
-        ...
+    def fromFiles(paths: list[str]) -> SyntaxTree: ...
+    @staticmethod
+    @typing.overload
+    def fromFiles(
+        paths: list[str], sourceManager: SourceManager, options: Bag = ...
+    ) -> SyntaxTree: ...
+    @staticmethod
+    def fromLibraryMapBuffer(
+        buffer: SourceBuffer, sourceManager: SourceManager, options: Bag = ...
+    ) -> SyntaxTree: ...
+    @staticmethod
+    def fromLibraryMapFile(
+        path: str, sourceManager: SourceManager, options: Bag = ...
+    ) -> SyntaxTree: ...
+    @staticmethod
+    def fromLibraryMapText(
+        text: str,
+        sourceManager: SourceManager,
+        name: str = "source",
+        path: str = "",
+        options: Bag = ...,
+    ) -> SyntaxTree: ...
+    @staticmethod
+    @typing.overload
+    def fromText(text: str, name: str = "source", path: str = "") -> SyntaxTree: ...
     @staticmethod
     @typing.overload
     def fromText(
         text: str,
         sourceManager: SourceManager,
-        name: str = 'source', path: str = '',
+        name: str = "source",
+        path: str = "",
         options: Bag = ...,
-        library: Optional[SourceLibrary] = None
-    ) -> SyntaxTree:
-        ...
+        library: SourceLibrary | None = None,
+    ) -> SyntaxTree: ...
     @staticmethod
-    def getDefaultSourceManager() -> SourceManager:
-        ...
-    def getIncludeDirectives(self) -> List[IncludeMetadata]:
-        ...
+    def getDefaultSourceManager() -> SourceManager: ...
+    def getIncludeDirectives(self) -> list[IncludeMetadata]: ...
     @property
-    def diagnostics(self) -> Diagnostics:
-        ...
+    def diagnostics(self) -> Diagnostics: ...
     @property
-    def isLibraryUnit(self) -> bool:
-        ...
+    def isLibraryUnit(self) -> bool: ...
     @property
-    def options(self) -> Bag:
-        ...
+    def options(self) -> Bag: ...
     @property
-    def root(self) -> SyntaxNode:
-        ...
+    def root(self) -> SyntaxNode: ...
     @property
-    def sourceLibrary(self) -> SourceLibrary:
-        ...
+    def sourceLibrary(self) -> SourceLibrary: ...
     @property
-    def sourceManager(self) -> SourceManager:
-        ...
+    def sourceManager(self) -> SourceManager: ...
+
 class SystemNameSyntax(NameSyntax):
     systemIdentifier: Token
-class SystemSubroutine:
-    class WithClauseMode:
-        """
-        Members:
 
-          None_
+class SystemSubroutine(metaclass=_metaclass):
+    class WithClauseMode(metaclass=_metaclass):
+        Iterator = 1
+        None_ = 0
+        Randomize = 2
 
-          Iterator
+        __members__: dict[str, Self]
 
-          Randomize
-        """
-        Iterator: typing.ClassVar[SystemSubroutine.WithClauseMode]  # value = <WithClauseMode.Iterator: 1>
-        None_: typing.ClassVar[SystemSubroutine.WithClauseMode]  # value = <WithClauseMode.None_: 0>
-        Randomize: typing.ClassVar[SystemSubroutine.WithClauseMode]  # value = <WithClauseMode.Randomize: 2>
-        __members__: typing.ClassVar[dict[str, SystemSubroutine.WithClauseMode]]  # value = {'None_': <WithClauseMode.None_: 0>, 'Iterator': <WithClauseMode.Iterator: 1>, 'Randomize': <WithClauseMode.Randomize: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
+        def value(self) -> int: ...
+
     hasOutputArgs: bool
     kind: SubroutineKind
     knownNameId: Any
     name: str
     withClauseMode: Any
+
     @staticmethod
-    def unevaluatedContext(sourceContext: ASTContext) -> ASTContext:
-        ...
-    def __init__(self, name: str, kind: SubroutineKind) -> None:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def allowClockingArgument(self, argIndex: int) -> bool:
-        ...
-    def allowEmptyArgument(self, argIndex: int) -> bool:
-        ...
-    def badArg(self, context: ASTContext, arg: Any) -> Any:
-        ...
-    def bindArgument(self, argIndex: int, context: ASTContext, syntax: Any, previousArgs: List[Any]) -> Any:
-        ...
-    def checkArgCount(self, context: ASTContext, isMethod: bool, args: List[Any], callRange: Any, min: int, max: int) -> bool:
-        ...
-    def checkArguments(self, context: ASTContext, args: List[Any], range: Any, iterOrThis: Any) -> Any:
-        ...
-    def eval(self, context: EvalContext, args: List[Any], range: Any, callInfo: Any) -> Any:
-        ...
-    def kindStr(self) -> str:
-        ...
-    def noHierarchical(self, context: EvalContext, expr: Any) -> bool:
-        ...
-    def notConst(self, context: EvalContext, range: Any) -> bool:
-        ...
-class SystemTimingCheckKind:
-    """
-    Members:
+    def unevaluatedContext(sourceContext: ASTContext) -> ASTContext: ...
+    def __init__(self, name: str, kind: SubroutineKind) -> None: ...
+    def __repr__(self) -> str: ...
+    def allowClockingArgument(self, argIndex: int) -> bool: ...
+    def allowEmptyArgument(self, argIndex: int) -> bool: ...
+    def badArg(self, context: ASTContext, arg: Any) -> Any: ...
+    def bindArgument(
+        self, argIndex: int, context: ASTContext, syntax: Any, previousArgs: list[Any]
+    ) -> Any: ...
+    def checkArgCount(
+        self,
+        context: ASTContext,
+        isMethod: bool,
+        args: list[Any],
+        callRange: Any,
+        min: int,
+        max: int,
+    ) -> bool: ...
+    def checkArguments(
+        self, context: ASTContext, args: list[Any], range: Any, iterOrThis: Any
+    ) -> Any: ...
+    def eval(self, context: EvalContext, args: list[Any], range: Any, callInfo: Any) -> Any: ...
+    def kindStr(self) -> str: ...
+    def noHierarchical(self, context: EvalContext, expr: Any) -> bool: ...
+    def notConst(self, context: EvalContext, range: Any) -> bool: ...
 
-      Unknown
+class SystemTimingCheckKind(metaclass=_metaclass):
+    FullSkew: ClassVar[SystemTimingCheckKind]
+    """Value = 9"""
+    Hold: ClassVar[SystemTimingCheckKind]
+    """Value = 2"""
+    NoChange: ClassVar[SystemTimingCheckKind]
+    """Value = 12"""
+    Period: ClassVar[SystemTimingCheckKind]
+    """Value = 10"""
+    RecRem: ClassVar[SystemTimingCheckKind]
+    """Value = 6"""
+    Recovery: ClassVar[SystemTimingCheckKind]
+    """Value = 4"""
+    Removal: ClassVar[SystemTimingCheckKind]
+    """Value = 5"""
+    Setup: ClassVar[SystemTimingCheckKind]
+    """Value = 1"""
+    SetupHold: ClassVar[SystemTimingCheckKind]
+    """Value = 3"""
+    Skew: ClassVar[SystemTimingCheckKind]
+    """Value = 7"""
+    TimeSkew: ClassVar[SystemTimingCheckKind]
+    """Value = 8"""
+    Unknown: ClassVar[SystemTimingCheckKind]
+    """Value = 0"""
+    Width: ClassVar[SystemTimingCheckKind]
+    """Value = 11"""
 
-      Setup
+    __members__: dict[str, Self]
 
-      Hold
-
-      SetupHold
-
-      Recovery
-
-      Removal
-
-      RecRem
-
-      Skew
-
-      TimeSkew
-
-      FullSkew
-
-      Period
-
-      Width
-
-      NoChange
-    """
-    FullSkew: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.FullSkew: 9>
-    Hold: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Hold: 2>
-    NoChange: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.NoChange: 12>
-    Period: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Period: 10>
-    RecRem: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.RecRem: 6>
-    Recovery: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Recovery: 4>
-    Removal: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Removal: 5>
-    Setup: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Setup: 1>
-    SetupHold: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.SetupHold: 3>
-    Skew: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Skew: 7>
-    TimeSkew: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.TimeSkew: 8>
-    Unknown: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Unknown: 0>
-    Width: typing.ClassVar[SystemTimingCheckKind]  # value = <SystemTimingCheckKind.Width: 11>
-    __members__: typing.ClassVar[dict[str, SystemTimingCheckKind]]  # value = {'Unknown': <SystemTimingCheckKind.Unknown: 0>, 'Setup': <SystemTimingCheckKind.Setup: 1>, 'Hold': <SystemTimingCheckKind.Hold: 2>, 'SetupHold': <SystemTimingCheckKind.SetupHold: 3>, 'Recovery': <SystemTimingCheckKind.Recovery: 4>, 'Removal': <SystemTimingCheckKind.Removal: 5>, 'RecRem': <SystemTimingCheckKind.RecRem: 6>, 'Skew': <SystemTimingCheckKind.Skew: 7>, 'TimeSkew': <SystemTimingCheckKind.TimeSkew: 8>, 'FullSkew': <SystemTimingCheckKind.FullSkew: 9>, 'Period': <SystemTimingCheckKind.Period: 10>, 'Width': <SystemTimingCheckKind.Width: 11>, 'NoChange': <SystemTimingCheckKind.NoChange: 12>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class SystemTimingCheckSymbol(Symbol):
-    class Arg:
+    class Arg(metaclass=_metaclass):
         @property
-        def condition(self) -> Expression:
-            ...
+        def condition(self) -> Expression: ...
         @property
-        def edge(self) -> EdgeKind:
-            ...
+        def edge(self) -> EdgeKind: ...
         @property
-        def edgeDescriptors(self) -> List[typing.Annotated[list[str], pybind11_stubgen.typing_ext.FixedSize(2)]]:
-            ...
+        def edgeDescriptors(
+            self,
+        ) -> list[list[str]]: ...
         @property
-        def expr(self) -> Expression:
-            ...
+        def expr(self) -> Expression: ...
+
     @property
-    def arguments(self) -> List[Any]:
-        ...
+    def arguments(self) -> list[Any]: ...
     @property
-    def timingCheckKind(self) -> SystemTimingCheckKind:
-        ...
+    def timingCheckKind(self) -> SystemTimingCheckKind: ...
+
 class SystemTimingCheckSyntax(MemberSyntax):
     args: Any
     closeParen: Token
     name: Token
     openParen: Token
     semi: Token
+
 class TaggedPattern(Pattern):
     @property
-    def member(self) -> Any:
-        ...
+    def member(self) -> Any: ...
     @property
-    def valuePattern(self) -> Pattern:
-        ...
+    def valuePattern(self) -> Pattern: ...
+
 class TaggedPatternSyntax(PatternSyntax):
     memberName: Token
     pattern: PatternSyntax
     tagged: Token
+
 class TaggedUnionExpression(Expression):
     @property
-    def member(self) -> Any:
-        ...
+    def member(self) -> Any: ...
     @property
-    def valueExpr(self) -> Expression:
-        ...
+    def valueExpr(self) -> Expression: ...
+
 class TaggedUnionExpressionSyntax(ExpressionSyntax):
     expr: ExpressionSyntax
     member: Token
     tagged: Token
+
 class TempVarSymbol(VariableSymbol):
     pass
+
 class TextDiagnosticClient(DiagnosticClient):
-    def __init__(self) -> None:
-        ...
-    def clear(self) -> None:
-        ...
-    def getString(self) -> str:
-        ...
-    def report(self, diag: ReportedDiagnostic) -> None:
-        ...
-    def showColors(self, show: bool) -> None:
-        ...
-    def showColumn(self, show: bool) -> None:
-        ...
-    def showHierarchyInstance(self, show: Any) -> None:
-        ...
-    def showIncludeStack(self, show: bool) -> None:
-        ...
-    def showLocation(self, show: bool) -> None:
-        ...
-    def showMacroExpansion(self, show: bool) -> None:
-        ...
-    def showOptionName(self, show: bool) -> None:
-        ...
-    def showSourceLine(self, show: bool) -> None:
-        ...
+    def __init__(self) -> None: ...
+    def clear(self) -> None: ...
+    def getString(self) -> str: ...
+    def report(self, diag: ReportedDiagnostic) -> None: ...
+    def showColors(self, show: bool) -> None: ...
+    def showColumn(self, show: bool) -> None: ...
+    def showHierarchyInstance(self, show: Any) -> None: ...
+    def showIncludeStack(self, show: bool) -> None: ...
+    def showLocation(self, show: bool) -> None: ...
+    def showMacroExpansion(self, show: bool) -> None: ...
+    def showOptionName(self, show: bool) -> None: ...
+    def showSourceLine(self, show: bool) -> None: ...
+
 class TimeLiteral(Expression):
     @property
-    def value(self) -> float:
-        ...
-class TimeScale:
+    def value(self) -> float: ...
+
+class TimeScale(metaclass=_metaclass):
     base: TimeScaleValue
     precision: TimeScaleValue
     @staticmethod
-    def fromString(str: str) -> TimeScale | None:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def fromString(str: str) -> TimeScale | None: ...
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, base: TimeScaleValue, precision: TimeScaleValue) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def apply(self, value: float, unit: TimeUnit, roundToPrecision: bool) -> float:
-        ...
+    def __init__(self, base: TimeScaleValue, precision: TimeScaleValue) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def apply(self, value: float, unit: TimeUnit, roundToPrecision: bool) -> float: ...
+
 class TimeScaleDirectiveSyntax(DirectiveSyntax):
     slash: Token
     timePrecision: Token
     timeUnit: Token
-class TimeScaleMagnitude:
-    """
-    Members:
 
-      One
+class TimeScaleMagnitude(metaclass=_metaclass):
+    Hundred: ClassVar[TimeScaleMagnitude]
+    """Value = 100"""
+    One: ClassVar[TimeScaleMagnitude]
+    """Value = 1"""
+    Ten: ClassVar[TimeScaleMagnitude]
+    """Value = 10"""
 
-      Ten
+    __members__: dict[str, Self]
 
-      Hundred
-    """
-    Hundred: typing.ClassVar[TimeScaleMagnitude]  # value = <TimeScaleMagnitude.Hundred: 100>
-    One: typing.ClassVar[TimeScaleMagnitude]  # value = <TimeScaleMagnitude.One: 1>
-    Ten: typing.ClassVar[TimeScaleMagnitude]  # value = <TimeScaleMagnitude.Ten: 10>
-    __members__: typing.ClassVar[dict[str, TimeScaleMagnitude]]  # value = {'One': <TimeScaleMagnitude.One: 1>, 'Ten': <TimeScaleMagnitude.Ten: 10>, 'Hundred': <TimeScaleMagnitude.Hundred: 100>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class TimeScaleValue:
+    def value(self) -> int: ...
+
+class TimeScaleValue(metaclass=_metaclass):
     magnitude: TimeScaleMagnitude
     unit: TimeUnit
     @staticmethod
-    def fromLiteral(value: float, unit: TimeUnit) -> TimeScaleValue | None:
-        ...
+    def fromLiteral(value: float, unit: TimeUnit) -> TimeScaleValue | None: ...
     @staticmethod
-    def fromString(str: str) -> TimeScaleValue | None:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def fromString(str: str) -> TimeScaleValue | None: ...
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, unit: TimeUnit, magnitude: TimeScaleMagnitude) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-class TimeUnit:
-    """
-    Members:
+    def __init__(self, unit: TimeUnit, magnitude: TimeScaleMagnitude) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
 
-      Seconds
+class TimeUnit(metaclass=_metaclass):
+    Femtoseconds: ClassVar[TimeUnit]
+    """Value = 5"""
+    Microseconds: ClassVar[TimeUnit]
+    """Value = 2"""
+    Milliseconds: ClassVar[TimeUnit]
+    """Value = 1"""
+    Nanoseconds: ClassVar[TimeUnit]
+    """Value = 3"""
+    Picoseconds: ClassVar[TimeUnit]
+    """Value = 4"""
+    Seconds: ClassVar[TimeUnit]
+    """Value = 0"""
 
-      Milliseconds
+    __members__: dict[str, Self]
 
-      Microseconds
-
-      Nanoseconds
-
-      Picoseconds
-
-      Femtoseconds
-    """
-    Femtoseconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Femtoseconds: 5>
-    Microseconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Microseconds: 2>
-    Milliseconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Milliseconds: 1>
-    Nanoseconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Nanoseconds: 3>
-    Picoseconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Picoseconds: 4>
-    Seconds: typing.ClassVar[TimeUnit]  # value = <TimeUnit.Seconds: 0>
-    __members__: typing.ClassVar[dict[str, TimeUnit]]  # value = {'Seconds': <TimeUnit.Seconds: 0>, 'Milliseconds': <TimeUnit.Milliseconds: 1>, 'Microseconds': <TimeUnit.Microseconds: 2>, 'Nanoseconds': <TimeUnit.Nanoseconds: 3>, 'Picoseconds': <TimeUnit.Picoseconds: 4>, 'Femtoseconds': <TimeUnit.Femtoseconds: 5>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class TimeUnitsDeclarationSyntax(MemberSyntax):
     divider: DividerClauseSyntax
     keyword: Token
     semi: Token
     time: Token
+
 class TimedStatement(Statement):
     @property
-    def stmt(self) -> Statement:
-        ...
+    def stmt(self) -> Statement: ...
     @property
-    def timing(self) -> TimingControl:
-        ...
+    def timing(self) -> TimingControl: ...
+
 class TimingCheckArgSyntax(SyntaxNode):
     pass
+
 class TimingCheckEventArgSyntax(TimingCheckArgSyntax):
     condition: TimingCheckEventConditionSyntax
     controlSpecifier: EdgeControlSpecifierSyntax
     edge: Token
     terminal: ExpressionSyntax
+
 class TimingCheckEventConditionSyntax(SyntaxNode):
     expr: ExpressionSyntax
     tripleAnd: Token
-class TimingControl:
-    def __repr__(self) -> str:
-        ...
+
+class TimingControl(metaclass=_metaclass):
+    def __repr__(self) -> str: ...
     def visit(self, f: typing.Any) -> None:
+        """Visit a pyslang object with a callback function `f`.
+        The callback function `f` should take a single argument, which is the current node being
+            visited.
+        The return value of `f` determines the next node to visit.
+        If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional
+            nodes are visited.
+        If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are
+            visited. For any other return value, including `pyslang.VisitAction.Advance`,
+            the return value is ignored, and the walk continues.
         """
-        Visit a pyslang object with a callback function `f`.
+    @property
+    def bad(self) -> bool: ...
+    @property
+    def kind(self) -> TimingControlKind: ...
+    @property
+    def sourceRange(self) -> Any: ...
+    @property
+    def syntax(self) -> Any: ...
 
-        The callback function `f` should take a single argument, which is the current node being visited.
-
-        The return value of `f` determines the next node to visit. If `f` ever returns `pyslang.VisitAction.Interrupt`, the visit is aborted and no additional nodes are visited. If `f` returns `pyslang.VisitAction.Skip`, then no child nodes of the current node are visited. For any other return value, including `pyslang.VisitAction.Advance`, the return value is ignored, and the walk continues.
-        """
-    @property
-    def bad(self) -> bool:
-        ...
-    @property
-    def kind(self) -> TimingControlKind:
-        ...
-    @property
-    def sourceRange(self) -> Any:
-        ...
-    @property
-    def syntax(self) -> Any:
-        ...
 class TimingControlExpressionSyntax(ExpressionSyntax):
     expr: ExpressionSyntax
     timing: TimingControlSyntax
-class TimingControlKind:
-    """
-    Members:
 
-      Invalid
+class TimingControlKind(metaclass=_metaclass):
+    BlockEventList: ClassVar[TimingControlKind]
+    """Value = 9"""
+    CycleDelay: ClassVar[TimingControlKind]
+    """Value = 8"""
+    Delay: ClassVar[TimingControlKind]
+    """Value = 1"""
+    Delay3: ClassVar[TimingControlKind]
+    """Value = 6"""
+    EventList: ClassVar[TimingControlKind]
+    """Value = 3"""
+    ImplicitEvent: ClassVar[TimingControlKind]
+    """Value = 4"""
+    Invalid: ClassVar[TimingControlKind]
+    """Value = 0"""
+    OneStepDelay: ClassVar[TimingControlKind]
+    """Value = 7"""
+    RepeatedEvent: ClassVar[TimingControlKind]
+    """Value = 5"""
+    SignalEvent: ClassVar[TimingControlKind]
+    """Value = 2"""
 
-      Delay
+    __members__: dict[str, Self]
 
-      SignalEvent
-
-      EventList
-
-      ImplicitEvent
-
-      RepeatedEvent
-
-      Delay3
-
-      OneStepDelay
-
-      CycleDelay
-
-      BlockEventList
-    """
-    BlockEventList: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.BlockEventList: 9>
-    CycleDelay: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.CycleDelay: 8>
-    Delay: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.Delay: 1>
-    Delay3: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.Delay3: 6>
-    EventList: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.EventList: 3>
-    ImplicitEvent: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.ImplicitEvent: 4>
-    Invalid: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.Invalid: 0>
-    OneStepDelay: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.OneStepDelay: 7>
-    RepeatedEvent: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.RepeatedEvent: 5>
-    SignalEvent: typing.ClassVar[TimingControlKind]  # value = <TimingControlKind.SignalEvent: 2>
-    __members__: typing.ClassVar[dict[str, TimingControlKind]]  # value = {'Invalid': <TimingControlKind.Invalid: 0>, 'Delay': <TimingControlKind.Delay: 1>, 'SignalEvent': <TimingControlKind.SignalEvent: 2>, 'EventList': <TimingControlKind.EventList: 3>, 'ImplicitEvent': <TimingControlKind.ImplicitEvent: 4>, 'RepeatedEvent': <TimingControlKind.RepeatedEvent: 5>, 'Delay3': <TimingControlKind.Delay3: 6>, 'OneStepDelay': <TimingControlKind.OneStepDelay: 7>, 'CycleDelay': <TimingControlKind.CycleDelay: 8>, 'BlockEventList': <TimingControlKind.BlockEventList: 9>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class TimingControlStatementSyntax(StatementSyntax):
     statement: StatementSyntax
     timingControl: TimingControlSyntax
+
 class TimingControlSyntax(SyntaxNode):
     pass
+
 class TimingPathSymbol(Symbol):
-    class ConnectionKind:
-        """
-        Members:
+    class ConnectionKind(metaclass=_metaclass):
+        Full = 0
+        Parallel = 1
 
-          Full
+        __members__: dict[str, Self]
 
-          Parallel
-        """
-        Full: typing.ClassVar[TimingPathSymbol.ConnectionKind]  # value = <ConnectionKind.Full: 0>
-        Parallel: typing.ClassVar[TimingPathSymbol.ConnectionKind]  # value = <ConnectionKind.Parallel: 1>
-        __members__: typing.ClassVar[dict[str, TimingPathSymbol.ConnectionKind]]  # value = {'Full': <ConnectionKind.Full: 0>, 'Parallel': <ConnectionKind.Parallel: 1>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    class Polarity:
-        """
-        Members:
+        def value(self) -> int: ...
 
-          Unknown
+    class Polarity(metaclass=_metaclass):
+        Negative = 2
+        Positive = 1
+        Unknown = 0
 
-          Positive
+        __members__: dict[str, Self]
 
-          Negative
-        """
-        Negative: typing.ClassVar[TimingPathSymbol.Polarity]  # value = <Polarity.Negative: 2>
-        Positive: typing.ClassVar[TimingPathSymbol.Polarity]  # value = <Polarity.Positive: 1>
-        Unknown: typing.ClassVar[TimingPathSymbol.Polarity]  # value = <Polarity.Unknown: 0>
-        __members__: typing.ClassVar[dict[str, TimingPathSymbol.Polarity]]  # value = {'Unknown': <Polarity.Unknown: 0>, 'Positive': <Polarity.Positive: 1>, 'Negative': <Polarity.Negative: 2>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
+        def value(self) -> int: ...
+
     @property
-    def conditionExpr(self) -> Expression:
-        ...
+    def conditionExpr(self) -> Expression: ...
     @property
-    def connectionKind(self) -> Any:
-        ...
+    def connectionKind(self) -> Any: ...
     @property
-    def delays(self) -> List[Expression]:
-        ...
+    def delays(self) -> list[Expression]: ...
     @property
-    def edgeIdentifier(self) -> EdgeKind:
-        ...
+    def edgeIdentifier(self) -> EdgeKind: ...
     @property
-    def edgePolarity(self) -> Any:
-        ...
+    def edgePolarity(self) -> Any: ...
     @property
-    def edgeSourceExpr(self) -> Expression:
-        ...
+    def edgeSourceExpr(self) -> Expression: ...
     @property
-    def inputs(self) -> List[Expression]:
-        ...
+    def inputs(self) -> list[Expression]: ...
     @property
-    def isStateDependent(self) -> bool:
-        ...
+    def isStateDependent(self) -> bool: ...
     @property
-    def outputs(self) -> List[Expression]:
-        ...
+    def outputs(self) -> list[Expression]: ...
     @property
-    def polarity(self) -> Any:
-        ...
-class Token:
-    def __bool__(self) -> bool:
-        ...
-    def __eq__(self, arg0: object) -> bool:
-        ...
+    def polarity(self) -> Any: ...
+
+class Token(metaclass=_metaclass):
+    def __bool__(self) -> bool: ...
+    def __eq__(self, arg0: object) -> bool: ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, strText: str) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        strText: str,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, directive: SyntaxKind) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        directive: SyntaxKind,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, bit: logic_t) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        bit: logic_t,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, value: SVInt) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        value: SVInt,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, value: float, outOfRange: bool, timeUnit: TimeUnit | None) -> None:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        value: float,
+        outOfRange: bool,
+        timeUnit: TimeUnit | None,
+    ) -> None: ...
     @typing.overload
-    def __init__(self, alloc: BumpAllocator, kind: TokenKind, trivia: List[Trivia], rawText: str, location: SourceLocation, base: LiteralBase, isSigned: bool) -> None:
-        ...
-    def __ne__(self, arg0: object) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __init__(
+        self,
+        alloc: BumpAllocator,
+        kind: TokenKind,
+        trivia: list[Trivia],
+        rawText: str,
+        location: SourceLocation,
+        base: LiteralBase,
+        isSigned: bool,
+    ) -> None: ...
+    def __ne__(self, arg0: object) -> bool: ...
+    def __repr__(self) -> str: ...
+    def __str__(self) -> str: ...
     @property
-    def isMissing(self) -> bool:
-        ...
+    def isMissing(self) -> bool: ...
     @property
-    def isOnSameLine(self) -> bool:
-        ...
+    def isOnSameLine(self) -> bool: ...
     @property
-    def kind(self) -> TokenKind:
-        ...
+    def kind(self) -> TokenKind: ...
     @property
-    def location(self) -> SourceLocation:
-        ...
+    def location(self) -> SourceLocation: ...
     @property
-    def range(self) -> SourceRange:
-        ...
+    def range(self) -> SourceRange: ...
     @property
-    def rawText(self) -> str:
-        ...
+    def rawText(self) -> str: ...
     @property
-    def trivia(self) -> List[Trivia]:
-        ...
+    def trivia(self) -> list[Trivia]: ...
     @property
-    def value(self) -> typing.Any:
-        ...
+    def value(self) -> typing.Any: ...
     @property
-    def valueText(self) -> str:
-        ...
-class TokenKind:
-    """
-    Members:
-
-      Unknown
-
-      EndOfFile
-
-      Identifier
-
-      SystemIdentifier
-
-      StringLiteral
-
-      IntegerLiteral
-
-      IntegerBase
-
-      UnbasedUnsizedLiteral
-
-      RealLiteral
-
-      TimeLiteral
-
-      Placeholder
-
-      Apostrophe
-
-      ApostropheOpenBrace
-
-      OpenBrace
-
-      CloseBrace
-
-      OpenBracket
-
-      CloseBracket
-
-      OpenParenthesis
-
-      CloseParenthesis
-
-      Semicolon
-
-      Colon
-
-      ColonEquals
-
-      ColonSlash
-
-      DoubleColon
-
-      Comma
-
-      Dot
-
-      Slash
-
-      Star
-
-      DoubleStar
-
-      StarArrow
-
-      Plus
-
-      DoublePlus
-
-      PlusColon
-
-      PlusDivMinus
-
-      PlusModMinus
-
-      Minus
-
-      DoubleMinus
-
-      MinusColon
-
-      MinusArrow
-
-      MinusDoubleArrow
-
-      Tilde
-
-      TildeAnd
-
-      TildeOr
-
-      TildeXor
-
-      Dollar
-
-      Question
-
-      Hash
-
-      DoubleHash
-
-      HashMinusHash
-
-      HashEqualsHash
-
-      Xor
-
-      XorTilde
-
-      Equals
-
-      DoubleEquals
-
-      DoubleEqualsQuestion
-
-      TripleEquals
-
-      EqualsArrow
-
-      PlusEqual
-
-      MinusEqual
-
-      SlashEqual
-
-      StarEqual
-
-      AndEqual
-
-      OrEqual
-
-      PercentEqual
-
-      XorEqual
-
-      LeftShiftEqual
-
-      TripleLeftShiftEqual
-
-      RightShiftEqual
-
-      TripleRightShiftEqual
-
-      LeftShift
-
-      RightShift
-
-      TripleLeftShift
-
-      TripleRightShift
-
-      Exclamation
-
-      ExclamationEquals
-
-      ExclamationEqualsQuestion
-
-      ExclamationDoubleEquals
-
-      Percent
-
-      LessThan
-
-      LessThanEquals
-
-      LessThanMinusArrow
-
-      GreaterThan
-
-      GreaterThanEquals
-
-      Or
-
-      DoubleOr
-
-      OrMinusArrow
-
-      OrEqualsArrow
-
-      At
-
-      DoubleAt
-
-      And
-
-      DoubleAnd
-
-      TripleAnd
-
-      OneStep
-
-      AcceptOnKeyword
-
-      AliasKeyword
-
-      AlwaysKeyword
-
-      AlwaysCombKeyword
-
-      AlwaysFFKeyword
-
-      AlwaysLatchKeyword
-
-      AndKeyword
-
-      AssertKeyword
-
-      AssignKeyword
-
-      AssumeKeyword
-
-      AutomaticKeyword
-
-      BeforeKeyword
-
-      BeginKeyword
-
-      BindKeyword
-
-      BinsKeyword
-
-      BinsOfKeyword
-
-      BitKeyword
-
-      BreakKeyword
-
-      BufKeyword
-
-      BufIf0Keyword
-
-      BufIf1Keyword
-
-      ByteKeyword
-
-      CaseKeyword
-
-      CaseXKeyword
-
-      CaseZKeyword
-
-      CellKeyword
-
-      CHandleKeyword
-
-      CheckerKeyword
-
-      ClassKeyword
-
-      ClockingKeyword
-
-      CmosKeyword
-
-      ConfigKeyword
-
-      ConstKeyword
-
-      ConstraintKeyword
-
-      ContextKeyword
-
-      ContinueKeyword
-
-      CoverKeyword
-
-      CoverGroupKeyword
-
-      CoverPointKeyword
-
-      CrossKeyword
-
-      DeassignKeyword
-
-      DefaultKeyword
-
-      DefParamKeyword
-
-      DesignKeyword
-
-      DisableKeyword
-
-      DistKeyword
-
-      DoKeyword
-
-      EdgeKeyword
-
-      ElseKeyword
-
-      EndKeyword
-
-      EndCaseKeyword
-
-      EndCheckerKeyword
-
-      EndClassKeyword
-
-      EndClockingKeyword
-
-      EndConfigKeyword
-
-      EndFunctionKeyword
-
-      EndGenerateKeyword
-
-      EndGroupKeyword
-
-      EndInterfaceKeyword
-
-      EndModuleKeyword
-
-      EndPackageKeyword
-
-      EndPrimitiveKeyword
-
-      EndProgramKeyword
-
-      EndPropertyKeyword
-
-      EndSpecifyKeyword
-
-      EndSequenceKeyword
-
-      EndTableKeyword
-
-      EndTaskKeyword
-
-      EnumKeyword
-
-      EventKeyword
-
-      EventuallyKeyword
-
-      ExpectKeyword
-
-      ExportKeyword
-
-      ExtendsKeyword
-
-      ExternKeyword
-
-      FinalKeyword
-
-      FirstMatchKeyword
-
-      ForKeyword
-
-      ForceKeyword
-
-      ForeachKeyword
-
-      ForeverKeyword
-
-      ForkKeyword
-
-      ForkJoinKeyword
-
-      FunctionKeyword
-
-      GenerateKeyword
-
-      GenVarKeyword
-
-      GlobalKeyword
-
-      HighZ0Keyword
-
-      HighZ1Keyword
-
-      IfKeyword
-
-      IffKeyword
-
-      IfNoneKeyword
-
-      IgnoreBinsKeyword
-
-      IllegalBinsKeyword
-
-      ImplementsKeyword
-
-      ImpliesKeyword
-
-      ImportKeyword
-
-      IncDirKeyword
-
-      IncludeKeyword
-
-      InitialKeyword
-
-      InOutKeyword
-
-      InputKeyword
-
-      InsideKeyword
-
-      InstanceKeyword
-
-      IntKeyword
-
-      IntegerKeyword
-
-      InterconnectKeyword
-
-      InterfaceKeyword
-
-      IntersectKeyword
-
-      JoinKeyword
-
-      JoinAnyKeyword
-
-      JoinNoneKeyword
-
-      LargeKeyword
-
-      LetKeyword
-
-      LibListKeyword
-
-      LibraryKeyword
-
-      LocalKeyword
-
-      LocalParamKeyword
-
-      LogicKeyword
-
-      LongIntKeyword
-
-      MacromoduleKeyword
-
-      MatchesKeyword
-
-      MediumKeyword
-
-      ModPortKeyword
-
-      ModuleKeyword
-
-      NandKeyword
-
-      NegEdgeKeyword
-
-      NetTypeKeyword
-
-      NewKeyword
-
-      NextTimeKeyword
-
-      NmosKeyword
-
-      NorKeyword
-
-      NoShowCancelledKeyword
-
-      NotKeyword
-
-      NotIf0Keyword
-
-      NotIf1Keyword
-
-      NullKeyword
-
-      OrKeyword
-
-      OutputKeyword
-
-      PackageKeyword
-
-      PackedKeyword
-
-      ParameterKeyword
-
-      PmosKeyword
-
-      PosEdgeKeyword
-
-      PrimitiveKeyword
-
-      PriorityKeyword
-
-      ProgramKeyword
-
-      PropertyKeyword
-
-      ProtectedKeyword
-
-      Pull0Keyword
-
-      Pull1Keyword
-
-      PullDownKeyword
-
-      PullUpKeyword
-
-      PulseStyleOnDetectKeyword
-
-      PulseStyleOnEventKeyword
-
-      PureKeyword
-
-      RandKeyword
-
-      RandCKeyword
-
-      RandCaseKeyword
-
-      RandSequenceKeyword
-
-      RcmosKeyword
-
-      RealKeyword
-
-      RealTimeKeyword
-
-      RefKeyword
-
-      RegKeyword
-
-      RejectOnKeyword
-
-      ReleaseKeyword
-
-      RepeatKeyword
-
-      RestrictKeyword
-
-      ReturnKeyword
-
-      RnmosKeyword
-
-      RpmosKeyword
-
-      RtranKeyword
-
-      RtranIf0Keyword
-
-      RtranIf1Keyword
-
-      SAlwaysKeyword
-
-      SEventuallyKeyword
-
-      SNextTimeKeyword
-
-      SUntilKeyword
-
-      SUntilWithKeyword
-
-      ScalaredKeyword
-
-      SequenceKeyword
-
-      ShortIntKeyword
-
-      ShortRealKeyword
-
-      ShowCancelledKeyword
-
-      SignedKeyword
-
-      SmallKeyword
-
-      SoftKeyword
-
-      SolveKeyword
-
-      SpecifyKeyword
-
-      SpecParamKeyword
-
-      StaticKeyword
-
-      StringKeyword
-
-      StrongKeyword
-
-      Strong0Keyword
-
-      Strong1Keyword
-
-      StructKeyword
-
-      SuperKeyword
-
-      Supply0Keyword
-
-      Supply1Keyword
-
-      SyncAcceptOnKeyword
-
-      SyncRejectOnKeyword
-
-      TableKeyword
-
-      TaggedKeyword
-
-      TaskKeyword
-
-      ThisKeyword
-
-      ThroughoutKeyword
-
-      TimeKeyword
-
-      TimePrecisionKeyword
-
-      TimeUnitKeyword
-
-      TranKeyword
-
-      TranIf0Keyword
-
-      TranIf1Keyword
-
-      TriKeyword
-
-      Tri0Keyword
-
-      Tri1Keyword
-
-      TriAndKeyword
-
-      TriOrKeyword
-
-      TriRegKeyword
-
-      TypeKeyword
-
-      TypedefKeyword
-
-      UnionKeyword
-
-      UniqueKeyword
-
-      Unique0Keyword
-
-      UnsignedKeyword
-
-      UntilKeyword
-
-      UntilWithKeyword
-
-      UntypedKeyword
-
-      UseKeyword
-
-      UWireKeyword
-
-      VarKeyword
-
-      VectoredKeyword
-
-      VirtualKeyword
-
-      VoidKeyword
-
-      WaitKeyword
-
-      WaitOrderKeyword
-
-      WAndKeyword
-
-      WeakKeyword
-
-      Weak0Keyword
-
-      Weak1Keyword
-
-      WhileKeyword
-
-      WildcardKeyword
-
-      WireKeyword
-
-      WithKeyword
-
-      WithinKeyword
-
-      WOrKeyword
-
-      XnorKeyword
-
-      XorKeyword
-
-      UnitSystemName
-
-      RootSystemName
-
-      Directive
-
-      IncludeFileName
-
-      MacroUsage
-
-      MacroQuote
-
-      MacroTripleQuote
-
-      MacroEscapedQuote
-
-      MacroPaste
-
-      EmptyMacroArgument
-
-      LineContinuation
-    """
-    AcceptOnKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AcceptOnKeyword: 93>
-    AliasKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AliasKeyword: 94>
-    AlwaysCombKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AlwaysCombKeyword: 96>
-    AlwaysFFKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AlwaysFFKeyword: 97>
-    AlwaysKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AlwaysKeyword: 95>
-    AlwaysLatchKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AlwaysLatchKeyword: 98>
-    And: typing.ClassVar[TokenKind]  # value = <TokenKind.And: 89>
-    AndEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.AndEqual: 61>
-    AndKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AndKeyword: 99>
-    Apostrophe: typing.ClassVar[TokenKind]  # value = <TokenKind.Apostrophe: 11>
-    ApostropheOpenBrace: typing.ClassVar[TokenKind]  # value = <TokenKind.ApostropheOpenBrace: 12>
-    AssertKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AssertKeyword: 100>
-    AssignKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AssignKeyword: 101>
-    AssumeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AssumeKeyword: 102>
-    At: typing.ClassVar[TokenKind]  # value = <TokenKind.At: 87>
-    AutomaticKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.AutomaticKeyword: 103>
-    BeforeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BeforeKeyword: 104>
-    BeginKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BeginKeyword: 105>
-    BindKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BindKeyword: 106>
-    BinsKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BinsKeyword: 107>
-    BinsOfKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BinsOfKeyword: 108>
-    BitKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BitKeyword: 109>
-    BreakKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BreakKeyword: 110>
-    BufIf0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BufIf0Keyword: 112>
-    BufIf1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BufIf1Keyword: 113>
-    BufKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.BufKeyword: 111>
-    ByteKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ByteKeyword: 114>
-    CHandleKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CHandleKeyword: 119>
-    CaseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CaseKeyword: 115>
-    CaseXKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CaseXKeyword: 116>
-    CaseZKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CaseZKeyword: 117>
-    CellKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CellKeyword: 118>
-    CheckerKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CheckerKeyword: 120>
-    ClassKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ClassKeyword: 121>
-    ClockingKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ClockingKeyword: 122>
-    CloseBrace: typing.ClassVar[TokenKind]  # value = <TokenKind.CloseBrace: 14>
-    CloseBracket: typing.ClassVar[TokenKind]  # value = <TokenKind.CloseBracket: 16>
-    CloseParenthesis: typing.ClassVar[TokenKind]  # value = <TokenKind.CloseParenthesis: 18>
-    CmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CmosKeyword: 123>
-    Colon: typing.ClassVar[TokenKind]  # value = <TokenKind.Colon: 20>
-    ColonEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.ColonEquals: 21>
-    ColonSlash: typing.ClassVar[TokenKind]  # value = <TokenKind.ColonSlash: 22>
-    Comma: typing.ClassVar[TokenKind]  # value = <TokenKind.Comma: 24>
-    ConfigKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ConfigKeyword: 124>
-    ConstKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ConstKeyword: 125>
-    ConstraintKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ConstraintKeyword: 126>
-    ContextKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ContextKeyword: 127>
-    ContinueKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ContinueKeyword: 128>
-    CoverGroupKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CoverGroupKeyword: 130>
-    CoverKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CoverKeyword: 129>
-    CoverPointKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CoverPointKeyword: 131>
-    CrossKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.CrossKeyword: 132>
-    DeassignKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DeassignKeyword: 133>
-    DefParamKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DefParamKeyword: 135>
-    DefaultKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DefaultKeyword: 134>
-    DesignKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DesignKeyword: 136>
-    Directive: typing.ClassVar[TokenKind]  # value = <TokenKind.Directive: 343>
-    DisableKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DisableKeyword: 137>
-    DistKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DistKeyword: 138>
-    DoKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.DoKeyword: 139>
-    Dollar: typing.ClassVar[TokenKind]  # value = <TokenKind.Dollar: 44>
-    Dot: typing.ClassVar[TokenKind]  # value = <TokenKind.Dot: 25>
-    DoubleAnd: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleAnd: 90>
-    DoubleAt: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleAt: 88>
-    DoubleColon: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleColon: 23>
-    DoubleEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleEquals: 53>
-    DoubleEqualsQuestion: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleEqualsQuestion: 54>
-    DoubleHash: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleHash: 47>
-    DoubleMinus: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleMinus: 36>
-    DoubleOr: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleOr: 84>
-    DoublePlus: typing.ClassVar[TokenKind]  # value = <TokenKind.DoublePlus: 31>
-    DoubleStar: typing.ClassVar[TokenKind]  # value = <TokenKind.DoubleStar: 28>
-    EdgeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EdgeKeyword: 140>
-    ElseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ElseKeyword: 141>
-    EmptyMacroArgument: typing.ClassVar[TokenKind]  # value = <TokenKind.EmptyMacroArgument: 350>
-    EndCaseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndCaseKeyword: 143>
-    EndCheckerKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndCheckerKeyword: 144>
-    EndClassKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndClassKeyword: 145>
-    EndClockingKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndClockingKeyword: 146>
-    EndConfigKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndConfigKeyword: 147>
-    EndFunctionKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndFunctionKeyword: 148>
-    EndGenerateKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndGenerateKeyword: 149>
-    EndGroupKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndGroupKeyword: 150>
-    EndInterfaceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndInterfaceKeyword: 151>
-    EndKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndKeyword: 142>
-    EndModuleKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndModuleKeyword: 152>
-    EndOfFile: typing.ClassVar[TokenKind]  # value = <TokenKind.EndOfFile: 1>
-    EndPackageKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndPackageKeyword: 153>
-    EndPrimitiveKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndPrimitiveKeyword: 154>
-    EndProgramKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndProgramKeyword: 155>
-    EndPropertyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndPropertyKeyword: 156>
-    EndSequenceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndSequenceKeyword: 158>
-    EndSpecifyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndSpecifyKeyword: 157>
-    EndTableKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndTableKeyword: 159>
-    EndTaskKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EndTaskKeyword: 160>
-    EnumKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EnumKeyword: 161>
-    Equals: typing.ClassVar[TokenKind]  # value = <TokenKind.Equals: 52>
-    EqualsArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.EqualsArrow: 56>
-    EventKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EventKeyword: 162>
-    EventuallyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.EventuallyKeyword: 163>
-    Exclamation: typing.ClassVar[TokenKind]  # value = <TokenKind.Exclamation: 73>
-    ExclamationDoubleEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.ExclamationDoubleEquals: 76>
-    ExclamationEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.ExclamationEquals: 74>
-    ExclamationEqualsQuestion: typing.ClassVar[TokenKind]  # value = <TokenKind.ExclamationEqualsQuestion: 75>
-    ExpectKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ExpectKeyword: 164>
-    ExportKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ExportKeyword: 165>
-    ExtendsKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ExtendsKeyword: 166>
-    ExternKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ExternKeyword: 167>
-    FinalKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.FinalKeyword: 168>
-    FirstMatchKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.FirstMatchKeyword: 169>
-    ForKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForKeyword: 170>
-    ForceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForceKeyword: 171>
-    ForeachKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForeachKeyword: 172>
-    ForeverKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForeverKeyword: 173>
-    ForkJoinKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForkJoinKeyword: 175>
-    ForkKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ForkKeyword: 174>
-    FunctionKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.FunctionKeyword: 176>
-    GenVarKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.GenVarKeyword: 178>
-    GenerateKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.GenerateKeyword: 177>
-    GlobalKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.GlobalKeyword: 179>
-    GreaterThan: typing.ClassVar[TokenKind]  # value = <TokenKind.GreaterThan: 81>
-    GreaterThanEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.GreaterThanEquals: 82>
-    Hash: typing.ClassVar[TokenKind]  # value = <TokenKind.Hash: 46>
-    HashEqualsHash: typing.ClassVar[TokenKind]  # value = <TokenKind.HashEqualsHash: 49>
-    HashMinusHash: typing.ClassVar[TokenKind]  # value = <TokenKind.HashMinusHash: 48>
-    HighZ0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.HighZ0Keyword: 180>
-    HighZ1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.HighZ1Keyword: 181>
-    Identifier: typing.ClassVar[TokenKind]  # value = <TokenKind.Identifier: 2>
-    IfKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IfKeyword: 182>
-    IfNoneKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IfNoneKeyword: 184>
-    IffKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IffKeyword: 183>
-    IgnoreBinsKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IgnoreBinsKeyword: 185>
-    IllegalBinsKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IllegalBinsKeyword: 186>
-    ImplementsKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ImplementsKeyword: 187>
-    ImpliesKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ImpliesKeyword: 188>
-    ImportKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ImportKeyword: 189>
-    InOutKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InOutKeyword: 193>
-    IncDirKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IncDirKeyword: 190>
-    IncludeFileName: typing.ClassVar[TokenKind]  # value = <TokenKind.IncludeFileName: 344>
-    IncludeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IncludeKeyword: 191>
-    InitialKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InitialKeyword: 192>
-    InputKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InputKeyword: 194>
-    InsideKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InsideKeyword: 195>
-    InstanceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InstanceKeyword: 196>
-    IntKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IntKeyword: 197>
-    IntegerBase: typing.ClassVar[TokenKind]  # value = <TokenKind.IntegerBase: 6>
-    IntegerKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IntegerKeyword: 198>
-    IntegerLiteral: typing.ClassVar[TokenKind]  # value = <TokenKind.IntegerLiteral: 5>
-    InterconnectKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InterconnectKeyword: 199>
-    InterfaceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.InterfaceKeyword: 200>
-    IntersectKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.IntersectKeyword: 201>
-    JoinAnyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.JoinAnyKeyword: 203>
-    JoinKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.JoinKeyword: 202>
-    JoinNoneKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.JoinNoneKeyword: 204>
-    LargeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LargeKeyword: 205>
-    LeftShift: typing.ClassVar[TokenKind]  # value = <TokenKind.LeftShift: 69>
-    LeftShiftEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.LeftShiftEqual: 65>
-    LessThan: typing.ClassVar[TokenKind]  # value = <TokenKind.LessThan: 78>
-    LessThanEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.LessThanEquals: 79>
-    LessThanMinusArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.LessThanMinusArrow: 80>
-    LetKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LetKeyword: 206>
-    LibListKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LibListKeyword: 207>
-    LibraryKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LibraryKeyword: 208>
-    LineContinuation: typing.ClassVar[TokenKind]  # value = <TokenKind.LineContinuation: 351>
-    LocalKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LocalKeyword: 209>
-    LocalParamKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LocalParamKeyword: 210>
-    LogicKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LogicKeyword: 211>
-    LongIntKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.LongIntKeyword: 212>
-    MacroEscapedQuote: typing.ClassVar[TokenKind]  # value = <TokenKind.MacroEscapedQuote: 348>
-    MacroPaste: typing.ClassVar[TokenKind]  # value = <TokenKind.MacroPaste: 349>
-    MacroQuote: typing.ClassVar[TokenKind]  # value = <TokenKind.MacroQuote: 346>
-    MacroTripleQuote: typing.ClassVar[TokenKind]  # value = <TokenKind.MacroTripleQuote: 347>
-    MacroUsage: typing.ClassVar[TokenKind]  # value = <TokenKind.MacroUsage: 345>
-    MacromoduleKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.MacromoduleKeyword: 213>
-    MatchesKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.MatchesKeyword: 214>
-    MediumKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.MediumKeyword: 215>
-    Minus: typing.ClassVar[TokenKind]  # value = <TokenKind.Minus: 35>
-    MinusArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.MinusArrow: 38>
-    MinusColon: typing.ClassVar[TokenKind]  # value = <TokenKind.MinusColon: 37>
-    MinusDoubleArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.MinusDoubleArrow: 39>
-    MinusEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.MinusEqual: 58>
-    ModPortKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ModPortKeyword: 216>
-    ModuleKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ModuleKeyword: 217>
-    NandKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NandKeyword: 218>
-    NegEdgeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NegEdgeKeyword: 219>
-    NetTypeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NetTypeKeyword: 220>
-    NewKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NewKeyword: 221>
-    NextTimeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NextTimeKeyword: 222>
-    NmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NmosKeyword: 223>
-    NoShowCancelledKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NoShowCancelledKeyword: 225>
-    NorKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NorKeyword: 224>
-    NotIf0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NotIf0Keyword: 227>
-    NotIf1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NotIf1Keyword: 228>
-    NotKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NotKeyword: 226>
-    NullKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.NullKeyword: 229>
-    OneStep: typing.ClassVar[TokenKind]  # value = <TokenKind.OneStep: 92>
-    OpenBrace: typing.ClassVar[TokenKind]  # value = <TokenKind.OpenBrace: 13>
-    OpenBracket: typing.ClassVar[TokenKind]  # value = <TokenKind.OpenBracket: 15>
-    OpenParenthesis: typing.ClassVar[TokenKind]  # value = <TokenKind.OpenParenthesis: 17>
-    Or: typing.ClassVar[TokenKind]  # value = <TokenKind.Or: 83>
-    OrEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.OrEqual: 62>
-    OrEqualsArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.OrEqualsArrow: 86>
-    OrKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.OrKeyword: 230>
-    OrMinusArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.OrMinusArrow: 85>
-    OutputKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.OutputKeyword: 231>
-    PackageKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PackageKeyword: 232>
-    PackedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PackedKeyword: 233>
-    ParameterKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ParameterKeyword: 234>
-    Percent: typing.ClassVar[TokenKind]  # value = <TokenKind.Percent: 77>
-    PercentEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.PercentEqual: 63>
-    Placeholder: typing.ClassVar[TokenKind]  # value = <TokenKind.Placeholder: 10>
-    Plus: typing.ClassVar[TokenKind]  # value = <TokenKind.Plus: 30>
-    PlusColon: typing.ClassVar[TokenKind]  # value = <TokenKind.PlusColon: 32>
-    PlusDivMinus: typing.ClassVar[TokenKind]  # value = <TokenKind.PlusDivMinus: 33>
-    PlusEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.PlusEqual: 57>
-    PlusModMinus: typing.ClassVar[TokenKind]  # value = <TokenKind.PlusModMinus: 34>
-    PmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PmosKeyword: 235>
-    PosEdgeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PosEdgeKeyword: 236>
-    PrimitiveKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PrimitiveKeyword: 237>
-    PriorityKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PriorityKeyword: 238>
-    ProgramKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ProgramKeyword: 239>
-    PropertyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PropertyKeyword: 240>
-    ProtectedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ProtectedKeyword: 241>
-    Pull0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Pull0Keyword: 242>
-    Pull1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Pull1Keyword: 243>
-    PullDownKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PullDownKeyword: 244>
-    PullUpKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PullUpKeyword: 245>
-    PulseStyleOnDetectKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PulseStyleOnDetectKeyword: 246>
-    PulseStyleOnEventKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PulseStyleOnEventKeyword: 247>
-    PureKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.PureKeyword: 248>
-    Question: typing.ClassVar[TokenKind]  # value = <TokenKind.Question: 45>
-    RandCKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RandCKeyword: 250>
-    RandCaseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RandCaseKeyword: 251>
-    RandKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RandKeyword: 249>
-    RandSequenceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RandSequenceKeyword: 252>
-    RcmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RcmosKeyword: 253>
-    RealKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RealKeyword: 254>
-    RealLiteral: typing.ClassVar[TokenKind]  # value = <TokenKind.RealLiteral: 8>
-    RealTimeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RealTimeKeyword: 255>
-    RefKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RefKeyword: 256>
-    RegKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RegKeyword: 257>
-    RejectOnKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RejectOnKeyword: 258>
-    ReleaseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ReleaseKeyword: 259>
-    RepeatKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RepeatKeyword: 260>
-    RestrictKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RestrictKeyword: 261>
-    ReturnKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ReturnKeyword: 262>
-    RightShift: typing.ClassVar[TokenKind]  # value = <TokenKind.RightShift: 70>
-    RightShiftEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.RightShiftEqual: 67>
-    RnmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RnmosKeyword: 263>
-    RootSystemName: typing.ClassVar[TokenKind]  # value = <TokenKind.RootSystemName: 342>
-    RpmosKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RpmosKeyword: 264>
-    RtranIf0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RtranIf0Keyword: 266>
-    RtranIf1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RtranIf1Keyword: 267>
-    RtranKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.RtranKeyword: 265>
-    SAlwaysKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SAlwaysKeyword: 268>
-    SEventuallyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SEventuallyKeyword: 269>
-    SNextTimeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SNextTimeKeyword: 270>
-    SUntilKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SUntilKeyword: 271>
-    SUntilWithKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SUntilWithKeyword: 272>
-    ScalaredKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ScalaredKeyword: 273>
-    Semicolon: typing.ClassVar[TokenKind]  # value = <TokenKind.Semicolon: 19>
-    SequenceKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SequenceKeyword: 274>
-    ShortIntKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ShortIntKeyword: 275>
-    ShortRealKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ShortRealKeyword: 276>
-    ShowCancelledKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ShowCancelledKeyword: 277>
-    SignedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SignedKeyword: 278>
-    Slash: typing.ClassVar[TokenKind]  # value = <TokenKind.Slash: 26>
-    SlashEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.SlashEqual: 59>
-    SmallKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SmallKeyword: 279>
-    SoftKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SoftKeyword: 280>
-    SolveKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SolveKeyword: 281>
-    SpecParamKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SpecParamKeyword: 283>
-    SpecifyKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SpecifyKeyword: 282>
-    Star: typing.ClassVar[TokenKind]  # value = <TokenKind.Star: 27>
-    StarArrow: typing.ClassVar[TokenKind]  # value = <TokenKind.StarArrow: 29>
-    StarEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.StarEqual: 60>
-    StaticKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.StaticKeyword: 284>
-    StringKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.StringKeyword: 285>
-    StringLiteral: typing.ClassVar[TokenKind]  # value = <TokenKind.StringLiteral: 4>
-    Strong0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Strong0Keyword: 287>
-    Strong1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Strong1Keyword: 288>
-    StrongKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.StrongKeyword: 286>
-    StructKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.StructKeyword: 289>
-    SuperKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SuperKeyword: 290>
-    Supply0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Supply0Keyword: 291>
-    Supply1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Supply1Keyword: 292>
-    SyncAcceptOnKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SyncAcceptOnKeyword: 293>
-    SyncRejectOnKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.SyncRejectOnKeyword: 294>
-    SystemIdentifier: typing.ClassVar[TokenKind]  # value = <TokenKind.SystemIdentifier: 3>
-    TableKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TableKeyword: 295>
-    TaggedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TaggedKeyword: 296>
-    TaskKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TaskKeyword: 297>
-    ThisKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ThisKeyword: 298>
-    ThroughoutKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.ThroughoutKeyword: 299>
-    Tilde: typing.ClassVar[TokenKind]  # value = <TokenKind.Tilde: 40>
-    TildeAnd: typing.ClassVar[TokenKind]  # value = <TokenKind.TildeAnd: 41>
-    TildeOr: typing.ClassVar[TokenKind]  # value = <TokenKind.TildeOr: 42>
-    TildeXor: typing.ClassVar[TokenKind]  # value = <TokenKind.TildeXor: 43>
-    TimeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TimeKeyword: 300>
-    TimeLiteral: typing.ClassVar[TokenKind]  # value = <TokenKind.TimeLiteral: 9>
-    TimePrecisionKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TimePrecisionKeyword: 301>
-    TimeUnitKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TimeUnitKeyword: 302>
-    TranIf0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TranIf0Keyword: 304>
-    TranIf1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TranIf1Keyword: 305>
-    TranKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TranKeyword: 303>
-    Tri0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Tri0Keyword: 307>
-    Tri1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Tri1Keyword: 308>
-    TriAndKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TriAndKeyword: 309>
-    TriKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TriKeyword: 306>
-    TriOrKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TriOrKeyword: 310>
-    TriRegKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TriRegKeyword: 311>
-    TripleAnd: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleAnd: 91>
-    TripleEquals: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleEquals: 55>
-    TripleLeftShift: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleLeftShift: 71>
-    TripleLeftShiftEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleLeftShiftEqual: 66>
-    TripleRightShift: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleRightShift: 72>
-    TripleRightShiftEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.TripleRightShiftEqual: 68>
-    TypeKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TypeKeyword: 312>
-    TypedefKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.TypedefKeyword: 313>
-    UWireKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UWireKeyword: 322>
-    UnbasedUnsizedLiteral: typing.ClassVar[TokenKind]  # value = <TokenKind.UnbasedUnsizedLiteral: 7>
-    UnionKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UnionKeyword: 314>
-    Unique0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Unique0Keyword: 316>
-    UniqueKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UniqueKeyword: 315>
-    UnitSystemName: typing.ClassVar[TokenKind]  # value = <TokenKind.UnitSystemName: 341>
-    Unknown: typing.ClassVar[TokenKind]  # value = <TokenKind.Unknown: 0>
-    UnsignedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UnsignedKeyword: 317>
-    UntilKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UntilKeyword: 318>
-    UntilWithKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UntilWithKeyword: 319>
-    UntypedKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UntypedKeyword: 320>
-    UseKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.UseKeyword: 321>
-    VarKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.VarKeyword: 323>
-    VectoredKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.VectoredKeyword: 324>
-    VirtualKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.VirtualKeyword: 325>
-    VoidKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.VoidKeyword: 326>
-    WAndKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WAndKeyword: 329>
-    WOrKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WOrKeyword: 338>
-    WaitKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WaitKeyword: 327>
-    WaitOrderKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WaitOrderKeyword: 328>
-    Weak0Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Weak0Keyword: 331>
-    Weak1Keyword: typing.ClassVar[TokenKind]  # value = <TokenKind.Weak1Keyword: 332>
-    WeakKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WeakKeyword: 330>
-    WhileKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WhileKeyword: 333>
-    WildcardKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WildcardKeyword: 334>
-    WireKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WireKeyword: 335>
-    WithKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WithKeyword: 336>
-    WithinKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.WithinKeyword: 337>
-    XnorKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.XnorKeyword: 339>
-    Xor: typing.ClassVar[TokenKind]  # value = <TokenKind.Xor: 50>
-    XorEqual: typing.ClassVar[TokenKind]  # value = <TokenKind.XorEqual: 64>
-    XorKeyword: typing.ClassVar[TokenKind]  # value = <TokenKind.XorKeyword: 340>
-    XorTilde: typing.ClassVar[TokenKind]  # value = <TokenKind.XorTilde: 51>
-    __members__: typing.ClassVar[dict[str, TokenKind]]  # value = {'Unknown': <TokenKind.Unknown: 0>, 'EndOfFile': <TokenKind.EndOfFile: 1>, 'Identifier': <TokenKind.Identifier: 2>, 'SystemIdentifier': <TokenKind.SystemIdentifier: 3>, 'StringLiteral': <TokenKind.StringLiteral: 4>, 'IntegerLiteral': <TokenKind.IntegerLiteral: 5>, 'IntegerBase': <TokenKind.IntegerBase: 6>, 'UnbasedUnsizedLiteral': <TokenKind.UnbasedUnsizedLiteral: 7>, 'RealLiteral': <TokenKind.RealLiteral: 8>, 'TimeLiteral': <TokenKind.TimeLiteral: 9>, 'Placeholder': <TokenKind.Placeholder: 10>, 'Apostrophe': <TokenKind.Apostrophe: 11>, 'ApostropheOpenBrace': <TokenKind.ApostropheOpenBrace: 12>, 'OpenBrace': <TokenKind.OpenBrace: 13>, 'CloseBrace': <TokenKind.CloseBrace: 14>, 'OpenBracket': <TokenKind.OpenBracket: 15>, 'CloseBracket': <TokenKind.CloseBracket: 16>, 'OpenParenthesis': <TokenKind.OpenParenthesis: 17>, 'CloseParenthesis': <TokenKind.CloseParenthesis: 18>, 'Semicolon': <TokenKind.Semicolon: 19>, 'Colon': <TokenKind.Colon: 20>, 'ColonEquals': <TokenKind.ColonEquals: 21>, 'ColonSlash': <TokenKind.ColonSlash: 22>, 'DoubleColon': <TokenKind.DoubleColon: 23>, 'Comma': <TokenKind.Comma: 24>, 'Dot': <TokenKind.Dot: 25>, 'Slash': <TokenKind.Slash: 26>, 'Star': <TokenKind.Star: 27>, 'DoubleStar': <TokenKind.DoubleStar: 28>, 'StarArrow': <TokenKind.StarArrow: 29>, 'Plus': <TokenKind.Plus: 30>, 'DoublePlus': <TokenKind.DoublePlus: 31>, 'PlusColon': <TokenKind.PlusColon: 32>, 'PlusDivMinus': <TokenKind.PlusDivMinus: 33>, 'PlusModMinus': <TokenKind.PlusModMinus: 34>, 'Minus': <TokenKind.Minus: 35>, 'DoubleMinus': <TokenKind.DoubleMinus: 36>, 'MinusColon': <TokenKind.MinusColon: 37>, 'MinusArrow': <TokenKind.MinusArrow: 38>, 'MinusDoubleArrow': <TokenKind.MinusDoubleArrow: 39>, 'Tilde': <TokenKind.Tilde: 40>, 'TildeAnd': <TokenKind.TildeAnd: 41>, 'TildeOr': <TokenKind.TildeOr: 42>, 'TildeXor': <TokenKind.TildeXor: 43>, 'Dollar': <TokenKind.Dollar: 44>, 'Question': <TokenKind.Question: 45>, 'Hash': <TokenKind.Hash: 46>, 'DoubleHash': <TokenKind.DoubleHash: 47>, 'HashMinusHash': <TokenKind.HashMinusHash: 48>, 'HashEqualsHash': <TokenKind.HashEqualsHash: 49>, 'Xor': <TokenKind.Xor: 50>, 'XorTilde': <TokenKind.XorTilde: 51>, 'Equals': <TokenKind.Equals: 52>, 'DoubleEquals': <TokenKind.DoubleEquals: 53>, 'DoubleEqualsQuestion': <TokenKind.DoubleEqualsQuestion: 54>, 'TripleEquals': <TokenKind.TripleEquals: 55>, 'EqualsArrow': <TokenKind.EqualsArrow: 56>, 'PlusEqual': <TokenKind.PlusEqual: 57>, 'MinusEqual': <TokenKind.MinusEqual: 58>, 'SlashEqual': <TokenKind.SlashEqual: 59>, 'StarEqual': <TokenKind.StarEqual: 60>, 'AndEqual': <TokenKind.AndEqual: 61>, 'OrEqual': <TokenKind.OrEqual: 62>, 'PercentEqual': <TokenKind.PercentEqual: 63>, 'XorEqual': <TokenKind.XorEqual: 64>, 'LeftShiftEqual': <TokenKind.LeftShiftEqual: 65>, 'TripleLeftShiftEqual': <TokenKind.TripleLeftShiftEqual: 66>, 'RightShiftEqual': <TokenKind.RightShiftEqual: 67>, 'TripleRightShiftEqual': <TokenKind.TripleRightShiftEqual: 68>, 'LeftShift': <TokenKind.LeftShift: 69>, 'RightShift': <TokenKind.RightShift: 70>, 'TripleLeftShift': <TokenKind.TripleLeftShift: 71>, 'TripleRightShift': <TokenKind.TripleRightShift: 72>, 'Exclamation': <TokenKind.Exclamation: 73>, 'ExclamationEquals': <TokenKind.ExclamationEquals: 74>, 'ExclamationEqualsQuestion': <TokenKind.ExclamationEqualsQuestion: 75>, 'ExclamationDoubleEquals': <TokenKind.ExclamationDoubleEquals: 76>, 'Percent': <TokenKind.Percent: 77>, 'LessThan': <TokenKind.LessThan: 78>, 'LessThanEquals': <TokenKind.LessThanEquals: 79>, 'LessThanMinusArrow': <TokenKind.LessThanMinusArrow: 80>, 'GreaterThan': <TokenKind.GreaterThan: 81>, 'GreaterThanEquals': <TokenKind.GreaterThanEquals: 82>, 'Or': <TokenKind.Or: 83>, 'DoubleOr': <TokenKind.DoubleOr: 84>, 'OrMinusArrow': <TokenKind.OrMinusArrow: 85>, 'OrEqualsArrow': <TokenKind.OrEqualsArrow: 86>, 'At': <TokenKind.At: 87>, 'DoubleAt': <TokenKind.DoubleAt: 88>, 'And': <TokenKind.And: 89>, 'DoubleAnd': <TokenKind.DoubleAnd: 90>, 'TripleAnd': <TokenKind.TripleAnd: 91>, 'OneStep': <TokenKind.OneStep: 92>, 'AcceptOnKeyword': <TokenKind.AcceptOnKeyword: 93>, 'AliasKeyword': <TokenKind.AliasKeyword: 94>, 'AlwaysKeyword': <TokenKind.AlwaysKeyword: 95>, 'AlwaysCombKeyword': <TokenKind.AlwaysCombKeyword: 96>, 'AlwaysFFKeyword': <TokenKind.AlwaysFFKeyword: 97>, 'AlwaysLatchKeyword': <TokenKind.AlwaysLatchKeyword: 98>, 'AndKeyword': <TokenKind.AndKeyword: 99>, 'AssertKeyword': <TokenKind.AssertKeyword: 100>, 'AssignKeyword': <TokenKind.AssignKeyword: 101>, 'AssumeKeyword': <TokenKind.AssumeKeyword: 102>, 'AutomaticKeyword': <TokenKind.AutomaticKeyword: 103>, 'BeforeKeyword': <TokenKind.BeforeKeyword: 104>, 'BeginKeyword': <TokenKind.BeginKeyword: 105>, 'BindKeyword': <TokenKind.BindKeyword: 106>, 'BinsKeyword': <TokenKind.BinsKeyword: 107>, 'BinsOfKeyword': <TokenKind.BinsOfKeyword: 108>, 'BitKeyword': <TokenKind.BitKeyword: 109>, 'BreakKeyword': <TokenKind.BreakKeyword: 110>, 'BufKeyword': <TokenKind.BufKeyword: 111>, 'BufIf0Keyword': <TokenKind.BufIf0Keyword: 112>, 'BufIf1Keyword': <TokenKind.BufIf1Keyword: 113>, 'ByteKeyword': <TokenKind.ByteKeyword: 114>, 'CaseKeyword': <TokenKind.CaseKeyword: 115>, 'CaseXKeyword': <TokenKind.CaseXKeyword: 116>, 'CaseZKeyword': <TokenKind.CaseZKeyword: 117>, 'CellKeyword': <TokenKind.CellKeyword: 118>, 'CHandleKeyword': <TokenKind.CHandleKeyword: 119>, 'CheckerKeyword': <TokenKind.CheckerKeyword: 120>, 'ClassKeyword': <TokenKind.ClassKeyword: 121>, 'ClockingKeyword': <TokenKind.ClockingKeyword: 122>, 'CmosKeyword': <TokenKind.CmosKeyword: 123>, 'ConfigKeyword': <TokenKind.ConfigKeyword: 124>, 'ConstKeyword': <TokenKind.ConstKeyword: 125>, 'ConstraintKeyword': <TokenKind.ConstraintKeyword: 126>, 'ContextKeyword': <TokenKind.ContextKeyword: 127>, 'ContinueKeyword': <TokenKind.ContinueKeyword: 128>, 'CoverKeyword': <TokenKind.CoverKeyword: 129>, 'CoverGroupKeyword': <TokenKind.CoverGroupKeyword: 130>, 'CoverPointKeyword': <TokenKind.CoverPointKeyword: 131>, 'CrossKeyword': <TokenKind.CrossKeyword: 132>, 'DeassignKeyword': <TokenKind.DeassignKeyword: 133>, 'DefaultKeyword': <TokenKind.DefaultKeyword: 134>, 'DefParamKeyword': <TokenKind.DefParamKeyword: 135>, 'DesignKeyword': <TokenKind.DesignKeyword: 136>, 'DisableKeyword': <TokenKind.DisableKeyword: 137>, 'DistKeyword': <TokenKind.DistKeyword: 138>, 'DoKeyword': <TokenKind.DoKeyword: 139>, 'EdgeKeyword': <TokenKind.EdgeKeyword: 140>, 'ElseKeyword': <TokenKind.ElseKeyword: 141>, 'EndKeyword': <TokenKind.EndKeyword: 142>, 'EndCaseKeyword': <TokenKind.EndCaseKeyword: 143>, 'EndCheckerKeyword': <TokenKind.EndCheckerKeyword: 144>, 'EndClassKeyword': <TokenKind.EndClassKeyword: 145>, 'EndClockingKeyword': <TokenKind.EndClockingKeyword: 146>, 'EndConfigKeyword': <TokenKind.EndConfigKeyword: 147>, 'EndFunctionKeyword': <TokenKind.EndFunctionKeyword: 148>, 'EndGenerateKeyword': <TokenKind.EndGenerateKeyword: 149>, 'EndGroupKeyword': <TokenKind.EndGroupKeyword: 150>, 'EndInterfaceKeyword': <TokenKind.EndInterfaceKeyword: 151>, 'EndModuleKeyword': <TokenKind.EndModuleKeyword: 152>, 'EndPackageKeyword': <TokenKind.EndPackageKeyword: 153>, 'EndPrimitiveKeyword': <TokenKind.EndPrimitiveKeyword: 154>, 'EndProgramKeyword': <TokenKind.EndProgramKeyword: 155>, 'EndPropertyKeyword': <TokenKind.EndPropertyKeyword: 156>, 'EndSpecifyKeyword': <TokenKind.EndSpecifyKeyword: 157>, 'EndSequenceKeyword': <TokenKind.EndSequenceKeyword: 158>, 'EndTableKeyword': <TokenKind.EndTableKeyword: 159>, 'EndTaskKeyword': <TokenKind.EndTaskKeyword: 160>, 'EnumKeyword': <TokenKind.EnumKeyword: 161>, 'EventKeyword': <TokenKind.EventKeyword: 162>, 'EventuallyKeyword': <TokenKind.EventuallyKeyword: 163>, 'ExpectKeyword': <TokenKind.ExpectKeyword: 164>, 'ExportKeyword': <TokenKind.ExportKeyword: 165>, 'ExtendsKeyword': <TokenKind.ExtendsKeyword: 166>, 'ExternKeyword': <TokenKind.ExternKeyword: 167>, 'FinalKeyword': <TokenKind.FinalKeyword: 168>, 'FirstMatchKeyword': <TokenKind.FirstMatchKeyword: 169>, 'ForKeyword': <TokenKind.ForKeyword: 170>, 'ForceKeyword': <TokenKind.ForceKeyword: 171>, 'ForeachKeyword': <TokenKind.ForeachKeyword: 172>, 'ForeverKeyword': <TokenKind.ForeverKeyword: 173>, 'ForkKeyword': <TokenKind.ForkKeyword: 174>, 'ForkJoinKeyword': <TokenKind.ForkJoinKeyword: 175>, 'FunctionKeyword': <TokenKind.FunctionKeyword: 176>, 'GenerateKeyword': <TokenKind.GenerateKeyword: 177>, 'GenVarKeyword': <TokenKind.GenVarKeyword: 178>, 'GlobalKeyword': <TokenKind.GlobalKeyword: 179>, 'HighZ0Keyword': <TokenKind.HighZ0Keyword: 180>, 'HighZ1Keyword': <TokenKind.HighZ1Keyword: 181>, 'IfKeyword': <TokenKind.IfKeyword: 182>, 'IffKeyword': <TokenKind.IffKeyword: 183>, 'IfNoneKeyword': <TokenKind.IfNoneKeyword: 184>, 'IgnoreBinsKeyword': <TokenKind.IgnoreBinsKeyword: 185>, 'IllegalBinsKeyword': <TokenKind.IllegalBinsKeyword: 186>, 'ImplementsKeyword': <TokenKind.ImplementsKeyword: 187>, 'ImpliesKeyword': <TokenKind.ImpliesKeyword: 188>, 'ImportKeyword': <TokenKind.ImportKeyword: 189>, 'IncDirKeyword': <TokenKind.IncDirKeyword: 190>, 'IncludeKeyword': <TokenKind.IncludeKeyword: 191>, 'InitialKeyword': <TokenKind.InitialKeyword: 192>, 'InOutKeyword': <TokenKind.InOutKeyword: 193>, 'InputKeyword': <TokenKind.InputKeyword: 194>, 'InsideKeyword': <TokenKind.InsideKeyword: 195>, 'InstanceKeyword': <TokenKind.InstanceKeyword: 196>, 'IntKeyword': <TokenKind.IntKeyword: 197>, 'IntegerKeyword': <TokenKind.IntegerKeyword: 198>, 'InterconnectKeyword': <TokenKind.InterconnectKeyword: 199>, 'InterfaceKeyword': <TokenKind.InterfaceKeyword: 200>, 'IntersectKeyword': <TokenKind.IntersectKeyword: 201>, 'JoinKeyword': <TokenKind.JoinKeyword: 202>, 'JoinAnyKeyword': <TokenKind.JoinAnyKeyword: 203>, 'JoinNoneKeyword': <TokenKind.JoinNoneKeyword: 204>, 'LargeKeyword': <TokenKind.LargeKeyword: 205>, 'LetKeyword': <TokenKind.LetKeyword: 206>, 'LibListKeyword': <TokenKind.LibListKeyword: 207>, 'LibraryKeyword': <TokenKind.LibraryKeyword: 208>, 'LocalKeyword': <TokenKind.LocalKeyword: 209>, 'LocalParamKeyword': <TokenKind.LocalParamKeyword: 210>, 'LogicKeyword': <TokenKind.LogicKeyword: 211>, 'LongIntKeyword': <TokenKind.LongIntKeyword: 212>, 'MacromoduleKeyword': <TokenKind.MacromoduleKeyword: 213>, 'MatchesKeyword': <TokenKind.MatchesKeyword: 214>, 'MediumKeyword': <TokenKind.MediumKeyword: 215>, 'ModPortKeyword': <TokenKind.ModPortKeyword: 216>, 'ModuleKeyword': <TokenKind.ModuleKeyword: 217>, 'NandKeyword': <TokenKind.NandKeyword: 218>, 'NegEdgeKeyword': <TokenKind.NegEdgeKeyword: 219>, 'NetTypeKeyword': <TokenKind.NetTypeKeyword: 220>, 'NewKeyword': <TokenKind.NewKeyword: 221>, 'NextTimeKeyword': <TokenKind.NextTimeKeyword: 222>, 'NmosKeyword': <TokenKind.NmosKeyword: 223>, 'NorKeyword': <TokenKind.NorKeyword: 224>, 'NoShowCancelledKeyword': <TokenKind.NoShowCancelledKeyword: 225>, 'NotKeyword': <TokenKind.NotKeyword: 226>, 'NotIf0Keyword': <TokenKind.NotIf0Keyword: 227>, 'NotIf1Keyword': <TokenKind.NotIf1Keyword: 228>, 'NullKeyword': <TokenKind.NullKeyword: 229>, 'OrKeyword': <TokenKind.OrKeyword: 230>, 'OutputKeyword': <TokenKind.OutputKeyword: 231>, 'PackageKeyword': <TokenKind.PackageKeyword: 232>, 'PackedKeyword': <TokenKind.PackedKeyword: 233>, 'ParameterKeyword': <TokenKind.ParameterKeyword: 234>, 'PmosKeyword': <TokenKind.PmosKeyword: 235>, 'PosEdgeKeyword': <TokenKind.PosEdgeKeyword: 236>, 'PrimitiveKeyword': <TokenKind.PrimitiveKeyword: 237>, 'PriorityKeyword': <TokenKind.PriorityKeyword: 238>, 'ProgramKeyword': <TokenKind.ProgramKeyword: 239>, 'PropertyKeyword': <TokenKind.PropertyKeyword: 240>, 'ProtectedKeyword': <TokenKind.ProtectedKeyword: 241>, 'Pull0Keyword': <TokenKind.Pull0Keyword: 242>, 'Pull1Keyword': <TokenKind.Pull1Keyword: 243>, 'PullDownKeyword': <TokenKind.PullDownKeyword: 244>, 'PullUpKeyword': <TokenKind.PullUpKeyword: 245>, 'PulseStyleOnDetectKeyword': <TokenKind.PulseStyleOnDetectKeyword: 246>, 'PulseStyleOnEventKeyword': <TokenKind.PulseStyleOnEventKeyword: 247>, 'PureKeyword': <TokenKind.PureKeyword: 248>, 'RandKeyword': <TokenKind.RandKeyword: 249>, 'RandCKeyword': <TokenKind.RandCKeyword: 250>, 'RandCaseKeyword': <TokenKind.RandCaseKeyword: 251>, 'RandSequenceKeyword': <TokenKind.RandSequenceKeyword: 252>, 'RcmosKeyword': <TokenKind.RcmosKeyword: 253>, 'RealKeyword': <TokenKind.RealKeyword: 254>, 'RealTimeKeyword': <TokenKind.RealTimeKeyword: 255>, 'RefKeyword': <TokenKind.RefKeyword: 256>, 'RegKeyword': <TokenKind.RegKeyword: 257>, 'RejectOnKeyword': <TokenKind.RejectOnKeyword: 258>, 'ReleaseKeyword': <TokenKind.ReleaseKeyword: 259>, 'RepeatKeyword': <TokenKind.RepeatKeyword: 260>, 'RestrictKeyword': <TokenKind.RestrictKeyword: 261>, 'ReturnKeyword': <TokenKind.ReturnKeyword: 262>, 'RnmosKeyword': <TokenKind.RnmosKeyword: 263>, 'RpmosKeyword': <TokenKind.RpmosKeyword: 264>, 'RtranKeyword': <TokenKind.RtranKeyword: 265>, 'RtranIf0Keyword': <TokenKind.RtranIf0Keyword: 266>, 'RtranIf1Keyword': <TokenKind.RtranIf1Keyword: 267>, 'SAlwaysKeyword': <TokenKind.SAlwaysKeyword: 268>, 'SEventuallyKeyword': <TokenKind.SEventuallyKeyword: 269>, 'SNextTimeKeyword': <TokenKind.SNextTimeKeyword: 270>, 'SUntilKeyword': <TokenKind.SUntilKeyword: 271>, 'SUntilWithKeyword': <TokenKind.SUntilWithKeyword: 272>, 'ScalaredKeyword': <TokenKind.ScalaredKeyword: 273>, 'SequenceKeyword': <TokenKind.SequenceKeyword: 274>, 'ShortIntKeyword': <TokenKind.ShortIntKeyword: 275>, 'ShortRealKeyword': <TokenKind.ShortRealKeyword: 276>, 'ShowCancelledKeyword': <TokenKind.ShowCancelledKeyword: 277>, 'SignedKeyword': <TokenKind.SignedKeyword: 278>, 'SmallKeyword': <TokenKind.SmallKeyword: 279>, 'SoftKeyword': <TokenKind.SoftKeyword: 280>, 'SolveKeyword': <TokenKind.SolveKeyword: 281>, 'SpecifyKeyword': <TokenKind.SpecifyKeyword: 282>, 'SpecParamKeyword': <TokenKind.SpecParamKeyword: 283>, 'StaticKeyword': <TokenKind.StaticKeyword: 284>, 'StringKeyword': <TokenKind.StringKeyword: 285>, 'StrongKeyword': <TokenKind.StrongKeyword: 286>, 'Strong0Keyword': <TokenKind.Strong0Keyword: 287>, 'Strong1Keyword': <TokenKind.Strong1Keyword: 288>, 'StructKeyword': <TokenKind.StructKeyword: 289>, 'SuperKeyword': <TokenKind.SuperKeyword: 290>, 'Supply0Keyword': <TokenKind.Supply0Keyword: 291>, 'Supply1Keyword': <TokenKind.Supply1Keyword: 292>, 'SyncAcceptOnKeyword': <TokenKind.SyncAcceptOnKeyword: 293>, 'SyncRejectOnKeyword': <TokenKind.SyncRejectOnKeyword: 294>, 'TableKeyword': <TokenKind.TableKeyword: 295>, 'TaggedKeyword': <TokenKind.TaggedKeyword: 296>, 'TaskKeyword': <TokenKind.TaskKeyword: 297>, 'ThisKeyword': <TokenKind.ThisKeyword: 298>, 'ThroughoutKeyword': <TokenKind.ThroughoutKeyword: 299>, 'TimeKeyword': <TokenKind.TimeKeyword: 300>, 'TimePrecisionKeyword': <TokenKind.TimePrecisionKeyword: 301>, 'TimeUnitKeyword': <TokenKind.TimeUnitKeyword: 302>, 'TranKeyword': <TokenKind.TranKeyword: 303>, 'TranIf0Keyword': <TokenKind.TranIf0Keyword: 304>, 'TranIf1Keyword': <TokenKind.TranIf1Keyword: 305>, 'TriKeyword': <TokenKind.TriKeyword: 306>, 'Tri0Keyword': <TokenKind.Tri0Keyword: 307>, 'Tri1Keyword': <TokenKind.Tri1Keyword: 308>, 'TriAndKeyword': <TokenKind.TriAndKeyword: 309>, 'TriOrKeyword': <TokenKind.TriOrKeyword: 310>, 'TriRegKeyword': <TokenKind.TriRegKeyword: 311>, 'TypeKeyword': <TokenKind.TypeKeyword: 312>, 'TypedefKeyword': <TokenKind.TypedefKeyword: 313>, 'UnionKeyword': <TokenKind.UnionKeyword: 314>, 'UniqueKeyword': <TokenKind.UniqueKeyword: 315>, 'Unique0Keyword': <TokenKind.Unique0Keyword: 316>, 'UnsignedKeyword': <TokenKind.UnsignedKeyword: 317>, 'UntilKeyword': <TokenKind.UntilKeyword: 318>, 'UntilWithKeyword': <TokenKind.UntilWithKeyword: 319>, 'UntypedKeyword': <TokenKind.UntypedKeyword: 320>, 'UseKeyword': <TokenKind.UseKeyword: 321>, 'UWireKeyword': <TokenKind.UWireKeyword: 322>, 'VarKeyword': <TokenKind.VarKeyword: 323>, 'VectoredKeyword': <TokenKind.VectoredKeyword: 324>, 'VirtualKeyword': <TokenKind.VirtualKeyword: 325>, 'VoidKeyword': <TokenKind.VoidKeyword: 326>, 'WaitKeyword': <TokenKind.WaitKeyword: 327>, 'WaitOrderKeyword': <TokenKind.WaitOrderKeyword: 328>, 'WAndKeyword': <TokenKind.WAndKeyword: 329>, 'WeakKeyword': <TokenKind.WeakKeyword: 330>, 'Weak0Keyword': <TokenKind.Weak0Keyword: 331>, 'Weak1Keyword': <TokenKind.Weak1Keyword: 332>, 'WhileKeyword': <TokenKind.WhileKeyword: 333>, 'WildcardKeyword': <TokenKind.WildcardKeyword: 334>, 'WireKeyword': <TokenKind.WireKeyword: 335>, 'WithKeyword': <TokenKind.WithKeyword: 336>, 'WithinKeyword': <TokenKind.WithinKeyword: 337>, 'WOrKeyword': <TokenKind.WOrKeyword: 338>, 'XnorKeyword': <TokenKind.XnorKeyword: 339>, 'XorKeyword': <TokenKind.XorKeyword: 340>, 'UnitSystemName': <TokenKind.UnitSystemName: 341>, 'RootSystemName': <TokenKind.RootSystemName: 342>, 'Directive': <TokenKind.Directive: 343>, 'IncludeFileName': <TokenKind.IncludeFileName: 344>, 'MacroUsage': <TokenKind.MacroUsage: 345>, 'MacroQuote': <TokenKind.MacroQuote: 346>, 'MacroTripleQuote': <TokenKind.MacroTripleQuote: 347>, 'MacroEscapedQuote': <TokenKind.MacroEscapedQuote: 348>, 'MacroPaste': <TokenKind.MacroPaste: 349>, 'EmptyMacroArgument': <TokenKind.EmptyMacroArgument: 350>, 'LineContinuation': <TokenKind.LineContinuation: 351>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def valueText(self) -> str: ...
+
+class TokenKind(metaclass=_metaclass):
+    AcceptOnKeyword: ClassVar[TokenKind]
+    """Value = 93"""
+    AliasKeyword: ClassVar[TokenKind]
+    """Value = 94"""
+    AlwaysCombKeyword: ClassVar[TokenKind]
+    """Value = 96"""
+    AlwaysFFKeyword: ClassVar[TokenKind]
+    """Value = 97"""
+    AlwaysKeyword: ClassVar[TokenKind]
+    """Value = 95"""
+    AlwaysLatchKeyword: ClassVar[TokenKind]
+    """Value = 98"""
+    And: ClassVar[TokenKind]
+    """Value = 89"""
+    AndEqual: ClassVar[TokenKind]
+    """Value = 61"""
+    AndKeyword: ClassVar[TokenKind]
+    """Value = 99"""
+    Apostrophe: ClassVar[TokenKind]
+    """Value = 11"""
+    ApostropheOpenBrace: ClassVar[TokenKind]
+    """Value = 12"""
+    AssertKeyword: ClassVar[TokenKind]
+    """Value = 100"""
+    AssignKeyword: ClassVar[TokenKind]
+    """Value = 101"""
+    AssumeKeyword: ClassVar[TokenKind]
+    """Value = 102"""
+    At: ClassVar[TokenKind]
+    """Value = 87"""
+    AutomaticKeyword: ClassVar[TokenKind]
+    """Value = 103"""
+    BeforeKeyword: ClassVar[TokenKind]
+    """Value = 104"""
+    BeginKeyword: ClassVar[TokenKind]
+    """Value = 105"""
+    BindKeyword: ClassVar[TokenKind]
+    """Value = 106"""
+    BinsKeyword: ClassVar[TokenKind]
+    """Value = 107"""
+    BinsOfKeyword: ClassVar[TokenKind]
+    """Value = 108"""
+    BitKeyword: ClassVar[TokenKind]
+    """Value = 109"""
+    BreakKeyword: ClassVar[TokenKind]
+    """Value = 110"""
+    BufIf0Keyword: ClassVar[TokenKind]
+    """Value = 112"""
+    BufIf1Keyword: ClassVar[TokenKind]
+    """Value = 113"""
+    BufKeyword: ClassVar[TokenKind]
+    """Value = 111"""
+    ByteKeyword: ClassVar[TokenKind]
+    """Value = 114"""
+    CHandleKeyword: ClassVar[TokenKind]
+    """Value = 119"""
+    CaseKeyword: ClassVar[TokenKind]
+    """Value = 115"""
+    CaseXKeyword: ClassVar[TokenKind]
+    """Value = 116"""
+    CaseZKeyword: ClassVar[TokenKind]
+    """Value = 117"""
+    CellKeyword: ClassVar[TokenKind]
+    """Value = 118"""
+    CheckerKeyword: ClassVar[TokenKind]
+    """Value = 120"""
+    ClassKeyword: ClassVar[TokenKind]
+    """Value = 121"""
+    ClockingKeyword: ClassVar[TokenKind]
+    """Value = 122"""
+    CloseBrace: ClassVar[TokenKind]
+    """Value = 14"""
+    CloseBracket: ClassVar[TokenKind]
+    """Value = 16"""
+    CloseParenthesis: ClassVar[TokenKind]
+    """Value = 18"""
+    CmosKeyword: ClassVar[TokenKind]
+    """Value = 123"""
+    Colon: ClassVar[TokenKind]
+    """Value = 20"""
+    ColonEquals: ClassVar[TokenKind]
+    """Value = 21"""
+    ColonSlash: ClassVar[TokenKind]
+    """Value = 22"""
+    Comma: ClassVar[TokenKind]
+    """Value = 24"""
+    ConfigKeyword: ClassVar[TokenKind]
+    """Value = 124"""
+    ConstKeyword: ClassVar[TokenKind]
+    """Value = 125"""
+    ConstraintKeyword: ClassVar[TokenKind]
+    """Value = 126"""
+    ContextKeyword: ClassVar[TokenKind]
+    """Value = 127"""
+    ContinueKeyword: ClassVar[TokenKind]
+    """Value = 128"""
+    CoverGroupKeyword: ClassVar[TokenKind]
+    """Value = 130"""
+    CoverKeyword: ClassVar[TokenKind]
+    """Value = 129"""
+    CoverPointKeyword: ClassVar[TokenKind]
+    """Value = 131"""
+    CrossKeyword: ClassVar[TokenKind]
+    """Value = 132"""
+    DeassignKeyword: ClassVar[TokenKind]
+    """Value = 133"""
+    DefParamKeyword: ClassVar[TokenKind]
+    """Value = 135"""
+    DefaultKeyword: ClassVar[TokenKind]
+    """Value = 134"""
+    DesignKeyword: ClassVar[TokenKind]
+    """Value = 136"""
+    Directive: ClassVar[TokenKind]
+    """Value = 343"""
+    DisableKeyword: ClassVar[TokenKind]
+    """Value = 137"""
+    DistKeyword: ClassVar[TokenKind]
+    """Value = 138"""
+    DoKeyword: ClassVar[TokenKind]
+    """Value = 139"""
+    Dollar: ClassVar[TokenKind]
+    """Value = 44"""
+    Dot: ClassVar[TokenKind]
+    """Value = 25"""
+    DoubleAnd: ClassVar[TokenKind]
+    """Value = 90"""
+    DoubleAt: ClassVar[TokenKind]
+    """Value = 88"""
+    DoubleColon: ClassVar[TokenKind]
+    """Value = 23"""
+    DoubleEquals: ClassVar[TokenKind]
+    """Value = 53"""
+    DoubleEqualsQuestion: ClassVar[TokenKind]
+    """Value = 54"""
+    DoubleHash: ClassVar[TokenKind]
+    """Value = 47"""
+    DoubleMinus: ClassVar[TokenKind]
+    """Value = 36"""
+    DoubleOr: ClassVar[TokenKind]
+    """Value = 84"""
+    DoublePlus: ClassVar[TokenKind]
+    """Value = 31"""
+    DoubleStar: ClassVar[TokenKind]
+    """Value = 28"""
+    EdgeKeyword: ClassVar[TokenKind]
+    """Value = 140"""
+    ElseKeyword: ClassVar[TokenKind]
+    """Value = 141"""
+    EmptyMacroArgument: ClassVar[TokenKind]
+    """Value = 350"""
+    EndCaseKeyword: ClassVar[TokenKind]
+    """Value = 143"""
+    EndCheckerKeyword: ClassVar[TokenKind]
+    """Value = 144"""
+    EndClassKeyword: ClassVar[TokenKind]
+    """Value = 145"""
+    EndClockingKeyword: ClassVar[TokenKind]
+    """Value = 146"""
+    EndConfigKeyword: ClassVar[TokenKind]
+    """Value = 147"""
+    EndFunctionKeyword: ClassVar[TokenKind]
+    """Value = 148"""
+    EndGenerateKeyword: ClassVar[TokenKind]
+    """Value = 149"""
+    EndGroupKeyword: ClassVar[TokenKind]
+    """Value = 150"""
+    EndInterfaceKeyword: ClassVar[TokenKind]
+    """Value = 151"""
+    EndKeyword: ClassVar[TokenKind]
+    """Value = 142"""
+    EndModuleKeyword: ClassVar[TokenKind]
+    """Value = 152"""
+    EndOfFile: ClassVar[TokenKind]
+    """Value = 1"""
+    EndPackageKeyword: ClassVar[TokenKind]
+    """Value = 153"""
+    EndPrimitiveKeyword: ClassVar[TokenKind]
+    """Value = 154"""
+    EndProgramKeyword: ClassVar[TokenKind]
+    """Value = 155"""
+    EndPropertyKeyword: ClassVar[TokenKind]
+    """Value = 156"""
+    EndSequenceKeyword: ClassVar[TokenKind]
+    """Value = 158"""
+    EndSpecifyKeyword: ClassVar[TokenKind]
+    """Value = 157"""
+    EndTableKeyword: ClassVar[TokenKind]
+    """Value = 159"""
+    EndTaskKeyword: ClassVar[TokenKind]
+    """Value = 160"""
+    EnumKeyword: ClassVar[TokenKind]
+    """Value = 161"""
+    Equals: ClassVar[TokenKind]
+    """Value = 52"""
+    EqualsArrow: ClassVar[TokenKind]
+    """Value = 56"""
+    EventKeyword: ClassVar[TokenKind]
+    """Value = 162"""
+    EventuallyKeyword: ClassVar[TokenKind]
+    """Value = 163"""
+    Exclamation: ClassVar[TokenKind]
+    """Value = 73"""
+    ExclamationDoubleEquals: ClassVar[TokenKind]
+    """Value = 76"""
+    ExclamationEquals: ClassVar[TokenKind]
+    """Value = 74"""
+    ExclamationEqualsQuestion: ClassVar[TokenKind]
+    """Value = 75"""
+    ExpectKeyword: ClassVar[TokenKind]
+    """Value = 164"""
+    ExportKeyword: ClassVar[TokenKind]
+    """Value = 165"""
+    ExtendsKeyword: ClassVar[TokenKind]
+    """Value = 166"""
+    ExternKeyword: ClassVar[TokenKind]
+    """Value = 167"""
+    FinalKeyword: ClassVar[TokenKind]
+    """Value = 168"""
+    FirstMatchKeyword: ClassVar[TokenKind]
+    """Value = 169"""
+    ForKeyword: ClassVar[TokenKind]
+    """Value = 170"""
+    ForceKeyword: ClassVar[TokenKind]
+    """Value = 171"""
+    ForeachKeyword: ClassVar[TokenKind]
+    """Value = 172"""
+    ForeverKeyword: ClassVar[TokenKind]
+    """Value = 173"""
+    ForkJoinKeyword: ClassVar[TokenKind]
+    """Value = 175"""
+    ForkKeyword: ClassVar[TokenKind]
+    """Value = 174"""
+    FunctionKeyword: ClassVar[TokenKind]
+    """Value = 176"""
+    GenVarKeyword: ClassVar[TokenKind]
+    """Value = 178"""
+    GenerateKeyword: ClassVar[TokenKind]
+    """Value = 177"""
+    GlobalKeyword: ClassVar[TokenKind]
+    """Value = 179"""
+    GreaterThan: ClassVar[TokenKind]
+    """Value = 81"""
+    GreaterThanEquals: ClassVar[TokenKind]
+    """Value = 82"""
+    Hash: ClassVar[TokenKind]
+    """Value = 46"""
+    HashEqualsHash: ClassVar[TokenKind]
+    """Value = 49"""
+    HashMinusHash: ClassVar[TokenKind]
+    """Value = 48"""
+    HighZ0Keyword: ClassVar[TokenKind]
+    """Value = 180"""
+    HighZ1Keyword: ClassVar[TokenKind]
+    """Value = 181"""
+    Identifier: ClassVar[TokenKind]
+    """Value = 2"""
+    IfKeyword: ClassVar[TokenKind]
+    """Value = 182"""
+    IfNoneKeyword: ClassVar[TokenKind]
+    """Value = 184"""
+    IffKeyword: ClassVar[TokenKind]
+    """Value = 183"""
+    IgnoreBinsKeyword: ClassVar[TokenKind]
+    """Value = 185"""
+    IllegalBinsKeyword: ClassVar[TokenKind]
+    """Value = 186"""
+    ImplementsKeyword: ClassVar[TokenKind]
+    """Value = 187"""
+    ImpliesKeyword: ClassVar[TokenKind]
+    """Value = 188"""
+    ImportKeyword: ClassVar[TokenKind]
+    """Value = 189"""
+    InOutKeyword: ClassVar[TokenKind]
+    """Value = 193"""
+    IncDirKeyword: ClassVar[TokenKind]
+    """Value = 190"""
+    IncludeFileName: ClassVar[TokenKind]
+    """Value = 344"""
+    IncludeKeyword: ClassVar[TokenKind]
+    """Value = 191"""
+    InitialKeyword: ClassVar[TokenKind]
+    """Value = 192"""
+    InputKeyword: ClassVar[TokenKind]
+    """Value = 194"""
+    InsideKeyword: ClassVar[TokenKind]
+    """Value = 195"""
+    InstanceKeyword: ClassVar[TokenKind]
+    """Value = 196"""
+    IntKeyword: ClassVar[TokenKind]
+    """Value = 197"""
+    IntegerBase: ClassVar[TokenKind]
+    """Value = 6"""
+    IntegerKeyword: ClassVar[TokenKind]
+    """Value = 198"""
+    IntegerLiteral: ClassVar[TokenKind]
+    """Value = 5"""
+    InterconnectKeyword: ClassVar[TokenKind]
+    """Value = 199"""
+    InterfaceKeyword: ClassVar[TokenKind]
+    """Value = 200"""
+    IntersectKeyword: ClassVar[TokenKind]
+    """Value = 201"""
+    JoinAnyKeyword: ClassVar[TokenKind]
+    """Value = 203"""
+    JoinKeyword: ClassVar[TokenKind]
+    """Value = 202"""
+    JoinNoneKeyword: ClassVar[TokenKind]
+    """Value = 204"""
+    LargeKeyword: ClassVar[TokenKind]
+    """Value = 205"""
+    LeftShift: ClassVar[TokenKind]
+    """Value = 69"""
+    LeftShiftEqual: ClassVar[TokenKind]
+    """Value = 65"""
+    LessThan: ClassVar[TokenKind]
+    """Value = 78"""
+    LessThanEquals: ClassVar[TokenKind]
+    """Value = 79"""
+    LessThanMinusArrow: ClassVar[TokenKind]
+    """Value = 80"""
+    LetKeyword: ClassVar[TokenKind]
+    """Value = 206"""
+    LibListKeyword: ClassVar[TokenKind]
+    """Value = 207"""
+    LibraryKeyword: ClassVar[TokenKind]
+    """Value = 208"""
+    LineContinuation: ClassVar[TokenKind]
+    """Value = 351"""
+    LocalKeyword: ClassVar[TokenKind]
+    """Value = 209"""
+    LocalParamKeyword: ClassVar[TokenKind]
+    """Value = 210"""
+    LogicKeyword: ClassVar[TokenKind]
+    """Value = 211"""
+    LongIntKeyword: ClassVar[TokenKind]
+    """Value = 212"""
+    MacroEscapedQuote: ClassVar[TokenKind]
+    """Value = 348"""
+    MacroPaste: ClassVar[TokenKind]
+    """Value = 349"""
+    MacroQuote: ClassVar[TokenKind]
+    """Value = 346"""
+    MacroTripleQuote: ClassVar[TokenKind]
+    """Value = 347"""
+    MacroUsage: ClassVar[TokenKind]
+    """Value = 345"""
+    MacromoduleKeyword: ClassVar[TokenKind]
+    """Value = 213"""
+    MatchesKeyword: ClassVar[TokenKind]
+    """Value = 214"""
+    MediumKeyword: ClassVar[TokenKind]
+    """Value = 215"""
+    Minus: ClassVar[TokenKind]
+    """Value = 35"""
+    MinusArrow: ClassVar[TokenKind]
+    """Value = 38"""
+    MinusColon: ClassVar[TokenKind]
+    """Value = 37"""
+    MinusDoubleArrow: ClassVar[TokenKind]
+    """Value = 39"""
+    MinusEqual: ClassVar[TokenKind]
+    """Value = 58"""
+    ModPortKeyword: ClassVar[TokenKind]
+    """Value = 216"""
+    ModuleKeyword: ClassVar[TokenKind]
+    """Value = 217"""
+    NandKeyword: ClassVar[TokenKind]
+    """Value = 218"""
+    NegEdgeKeyword: ClassVar[TokenKind]
+    """Value = 219"""
+    NetTypeKeyword: ClassVar[TokenKind]
+    """Value = 220"""
+    NewKeyword: ClassVar[TokenKind]
+    """Value = 221"""
+    NextTimeKeyword: ClassVar[TokenKind]
+    """Value = 222"""
+    NmosKeyword: ClassVar[TokenKind]
+    """Value = 223"""
+    NoShowCancelledKeyword: ClassVar[TokenKind]
+    """Value = 225"""
+    NorKeyword: ClassVar[TokenKind]
+    """Value = 224"""
+    NotIf0Keyword: ClassVar[TokenKind]
+    """Value = 227"""
+    NotIf1Keyword: ClassVar[TokenKind]
+    """Value = 228"""
+    NotKeyword: ClassVar[TokenKind]
+    """Value = 226"""
+    NullKeyword: ClassVar[TokenKind]
+    """Value = 229"""
+    OneStep: ClassVar[TokenKind]
+    """Value = 92"""
+    OpenBrace: ClassVar[TokenKind]
+    """Value = 13"""
+    OpenBracket: ClassVar[TokenKind]
+    """Value = 15"""
+    OpenParenthesis: ClassVar[TokenKind]
+    """Value = 17"""
+    Or: ClassVar[TokenKind]
+    """Value = 83"""
+    OrEqual: ClassVar[TokenKind]
+    """Value = 62"""
+    OrEqualsArrow: ClassVar[TokenKind]
+    """Value = 86"""
+    OrKeyword: ClassVar[TokenKind]
+    """Value = 230"""
+    OrMinusArrow: ClassVar[TokenKind]
+    """Value = 85"""
+    OutputKeyword: ClassVar[TokenKind]
+    """Value = 231"""
+    PackageKeyword: ClassVar[TokenKind]
+    """Value = 232"""
+    PackedKeyword: ClassVar[TokenKind]
+    """Value = 233"""
+    ParameterKeyword: ClassVar[TokenKind]
+    """Value = 234"""
+    Percent: ClassVar[TokenKind]
+    """Value = 77"""
+    PercentEqual: ClassVar[TokenKind]
+    """Value = 63"""
+    Placeholder: ClassVar[TokenKind]
+    """Value = 10"""
+    Plus: ClassVar[TokenKind]
+    """Value = 30"""
+    PlusColon: ClassVar[TokenKind]
+    """Value = 32"""
+    PlusDivMinus: ClassVar[TokenKind]
+    """Value = 33"""
+    PlusEqual: ClassVar[TokenKind]
+    """Value = 57"""
+    PlusModMinus: ClassVar[TokenKind]
+    """Value = 34"""
+    PmosKeyword: ClassVar[TokenKind]
+    """Value = 235"""
+    PosEdgeKeyword: ClassVar[TokenKind]
+    """Value = 236"""
+    PrimitiveKeyword: ClassVar[TokenKind]
+    """Value = 237"""
+    PriorityKeyword: ClassVar[TokenKind]
+    """Value = 238"""
+    ProgramKeyword: ClassVar[TokenKind]
+    """Value = 239"""
+    PropertyKeyword: ClassVar[TokenKind]
+    """Value = 240"""
+    ProtectedKeyword: ClassVar[TokenKind]
+    """Value = 241"""
+    Pull0Keyword: ClassVar[TokenKind]
+    """Value = 242"""
+    Pull1Keyword: ClassVar[TokenKind]
+    """Value = 243"""
+    PullDownKeyword: ClassVar[TokenKind]
+    """Value = 244"""
+    PullUpKeyword: ClassVar[TokenKind]
+    """Value = 245"""
+    PulseStyleOnDetectKeyword: ClassVar[TokenKind]
+    """Value = 246"""
+    PulseStyleOnEventKeyword: ClassVar[TokenKind]
+    """Value = 247"""
+    PureKeyword: ClassVar[TokenKind]
+    """Value = 248"""
+    Question: ClassVar[TokenKind]
+    """Value = 45"""
+    RandCKeyword: ClassVar[TokenKind]
+    """Value = 250"""
+    RandCaseKeyword: ClassVar[TokenKind]
+    """Value = 251"""
+    RandKeyword: ClassVar[TokenKind]
+    """Value = 249"""
+    RandSequenceKeyword: ClassVar[TokenKind]
+    """Value = 252"""
+    RcmosKeyword: ClassVar[TokenKind]
+    """Value = 253"""
+    RealKeyword: ClassVar[TokenKind]
+    """Value = 254"""
+    RealLiteral: ClassVar[TokenKind]
+    """Value = 8"""
+    RealTimeKeyword: ClassVar[TokenKind]
+    """Value = 255"""
+    RefKeyword: ClassVar[TokenKind]
+    """Value = 256"""
+    RegKeyword: ClassVar[TokenKind]
+    """Value = 257"""
+    RejectOnKeyword: ClassVar[TokenKind]
+    """Value = 258"""
+    ReleaseKeyword: ClassVar[TokenKind]
+    """Value = 259"""
+    RepeatKeyword: ClassVar[TokenKind]
+    """Value = 260"""
+    RestrictKeyword: ClassVar[TokenKind]
+    """Value = 261"""
+    ReturnKeyword: ClassVar[TokenKind]
+    """Value = 262"""
+    RightShift: ClassVar[TokenKind]
+    """Value = 70"""
+    RightShiftEqual: ClassVar[TokenKind]
+    """Value = 67"""
+    RnmosKeyword: ClassVar[TokenKind]
+    """Value = 263"""
+    RootSystemName: ClassVar[TokenKind]
+    """Value = 342"""
+    RpmosKeyword: ClassVar[TokenKind]
+    """Value = 264"""
+    RtranIf0Keyword: ClassVar[TokenKind]
+    """Value = 266"""
+    RtranIf1Keyword: ClassVar[TokenKind]
+    """Value = 267"""
+    RtranKeyword: ClassVar[TokenKind]
+    """Value = 265"""
+    SAlwaysKeyword: ClassVar[TokenKind]
+    """Value = 268"""
+    SEventuallyKeyword: ClassVar[TokenKind]
+    """Value = 269"""
+    SNextTimeKeyword: ClassVar[TokenKind]
+    """Value = 270"""
+    SUntilKeyword: ClassVar[TokenKind]
+    """Value = 271"""
+    SUntilWithKeyword: ClassVar[TokenKind]
+    """Value = 272"""
+    ScalaredKeyword: ClassVar[TokenKind]
+    """Value = 273"""
+    Semicolon: ClassVar[TokenKind]
+    """Value = 19"""
+    SequenceKeyword: ClassVar[TokenKind]
+    """Value = 274"""
+    ShortIntKeyword: ClassVar[TokenKind]
+    """Value = 275"""
+    ShortRealKeyword: ClassVar[TokenKind]
+    """Value = 276"""
+    ShowCancelledKeyword: ClassVar[TokenKind]
+    """Value = 277"""
+    SignedKeyword: ClassVar[TokenKind]
+    """Value = 278"""
+    Slash: ClassVar[TokenKind]
+    """Value = 26"""
+    SlashEqual: ClassVar[TokenKind]
+    """Value = 59"""
+    SmallKeyword: ClassVar[TokenKind]
+    """Value = 279"""
+    SoftKeyword: ClassVar[TokenKind]
+    """Value = 280"""
+    SolveKeyword: ClassVar[TokenKind]
+    """Value = 281"""
+    SpecParamKeyword: ClassVar[TokenKind]
+    """Value = 283"""
+    SpecifyKeyword: ClassVar[TokenKind]
+    """Value = 282"""
+    Star: ClassVar[TokenKind]
+    """Value = 27"""
+    StarArrow: ClassVar[TokenKind]
+    """Value = 29"""
+    StarEqual: ClassVar[TokenKind]
+    """Value = 60"""
+    StaticKeyword: ClassVar[TokenKind]
+    """Value = 284"""
+    StringKeyword: ClassVar[TokenKind]
+    """Value = 285"""
+    StringLiteral: ClassVar[TokenKind]
+    """Value = 4"""
+    Strong0Keyword: ClassVar[TokenKind]
+    """Value = 287"""
+    Strong1Keyword: ClassVar[TokenKind]
+    """Value = 288"""
+    StrongKeyword: ClassVar[TokenKind]
+    """Value = 286"""
+    StructKeyword: ClassVar[TokenKind]
+    """Value = 289"""
+    SuperKeyword: ClassVar[TokenKind]
+    """Value = 290"""
+    Supply0Keyword: ClassVar[TokenKind]
+    """Value = 291"""
+    Supply1Keyword: ClassVar[TokenKind]
+    """Value = 292"""
+    SyncAcceptOnKeyword: ClassVar[TokenKind]
+    """Value = 293"""
+    SyncRejectOnKeyword: ClassVar[TokenKind]
+    """Value = 294"""
+    SystemIdentifier: ClassVar[TokenKind]
+    """Value = 3"""
+    TableKeyword: ClassVar[TokenKind]
+    """Value = 295"""
+    TaggedKeyword: ClassVar[TokenKind]
+    """Value = 296"""
+    TaskKeyword: ClassVar[TokenKind]
+    """Value = 297"""
+    ThisKeyword: ClassVar[TokenKind]
+    """Value = 298"""
+    ThroughoutKeyword: ClassVar[TokenKind]
+    """Value = 299"""
+    Tilde: ClassVar[TokenKind]
+    """Value = 40"""
+    TildeAnd: ClassVar[TokenKind]
+    """Value = 41"""
+    TildeOr: ClassVar[TokenKind]
+    """Value = 42"""
+    TildeXor: ClassVar[TokenKind]
+    """Value = 43"""
+    TimeKeyword: ClassVar[TokenKind]
+    """Value = 300"""
+    TimeLiteral: ClassVar[TokenKind]
+    """Value = 9"""
+    TimePrecisionKeyword: ClassVar[TokenKind]
+    """Value = 301"""
+    TimeUnitKeyword: ClassVar[TokenKind]
+    """Value = 302"""
+    TranIf0Keyword: ClassVar[TokenKind]
+    """Value = 304"""
+    TranIf1Keyword: ClassVar[TokenKind]
+    """Value = 305"""
+    TranKeyword: ClassVar[TokenKind]
+    """Value = 303"""
+    Tri0Keyword: ClassVar[TokenKind]
+    """Value = 307"""
+    Tri1Keyword: ClassVar[TokenKind]
+    """Value = 308"""
+    TriAndKeyword: ClassVar[TokenKind]
+    """Value = 309"""
+    TriKeyword: ClassVar[TokenKind]
+    """Value = 306"""
+    TriOrKeyword: ClassVar[TokenKind]
+    """Value = 310"""
+    TriRegKeyword: ClassVar[TokenKind]
+    """Value = 311"""
+    TripleAnd: ClassVar[TokenKind]
+    """Value = 91"""
+    TripleEquals: ClassVar[TokenKind]
+    """Value = 55"""
+    TripleLeftShift: ClassVar[TokenKind]
+    """Value = 71"""
+    TripleLeftShiftEqual: ClassVar[TokenKind]
+    """Value = 66"""
+    TripleRightShift: ClassVar[TokenKind]
+    """Value = 72"""
+    TripleRightShiftEqual: ClassVar[TokenKind]
+    """Value = 68"""
+    TypeKeyword: ClassVar[TokenKind]
+    """Value = 312"""
+    TypedefKeyword: ClassVar[TokenKind]
+    """Value = 313"""
+    UWireKeyword: ClassVar[TokenKind]
+    """Value = 322"""
+    UnbasedUnsizedLiteral: ClassVar[TokenKind]
+    """Value = 7"""
+    UnionKeyword: ClassVar[TokenKind]
+    """Value = 314"""
+    Unique0Keyword: ClassVar[TokenKind]
+    """Value = 316"""
+    UniqueKeyword: ClassVar[TokenKind]
+    """Value = 315"""
+    UnitSystemName: ClassVar[TokenKind]
+    """Value = 341"""
+    Unknown: ClassVar[TokenKind]
+    """Value = 0"""
+    UnsignedKeyword: ClassVar[TokenKind]
+    """Value = 317"""
+    UntilKeyword: ClassVar[TokenKind]
+    """Value = 318"""
+    UntilWithKeyword: ClassVar[TokenKind]
+    """Value = 319"""
+    UntypedKeyword: ClassVar[TokenKind]
+    """Value = 320"""
+    UseKeyword: ClassVar[TokenKind]
+    """Value = 321"""
+    VarKeyword: ClassVar[TokenKind]
+    """Value = 323"""
+    VectoredKeyword: ClassVar[TokenKind]
+    """Value = 324"""
+    VirtualKeyword: ClassVar[TokenKind]
+    """Value = 325"""
+    VoidKeyword: ClassVar[TokenKind]
+    """Value = 326"""
+    WAndKeyword: ClassVar[TokenKind]
+    """Value = 329"""
+    WOrKeyword: ClassVar[TokenKind]
+    """Value = 338"""
+    WaitKeyword: ClassVar[TokenKind]
+    """Value = 327"""
+    WaitOrderKeyword: ClassVar[TokenKind]
+    """Value = 328"""
+    Weak0Keyword: ClassVar[TokenKind]
+    """Value = 331"""
+    Weak1Keyword: ClassVar[TokenKind]
+    """Value = 332"""
+    WeakKeyword: ClassVar[TokenKind]
+    """Value = 330"""
+    WhileKeyword: ClassVar[TokenKind]
+    """Value = 333"""
+    WildcardKeyword: ClassVar[TokenKind]
+    """Value = 334"""
+    WireKeyword: ClassVar[TokenKind]
+    """Value = 335"""
+    WithKeyword: ClassVar[TokenKind]
+    """Value = 336"""
+    WithinKeyword: ClassVar[TokenKind]
+    """Value = 337"""
+    XnorKeyword: ClassVar[TokenKind]
+    """Value = 339"""
+    Xor: ClassVar[TokenKind]
+    """Value = 50"""
+    XorEqual: ClassVar[TokenKind]
+    """Value = 64"""
+    XorKeyword: ClassVar[TokenKind]
+    """Value = 340"""
+    XorTilde: ClassVar[TokenKind]
+    """Value = 51"""
+
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class TransListCoverageBinInitializerSyntax(CoverageBinInitializerSyntax):
     sets: Any
+
 class TransRangeSyntax(SyntaxNode):
     items: Any
     repeat: TransRepeatRangeSyntax
+
 class TransRepeatRangeSyntax(SyntaxNode):
     closeBracket: Token
     openBracket: Token
     selector: SelectorSyntax
     specifier: Token
+
 class TransSetSyntax(SyntaxNode):
     closeParen: Token
     openParen: Token
     ranges: Any
+
 class TransparentMemberSymbol(Symbol):
     @property
-    def wrapped(self) -> Symbol:
-        ...
-class Trivia:
+    def wrapped(self) -> Symbol: ...
+
+class Trivia(metaclass=_metaclass):
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, kind: TriviaKind, rawText: str) -> None:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def getExplicitLocation(self) -> SourceLocation | None:
-        ...
-    def getRawText(self) -> str:
-        ...
-    def getSkippedTokens(self) -> List[Any]:
-        ...
-    def syntax(self) -> Any:
-        ...
+    def __init__(self, kind: TriviaKind, rawText: str) -> None: ...
+    def __repr__(self) -> str: ...
+    def getExplicitLocation(self) -> SourceLocation | None: ...
+    def getRawText(self) -> str: ...
+    def getSkippedTokens(self) -> list[Any]: ...
+    def syntax(self) -> Any: ...
     @property
-    def kind(self) -> TriviaKind:
-        ...
-class TriviaKind:
-    """
-    Members:
+    def kind(self) -> TriviaKind: ...
 
-      Unknown
+class TriviaKind(metaclass=_metaclass):
+    BlockComment: ClassVar[TriviaKind]
+    """Value = 4"""
+    Directive: ClassVar[TriviaKind]
+    """Value = 8"""
+    DisabledText: ClassVar[TriviaKind]
+    """Value = 5"""
+    EndOfLine: ClassVar[TriviaKind]
+    """Value = 2"""
+    LineComment: ClassVar[TriviaKind]
+    """Value = 3"""
+    SkippedSyntax: ClassVar[TriviaKind]
+    """Value = 7"""
+    SkippedTokens: ClassVar[TriviaKind]
+    """Value = 6"""
+    Unknown: ClassVar[TriviaKind]
+    """Value = 0"""
+    Whitespace: ClassVar[TriviaKind]
+    """Value = 1"""
 
-      Whitespace
+    __members__: dict[str, Self]
 
-      EndOfLine
-
-      LineComment
-
-      BlockComment
-
-      DisabledText
-
-      SkippedTokens
-
-      SkippedSyntax
-
-      Directive
-    """
-    BlockComment: typing.ClassVar[TriviaKind]  # value = <TriviaKind.BlockComment: 4>
-    Directive: typing.ClassVar[TriviaKind]  # value = <TriviaKind.Directive: 8>
-    DisabledText: typing.ClassVar[TriviaKind]  # value = <TriviaKind.DisabledText: 5>
-    EndOfLine: typing.ClassVar[TriviaKind]  # value = <TriviaKind.EndOfLine: 2>
-    LineComment: typing.ClassVar[TriviaKind]  # value = <TriviaKind.LineComment: 3>
-    SkippedSyntax: typing.ClassVar[TriviaKind]  # value = <TriviaKind.SkippedSyntax: 7>
-    SkippedTokens: typing.ClassVar[TriviaKind]  # value = <TriviaKind.SkippedTokens: 6>
-    Unknown: typing.ClassVar[TriviaKind]  # value = <TriviaKind.Unknown: 0>
-    Whitespace: typing.ClassVar[TriviaKind]  # value = <TriviaKind.Whitespace: 1>
-    __members__: typing.ClassVar[dict[str, TriviaKind]]  # value = {'Unknown': <TriviaKind.Unknown: 0>, 'Whitespace': <TriviaKind.Whitespace: 1>, 'EndOfLine': <TriviaKind.EndOfLine: 2>, 'LineComment': <TriviaKind.LineComment: 3>, 'BlockComment': <TriviaKind.BlockComment: 4>, 'DisabledText': <TriviaKind.DisabledText: 5>, 'SkippedTokens': <TriviaKind.SkippedTokens: 6>, 'SkippedSyntax': <TriviaKind.SkippedSyntax: 7>, 'Directive': <TriviaKind.Directive: 8>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class Type(Symbol):
     @staticmethod
-    def getCommonBase(left: Type, right: Type) -> Type:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def coerceValue(self, value: ConstantValue) -> ConstantValue:
-        ...
-    def implements(self, rhs: Type) -> bool:
-        ...
-    def isAssignmentCompatible(self, rhs: Type) -> bool:
-        ...
-    def isBitstreamCastable(self, rhs: Type) -> bool:
-        ...
-    def isBitstreamType(self, destination: bool = False) -> bool:
-        ...
-    def isCastCompatible(self, rhs: Type) -> bool:
-        ...
-    def isDerivedFrom(self, rhs: Type) -> bool:
-        ...
-    def isEquivalent(self, rhs: Type) -> bool:
-        ...
-    def isMatching(self, rhs: Type) -> bool:
-        ...
-    def isValidForRand(self, mode: RandMode, languageVersion: LanguageVersion) -> bool:
-        ...
-    def makeSigned(self, compilation: Compilation) -> Type:
-        ...
-    def makeUnsigned(self, compilation: Compilation) -> Type:
-        ...
+    def getCommonBase(left: Type, right: Type) -> Type: ...
+    def __repr__(self) -> str: ...
+    def coerceValue(self, value: ConstantValue) -> ConstantValue: ...
+    def implements(self, rhs: Type) -> bool: ...
+    def isAssignmentCompatible(self, rhs: Type) -> bool: ...
+    def isBitstreamCastable(self, rhs: Type) -> bool: ...
+    def isBitstreamType(self, destination: bool = False) -> bool: ...
+    def isCastCompatible(self, rhs: Type) -> bool: ...
+    def isDerivedFrom(self, rhs: Type) -> bool: ...
+    def isEquivalent(self, rhs: Type) -> bool: ...
+    def isMatching(self, rhs: Type) -> bool: ...
+    def isValidForRand(self, mode: RandMode, languageVersion: LanguageVersion) -> bool: ...
+    def makeSigned(self, compilation: Compilation) -> Type: ...
+    def makeUnsigned(self, compilation: Compilation) -> Type: ...
     @property
-    def arrayElementType(self) -> Type:
-        ...
+    def arrayElementType(self) -> Type: ...
     @property
-    def associativeIndexType(self) -> Type:
-        ...
+    def associativeIndexType(self) -> Type: ...
     @property
-    def bitWidth(self) -> int:
-        ...
+    def bitWidth(self) -> int: ...
     @property
-    def bitstreamWidth(self) -> int:
-        ...
+    def bitstreamWidth(self) -> int: ...
     @property
-    def canBeStringLike(self) -> bool:
-        ...
+    def canBeStringLike(self) -> bool: ...
     @property
-    def canonicalType(self) -> Type:
-        ...
+    def canonicalType(self) -> Type: ...
     @property
-    def defaultValue(self) -> ConstantValue:
-        ...
+    def defaultValue(self) -> ConstantValue: ...
     @property
-    def fixedRange(self) -> ConstantRange:
-        ...
+    def fixedRange(self) -> ConstantRange: ...
     @property
-    def hasFixedRange(self) -> bool:
-        ...
+    def hasFixedRange(self) -> bool: ...
     @property
-    def integralFlags(self) -> IntegralFlags:
-        ...
+    def integralFlags(self) -> IntegralFlags: ...
     @property
-    def isAggregate(self) -> bool:
-        ...
+    def isAggregate(self) -> bool: ...
     @property
-    def isAlias(self) -> bool:
-        ...
+    def isAlias(self) -> bool: ...
     @property
-    def isArray(self) -> bool:
-        ...
+    def isArray(self) -> bool: ...
     @property
-    def isAssociativeArray(self) -> bool:
-        ...
+    def isAssociativeArray(self) -> bool: ...
     @property
-    def isBooleanConvertible(self) -> bool:
-        ...
+    def isBooleanConvertible(self) -> bool: ...
     @property
-    def isByteArray(self) -> bool:
-        ...
+    def isByteArray(self) -> bool: ...
     @property
-    def isCHandle(self) -> bool:
-        ...
+    def isCHandle(self) -> bool: ...
     @property
-    def isClass(self) -> bool:
-        ...
+    def isClass(self) -> bool: ...
     @property
-    def isCovergroup(self) -> bool:
-        ...
+    def isCovergroup(self) -> bool: ...
     @property
-    def isDynamicallySizedArray(self) -> bool:
-        ...
+    def isDynamicallySizedArray(self) -> bool: ...
     @property
-    def isEnum(self) -> bool:
-        ...
+    def isEnum(self) -> bool: ...
     @property
-    def isError(self) -> bool:
-        ...
+    def isError(self) -> bool: ...
     @property
-    def isEvent(self) -> bool:
-        ...
+    def isEvent(self) -> bool: ...
     @property
-    def isFixedSize(self) -> bool:
-        ...
+    def isFixedSize(self) -> bool: ...
     @property
-    def isFloating(self) -> bool:
-        ...
+    def isFloating(self) -> bool: ...
     @property
-    def isFourState(self) -> bool:
-        ...
+    def isFourState(self) -> bool: ...
     @property
-    def isHandleType(self) -> bool:
-        ...
+    def isHandleType(self) -> bool: ...
     @property
-    def isIntegral(self) -> bool:
-        ...
+    def isIntegral(self) -> bool: ...
     @property
-    def isIterable(self) -> bool:
-        ...
+    def isIterable(self) -> bool: ...
     @property
-    def isNull(self) -> bool:
-        ...
+    def isNull(self) -> bool: ...
     @property
-    def isNumeric(self) -> bool:
-        ...
+    def isNumeric(self) -> bool: ...
     @property
-    def isPackedArray(self) -> bool:
-        ...
+    def isPackedArray(self) -> bool: ...
     @property
-    def isPackedUnion(self) -> bool:
-        ...
+    def isPackedUnion(self) -> bool: ...
     @property
-    def isPredefinedInteger(self) -> bool:
-        ...
+    def isPredefinedInteger(self) -> bool: ...
     @property
-    def isPropertyType(self) -> bool:
-        ...
+    def isPropertyType(self) -> bool: ...
     @property
-    def isQueue(self) -> bool:
-        ...
+    def isQueue(self) -> bool: ...
     @property
-    def isScalar(self) -> bool:
-        ...
+    def isScalar(self) -> bool: ...
     @property
-    def isSequenceType(self) -> bool:
-        ...
+    def isSequenceType(self) -> bool: ...
     @property
-    def isSigned(self) -> bool:
-        ...
+    def isSigned(self) -> bool: ...
     @property
-    def isSimpleBitVector(self) -> bool:
-        ...
+    def isSimpleBitVector(self) -> bool: ...
     @property
-    def isSimpleType(self) -> bool:
-        ...
+    def isSimpleType(self) -> bool: ...
     @property
-    def isSingular(self) -> bool:
-        ...
+    def isSingular(self) -> bool: ...
     @property
-    def isString(self) -> bool:
-        ...
+    def isString(self) -> bool: ...
     @property
-    def isStruct(self) -> bool:
-        ...
+    def isStruct(self) -> bool: ...
     @property
-    def isTaggedUnion(self) -> bool:
-        ...
+    def isTaggedUnion(self) -> bool: ...
     @property
-    def isTypeRefType(self) -> bool:
-        ...
+    def isTypeRefType(self) -> bool: ...
     @property
-    def isUnbounded(self) -> bool:
-        ...
+    def isUnbounded(self) -> bool: ...
     @property
-    def isUnpackedArray(self) -> bool:
-        ...
+    def isUnpackedArray(self) -> bool: ...
     @property
-    def isUnpackedStruct(self) -> bool:
-        ...
+    def isUnpackedStruct(self) -> bool: ...
     @property
-    def isUnpackedUnion(self) -> bool:
-        ...
+    def isUnpackedUnion(self) -> bool: ...
     @property
-    def isUntypedType(self) -> bool:
-        ...
+    def isUntypedType(self) -> bool: ...
     @property
-    def isValidForDPIArg(self) -> bool:
-        ...
+    def isValidForDPIArg(self) -> bool: ...
     @property
-    def isValidForDPIReturn(self) -> bool:
-        ...
+    def isValidForDPIReturn(self) -> bool: ...
     @property
-    def isValidForSequence(self) -> bool:
-        ...
+    def isValidForSequence(self) -> bool: ...
     @property
-    def isVirtualInterface(self) -> bool:
-        ...
+    def isVirtualInterface(self) -> bool: ...
     @property
-    def isVoid(self) -> bool:
-        ...
+    def isVoid(self) -> bool: ...
     @property
-    def selectableWidth(self) -> int:
-        ...
+    def selectableWidth(self) -> int: ...
+
 class TypeAliasType(Type):
     @property
-    def firstForwardDecl(self) -> ForwardingTypedefSymbol:
-        ...
+    def firstForwardDecl(self) -> ForwardingTypedefSymbol: ...
     @property
-    def targetType(self) -> DeclaredType:
-        ...
+    def targetType(self) -> DeclaredType: ...
     @property
-    def visibility(self) -> Visibility:
-        ...
+    def visibility(self) -> Visibility: ...
+
 class TypeAssignmentSyntax(SyntaxNode):
     assignment: EqualsTypeClauseSyntax
     name: Token
+
 class TypeParameterDeclarationSyntax(ParameterDeclarationBaseSyntax):
     declarators: Any
     typeKeyword: Token
     typeRestriction: ForwardTypeRestrictionSyntax
+
 class TypeParameterSymbol(Symbol, ParameterSymbolBase):
     @property
-    def isOverridden(self) -> bool:
-        ...
+    def isOverridden(self) -> bool: ...
     @property
-    def targetType(self) -> Any:
-        ...
+    def targetType(self) -> Any: ...
     @property
-    def typeAlias(self) -> Any:
-        ...
-class TypePrinter:
+    def typeAlias(self) -> Any: ...
+
+class TypePrinter(metaclass=_metaclass):
     options: TypePrintingOptions
-    def __init__(self) -> None:
-        ...
-    def append(self, type: Type) -> None:
-        ...
-    def clear(self) -> None:
-        ...
-    def toString(self) -> str:
-        ...
-class TypePrintingOptions:
-    class AnonymousTypeStyle:
-        """
-        Members:
+    def __init__(self) -> None: ...
+    def append(self, type: Type) -> None: ...
+    def clear(self) -> None: ...
+    def toString(self) -> str: ...
 
-          SystemName
+class TypePrintingOptions(metaclass=_metaclass):
+    class AnonymousTypeStyle(metaclass=_metaclass):
+        FriendlyName: ClassVar[Self]
+        """ Value = 1"""
+        SystemName: ClassVar[Self]
+        """ Value = 0"""
 
-          FriendlyName
-        """
-        FriendlyName: typing.ClassVar[TypePrintingOptions.AnonymousTypeStyle]  # value = <AnonymousTypeStyle.FriendlyName: 1>
-        SystemName: typing.ClassVar[TypePrintingOptions.AnonymousTypeStyle]  # value = <AnonymousTypeStyle.SystemName: 0>
-        __members__: typing.ClassVar[dict[str, TypePrintingOptions.AnonymousTypeStyle]]  # value = {'SystemName': <AnonymousTypeStyle.SystemName: 0>, 'FriendlyName': <AnonymousTypeStyle.FriendlyName: 1>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        __members__: dict[str, Self]
+
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    FriendlyName: typing.ClassVar[TypePrintingOptions.AnonymousTypeStyle]  # value = <AnonymousTypeStyle.FriendlyName: 1>
-    SystemName: typing.ClassVar[TypePrintingOptions.AnonymousTypeStyle]  # value = <AnonymousTypeStyle.SystemName: 0>
+        def value(self) -> int: ...
+
+    FriendlyName = AnonymousTypeStyle.FriendlyName
+    SystemName = AnonymousTypeStyle.SystemName
     addSingleQuotes: bool
     anonymousTypeStyle: Any
     elideScopeNames: bool
@@ -14087,29 +10359,34 @@ class TypePrintingOptions:
     printAKA: bool
     skipScopedTypeNames: bool
     skipTypeDefs: bool
+
 class TypeRefType(Type):
     pass
+
 class TypeReferenceExpression(Expression):
     @property
-    def targetType(self) -> Any:
-        ...
+    def targetType(self) -> Any: ...
+
 class TypeReferenceSyntax(DataTypeSyntax):
     closeParen: Token
     expr: ExpressionSyntax
     openParen: Token
     typeKeyword: Token
+
 class TypedefDeclarationSyntax(MemberSyntax):
     dimensions: Any
     name: Token
     semi: Token
     type: DataTypeSyntax
     typedefKeyword: Token
+
 class UdpBodySyntax(SyntaxNode):
     endtable: Token
     entries: Any
     initialStmt: UdpInitialStmtSyntax
     portDecls: Any
     table: Token
+
 class UdpDeclarationSyntax(MemberSyntax):
     body: UdpBodySyntax
     endBlockName: NamedBlockClauseSyntax
@@ -14117,11 +10394,13 @@ class UdpDeclarationSyntax(MemberSyntax):
     name: Token
     portList: UdpPortListSyntax
     primitive: Token
+
 class UdpEdgeFieldSyntax(UdpFieldBaseSyntax):
     closeParen: Token
     first: Token
     openParen: Token
     second: Token
+
 class UdpEntrySyntax(SyntaxNode):
     colon1: Token
     colon2: Token
@@ -14129,697 +10408,447 @@ class UdpEntrySyntax(SyntaxNode):
     inputs: Any
     next: UdpFieldBaseSyntax
     semi: Token
+
 class UdpFieldBaseSyntax(SyntaxNode):
     pass
+
 class UdpInitialStmtSyntax(SyntaxNode):
     equals: Token
     initial: Token
     name: Token
     semi: Token
     value: ExpressionSyntax
+
 class UdpInputPortDeclSyntax(UdpPortDeclSyntax):
     keyword: Token
     names: Any
+
 class UdpOutputPortDeclSyntax(UdpPortDeclSyntax):
     initializer: EqualsValueClauseSyntax
     keyword: Token
     name: Token
     reg: Token
+
 class UdpPortDeclSyntax(SyntaxNode):
     attributes: Any
+
 class UdpPortListSyntax(SyntaxNode):
     pass
+
 class UdpSimpleFieldSyntax(UdpFieldBaseSyntax):
     field: Token
+
 class UnaryAssertionExpr(AssertionExpr):
     @property
-    def expr(self) -> AssertionExpr:
-        ...
+    def expr(self) -> AssertionExpr: ...
     @property
-    def op(self) -> UnaryAssertionOperator:
-        ...
+    def op(self) -> UnaryAssertionOperator: ...
     @property
-    def range(self) -> SequenceRange | None:
-        ...
-class UnaryAssertionOperator:
-    """
-    Members:
+    def range(self) -> SequenceRange | None: ...
 
-      Not
+class UnaryAssertionOperator(metaclass=_metaclass):
+    Always: ClassVar[UnaryAssertionOperator]
+    """Value = 3"""
+    Eventually: ClassVar[UnaryAssertionOperator]
+    """Value = 5"""
+    NextTime: ClassVar[UnaryAssertionOperator]
+    """Value = 1"""
+    Not: ClassVar[UnaryAssertionOperator]
+    """Value = 0"""
+    SAlways: ClassVar[UnaryAssertionOperator]
+    """Value = 4"""
+    SEventually: ClassVar[UnaryAssertionOperator]
+    """Value = 6"""
+    SNextTime: ClassVar[UnaryAssertionOperator]
+    """Value = 2"""
 
-      NextTime
+    __members__: dict[str, Self]
 
-      SNextTime
-
-      Always
-
-      SAlways
-
-      Eventually
-
-      SEventually
-    """
-    Always: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.Always: 3>
-    Eventually: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.Eventually: 5>
-    NextTime: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.NextTime: 1>
-    Not: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.Not: 0>
-    SAlways: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.SAlways: 4>
-    SEventually: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.SEventually: 6>
-    SNextTime: typing.ClassVar[UnaryAssertionOperator]  # value = <UnaryAssertionOperator.SNextTime: 2>
-    __members__: typing.ClassVar[dict[str, UnaryAssertionOperator]]  # value = {'Not': <UnaryAssertionOperator.Not: 0>, 'NextTime': <UnaryAssertionOperator.NextTime: 1>, 'SNextTime': <UnaryAssertionOperator.SNextTime: 2>, 'Always': <UnaryAssertionOperator.Always: 3>, 'SAlways': <UnaryAssertionOperator.SAlways: 4>, 'Eventually': <UnaryAssertionOperator.Eventually: 5>, 'SEventually': <UnaryAssertionOperator.SEventually: 6>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class UnaryBinsSelectExpr(BinsSelectExpr):
-    class Op:
-        """
-        Members:
+    class Op(metaclass=_metaclass):
+        Negation: ClassVar[Self]
+        """Value = 0"""
 
-          Negation
-        """
-        Negation: typing.ClassVar[UnaryBinsSelectExpr.Op]  # value = <Op.Negation: 0>
-        __members__: typing.ClassVar[dict[str, UnaryBinsSelectExpr.Op]]  # value = {'Negation': <Op.Negation: 0>}
-        def __eq__(self, other: typing.Any) -> bool:
-            ...
-        def __getstate__(self) -> int:
-            ...
-        def __hash__(self) -> int:
-            ...
-        def __index__(self) -> int:
-            ...
-        def __init__(self, value: int) -> None:
-            ...
-        def __int__(self) -> int:
-            ...
-        def __ne__(self, other: typing.Any) -> bool:
-            ...
-        def __repr__(self) -> str:
-            ...
-        def __setstate__(self, state: int) -> None:
-            ...
-        def __str__(self) -> str:
-            ...
+        __members__: dict[str, Self]
+
+        def __int__(self) -> int: ...
+        def __index__(self, index: int) -> Self: ...
         @property
-        def name(self) -> str:
-            ...
+        def name(self) -> str: ...
         @property
-        def value(self) -> int:
-            ...
-    Negation: typing.ClassVar[UnaryBinsSelectExpr.Op]  # value = <Op.Negation: 0>
+        def value(self) -> int: ...
+
+    Negation = Op.Negation
+
     @property
-    def expr(self) -> BinsSelectExpr:
-        ...
+    def expr(self) -> BinsSelectExpr: ...
     @property
-    def op(self) -> Any:
-        ...
+    def op(self) -> Any: ...
+
 class UnaryBinsSelectExprSyntax(BinsSelectExpressionSyntax):
     expr: BinsSelectConditionExprSyntax
     op: Token
+
 class UnaryConditionalDirectiveExpressionSyntax(ConditionalDirectiveExpressionSyntax):
     op: Token
     operand: ConditionalDirectiveExpressionSyntax
+
 class UnaryExpression(Expression):
     @property
-    def op(self) -> UnaryOperator:
-        ...
+    def op(self) -> UnaryOperator: ...
     @property
-    def operand(self) -> Expression:
-        ...
-class UnaryOperator:
-    """
-    Members:
+    def operand(self) -> Expression: ...
 
-      Plus
+class UnaryOperator(metaclass=_metaclass):
+    BitwiseAnd: ClassVar[UnaryOperator]
+    """Value = 3"""
+    BitwiseNand: ClassVar[UnaryOperator]
+    """Value = 6"""
+    BitwiseNor: ClassVar[UnaryOperator]
+    """Value = 7"""
+    BitwiseNot: ClassVar[UnaryOperator]
+    """Value = 2"""
+    BitwiseOr: ClassVar[UnaryOperator]
+    """Value = 4"""
+    BitwiseXnor: ClassVar[UnaryOperator]
+    """Value = 8"""
+    BitwiseXor: ClassVar[UnaryOperator]
+    """Value = 5"""
+    LogicalNot: ClassVar[UnaryOperator]
+    """Value = 9"""
+    Minus: ClassVar[UnaryOperator]
+    """Value = 1"""
+    Plus: ClassVar[UnaryOperator]
+    """Value = 0"""
+    Postdecrement: ClassVar[UnaryOperator]
+    """Value = 13"""
+    Postincrement: ClassVar[UnaryOperator]
+    """Value = 12"""
+    Predecrement: ClassVar[UnaryOperator]
+    """Value = 11"""
+    Preincrement: ClassVar[UnaryOperator]
+    """Value = 10"""
 
-      Minus
+    __members__: dict[str, Self]
 
-      BitwiseNot
-
-      BitwiseAnd
-
-      BitwiseOr
-
-      BitwiseXor
-
-      BitwiseNand
-
-      BitwiseNor
-
-      BitwiseXnor
-
-      LogicalNot
-
-      Preincrement
-
-      Predecrement
-
-      Postincrement
-
-      Postdecrement
-    """
-    BitwiseAnd: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseAnd: 3>
-    BitwiseNand: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseNand: 6>
-    BitwiseNor: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseNor: 7>
-    BitwiseNot: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseNot: 2>
-    BitwiseOr: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseOr: 4>
-    BitwiseXnor: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseXnor: 8>
-    BitwiseXor: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.BitwiseXor: 5>
-    LogicalNot: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.LogicalNot: 9>
-    Minus: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Minus: 1>
-    Plus: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Plus: 0>
-    Postdecrement: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Postdecrement: 13>
-    Postincrement: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Postincrement: 12>
-    Predecrement: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Predecrement: 11>
-    Preincrement: typing.ClassVar[UnaryOperator]  # value = <UnaryOperator.Preincrement: 10>
-    __members__: typing.ClassVar[dict[str, UnaryOperator]]  # value = {'Plus': <UnaryOperator.Plus: 0>, 'Minus': <UnaryOperator.Minus: 1>, 'BitwiseNot': <UnaryOperator.BitwiseNot: 2>, 'BitwiseAnd': <UnaryOperator.BitwiseAnd: 3>, 'BitwiseOr': <UnaryOperator.BitwiseOr: 4>, 'BitwiseXor': <UnaryOperator.BitwiseXor: 5>, 'BitwiseNand': <UnaryOperator.BitwiseNand: 6>, 'BitwiseNor': <UnaryOperator.BitwiseNor: 7>, 'BitwiseXnor': <UnaryOperator.BitwiseXnor: 8>, 'LogicalNot': <UnaryOperator.LogicalNot: 9>, 'Preincrement': <UnaryOperator.Preincrement: 10>, 'Predecrement': <UnaryOperator.Predecrement: 11>, 'Postincrement': <UnaryOperator.Postincrement: 12>, 'Postdecrement': <UnaryOperator.Postdecrement: 13>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class UnaryPropertyExprSyntax(PropertyExprSyntax):
     expr: PropertyExprSyntax
     op: Token
+
 class UnarySelectPropertyExprSyntax(PropertyExprSyntax):
     closeBracket: Token
     expr: PropertyExprSyntax
     op: Token
     openBracket: Token
     selector: SelectorSyntax
+
 class UnbasedUnsizedIntegerLiteral(Expression):
     @property
-    def literalValue(self) -> Any:
-        ...
+    def literalValue(self) -> Any: ...
     @property
-    def value(self) -> Any:
-        ...
-class Unbounded:
-    def __init__(self) -> None:
-        ...
-    def __repr__(self) -> str:
-        ...
+    def value(self) -> Any: ...
+
+class Unbounded(metaclass=_metaclass):
+    def __init__(self) -> None: ...
+    def __repr__(self) -> str: ...
+
 class UnboundedLiteral(Expression):
     pass
+
 class UnboundedType(Type):
     pass
+
 class UnconditionalBranchDirectiveSyntax(DirectiveSyntax):
     disabledTokens: Any
-class UnconnectedDrive:
-    """
-    Members:
 
-      None_
+class UnconnectedDrive(metaclass=_metaclass):
+    None_: ClassVar[UnconnectedDrive]
+    """Value = 0"""
+    Pull0: ClassVar[UnconnectedDrive]
+    """Value = 1"""
+    Pull1: ClassVar[UnconnectedDrive]
+    """Value = 2"""
 
-      Pull0
+    __members__: dict[str, Self]
 
-      Pull1
-    """
-    None_: typing.ClassVar[UnconnectedDrive]  # value = <UnconnectedDrive.None_: 0>
-    Pull0: typing.ClassVar[UnconnectedDrive]  # value = <UnconnectedDrive.Pull0: 1>
-    Pull1: typing.ClassVar[UnconnectedDrive]  # value = <UnconnectedDrive.Pull1: 2>
-    __members__: typing.ClassVar[dict[str, UnconnectedDrive]]  # value = {'None_': <UnconnectedDrive.None_: 0>, 'Pull0': <UnconnectedDrive.Pull0: 1>, 'Pull1': <UnconnectedDrive.Pull1: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class UnconnectedDriveDirectiveSyntax(DirectiveSyntax):
     strength: Token
+
 class UndefDirectiveSyntax(DirectiveSyntax):
     name: Token
+
 class UninstantiatedDefSymbol(Symbol):
     @property
-    def definitionName(self) -> str:
-        ...
+    def definitionName(self) -> str: ...
     @property
-    def isChecker(self) -> bool:
-        ...
+    def isChecker(self) -> bool: ...
     @property
-    def paramExpressions(self) -> List[Expression]:
-        ...
+    def paramExpressions(self) -> list[Expression]: ...
     @property
-    def portConnections(self) -> List[AssertionExpr]:
-        ...
+    def portConnections(self) -> list[AssertionExpr]: ...
     @property
-    def portNames(self) -> List[str]:
-        ...
-class UniquePriorityCheck:
-    """
-    Members:
+    def portNames(self) -> list[str]: ...
 
-      None_
+class UniquePriorityCheck(metaclass=_metaclass):
+    None_: ClassVar[UniquePriorityCheck]
+    """Value = 0"""
+    Priority: ClassVar[UniquePriorityCheck]
+    """Value = 3"""
+    Unique: ClassVar[UniquePriorityCheck]
+    """Value = 1"""
+    Unique0: ClassVar[UniquePriorityCheck]
+    """Value = 2"""
 
-      Unique
+    __members__: dict[str, Self]
 
-      Unique0
-
-      Priority
-    """
-    None_: typing.ClassVar[UniquePriorityCheck]  # value = <UniquePriorityCheck.None_: 0>
-    Priority: typing.ClassVar[UniquePriorityCheck]  # value = <UniquePriorityCheck.Priority: 3>
-    Unique: typing.ClassVar[UniquePriorityCheck]  # value = <UniquePriorityCheck.Unique: 1>
-    Unique0: typing.ClassVar[UniquePriorityCheck]  # value = <UniquePriorityCheck.Unique0: 2>
-    __members__: typing.ClassVar[dict[str, UniquePriorityCheck]]  # value = {'None_': <UniquePriorityCheck.None_: 0>, 'Unique': <UniquePriorityCheck.Unique: 1>, 'Unique0': <UniquePriorityCheck.Unique0: 2>, 'Priority': <UniquePriorityCheck.Priority: 3>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class UniquenessConstraint(Constraint):
     @property
-    def items(self) -> List[Any]:
-        ...
+    def items(self) -> list[Any]: ...
+
 class UniquenessConstraintSyntax(ConstraintItemSyntax):
     ranges: RangeListSyntax
     semi: Token
     unique: Token
+
 class UnpackedStructType(Type, Scope):
     @property
-    def systemId(self) -> int:
-        ...
+    def systemId(self) -> int: ...
+
 class UnpackedUnionType(Type, Scope):
     @property
-    def isTagged(self) -> bool:
-        ...
+    def isTagged(self) -> bool: ...
     @property
-    def systemId(self) -> int:
-        ...
+    def systemId(self) -> int: ...
+
 class UntypedType(Type):
     pass
+
 class UserDefinedNetDeclarationSyntax(MemberSyntax):
     declarators: Any
     delay: TimingControlSyntax
     netType: Token
     semi: Token
-class ValueDriver:
+
+class ValueDriver(metaclass=_metaclass):
     @property
-    def containingSymbol(self) -> Any:
-        ...
+    def containingSymbol(self) -> Any: ...
     @property
-    def flags(self) -> Any:
-        ...
+    def flags(self) -> Any: ...
     @property
-    def isClockVar(self) -> bool:
-        ...
+    def isClockVar(self) -> bool: ...
     @property
-    def isFromSideEffect(self) -> bool:
-        ...
+    def isFromSideEffect(self) -> bool: ...
     @property
-    def isInSingleDriverProcedure(self) -> bool:
-        ...
+    def isInSingleDriverProcedure(self) -> bool: ...
     @property
-    def isInputPort(self) -> bool:
-        ...
+    def isInputPort(self) -> bool: ...
     @property
-    def isUnidirectionalPort(self) -> bool:
-        ...
+    def isUnidirectionalPort(self) -> bool: ...
     @property
-    def kind(self) -> Any:
-        ...
+    def kind(self) -> Any: ...
     @property
-    def prefixExpression(self) -> Any:
-        ...
+    def prefixExpression(self) -> Any: ...
     @property
-    def procCallExpression(self) -> Any:
-        ...
+    def procCallExpression(self) -> Any: ...
     @property
-    def source(self) -> Any:
-        ...
+    def source(self) -> Any: ...
     @property
-    def sourceRange(self) -> Any:
-        ...
+    def sourceRange(self) -> Any: ...
+
 class ValueExpressionBase(Expression):
     @property
-    def symbol(self) -> Any:
-        ...
+    def symbol(self) -> Any: ...
+
 class ValueRangeExpression(Expression):
     @property
-    def left(self) -> Expression:
-        ...
+    def left(self) -> Expression: ...
     @property
-    def right(self) -> Expression:
-        ...
+    def right(self) -> Expression: ...
+
 class ValueRangeExpressionSyntax(ExpressionSyntax):
     closeBracket: Token
     left: ExpressionSyntax
     op: Token
     openBracket: Token
     right: ExpressionSyntax
-class ValueRangeKind:
-    """
-    Members:
 
-      Simple
+class ValueRangeKind(metaclass=_metaclass):
+    AbsoluteTolerance: ClassVar[ValueRangeKind]
+    """Value = 1"""
+    RelativeTolerance: ClassVar[ValueRangeKind]
+    """Value = 2"""
+    Simple: ClassVar[ValueRangeKind]
+    """Value = 0"""
 
-      AbsoluteTolerance
+    __members__: dict[str, Self]
 
-      RelativeTolerance
-    """
-    AbsoluteTolerance: typing.ClassVar[ValueRangeKind]  # value = <ValueRangeKind.AbsoluteTolerance: 1>
-    RelativeTolerance: typing.ClassVar[ValueRangeKind]  # value = <ValueRangeKind.RelativeTolerance: 2>
-    Simple: typing.ClassVar[ValueRangeKind]  # value = <ValueRangeKind.Simple: 0>
-    __members__: typing.ClassVar[dict[str, ValueRangeKind]]  # value = {'Simple': <ValueRangeKind.Simple: 0>, 'AbsoluteTolerance': <ValueRangeKind.AbsoluteTolerance: 1>, 'RelativeTolerance': <ValueRangeKind.RelativeTolerance: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class ValueSymbol(Symbol):
     @property
-    def initializer(self) -> Expression:
-        ...
+    def initializer(self) -> Expression: ...
     @property
-    def type(self) -> Any:
-        ...
+    def type(self) -> Any: ...
+
 class VariableDeclStatement(Statement):
     @property
-    def symbol(self) -> Any:
-        ...
+    def symbol(self) -> Any: ...
+
 class VariableDimensionSyntax(SyntaxNode):
     closeBracket: Token
     openBracket: Token
     specifier: DimensionSpecifierSyntax
-class VariableFlags:
-    """
-    Members:
 
-      None_
+class VariableFlags(metaclass=_metaclass):
+    CheckerFreeVariable: ClassVar[VariableFlags]
+    """Value = 16"""
+    CompilerGenerated: ClassVar[VariableFlags]
+    """Value = 2"""
+    Const: ClassVar[VariableFlags]
+    """Value = 1"""
+    CoverageSampleFormal: ClassVar[VariableFlags]
+    """Value = 8"""
+    ImmutableCoverageOption: ClassVar[VariableFlags]
+    """Value = 4"""
+    None_: ClassVar[VariableFlags]
+    """Value = 0"""
+    RefStatic: ClassVar[VariableFlags]
+    """Value = 32"""
 
-      Const
+    __members__: dict[str, Self]
 
-      CompilerGenerated
-
-      ImmutableCoverageOption
-
-      CoverageSampleFormal
-
-      CheckerFreeVariable
-
-      RefStatic
-    """
-    CheckerFreeVariable: typing.ClassVar[VariableFlags]  # value = <VariableFlags.CheckerFreeVariable: 16>
-    CompilerGenerated: typing.ClassVar[VariableFlags]  # value = <VariableFlags.CompilerGenerated: 2>
-    Const: typing.ClassVar[VariableFlags]  # value = <VariableFlags.Const: 1>
-    CoverageSampleFormal: typing.ClassVar[VariableFlags]  # value = <VariableFlags.CoverageSampleFormal: 8>
-    ImmutableCoverageOption: typing.ClassVar[VariableFlags]  # value = <VariableFlags.ImmutableCoverageOption: 4>
-    None_: typing.ClassVar[VariableFlags]  # value = <VariableFlags.None_: 0>
-    RefStatic: typing.ClassVar[VariableFlags]  # value = <VariableFlags.RefStatic: 32>
-    __members__: typing.ClassVar[dict[str, VariableFlags]]  # value = {'None_': <VariableFlags.None_: 0>, 'Const': <VariableFlags.Const: 1>, 'CompilerGenerated': <VariableFlags.CompilerGenerated: 2>, 'ImmutableCoverageOption': <VariableFlags.ImmutableCoverageOption: 4>, 'CoverageSampleFormal': <VariableFlags.CoverageSampleFormal: 8>, 'CheckerFreeVariable': <VariableFlags.CheckerFreeVariable: 16>, 'RefStatic': <VariableFlags.RefStatic: 32>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class VariableLifetime:
-    """
-    Members:
+    def value(self) -> int: ...
 
-      Automatic
+class VariableLifetime(metaclass=_metaclass):
+    Automatic: ClassVar[VariableLifetime]
+    """Value = 0"""
+    Static: ClassVar[VariableLifetime]
+    """Value = 1"""
 
-      Static
-    """
-    Automatic: typing.ClassVar[VariableLifetime]  # value = <VariableLifetime.Automatic: 0>
-    Static: typing.ClassVar[VariableLifetime]  # value = <VariableLifetime.Static: 1>
-    __members__: typing.ClassVar[dict[str, VariableLifetime]]  # value = {'Automatic': <VariableLifetime.Automatic: 0>, 'Static': <VariableLifetime.Static: 1>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    __members__: dict[str, Self]
+
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class VariablePattern(Pattern):
     @property
-    def variable(self) -> Any:
-        ...
+    def variable(self) -> Any: ...
+
 class VariablePatternSyntax(PatternSyntax):
     dot: Token
     variableName: Token
+
 class VariablePortHeaderSyntax(PortHeaderSyntax):
     constKeyword: Token
     dataType: DataTypeSyntax
     direction: Token
     varKeyword: Token
+
 class VariableSymbol(ValueSymbol):
     @property
-    def flags(self) -> VariableFlags:
-        ...
+    def flags(self) -> VariableFlags: ...
     @property
-    def lifetime(self) -> VariableLifetime:
-        ...
-class VersionInfo:
+    def lifetime(self) -> VariableLifetime: ...
+
+class VersionInfo(metaclass=_metaclass):
     @staticmethod
-    def getHash() -> str:
-        ...
+    def getHash() -> str: ...
     @staticmethod
-    def getMajor() -> int:
-        ...
+    def getMajor() -> int: ...
     @staticmethod
-    def getMinor() -> int:
-        ...
+    def getMinor() -> int: ...
     @staticmethod
-    def getPatch() -> int:
-        ...
+    def getPatch() -> int: ...
+
 class VirtualInterfaceType(Type):
     @property
-    def iface(self) -> InstanceSymbol:
-        ...
+    def iface(self) -> InstanceSymbol: ...
     @property
-    def modport(self) -> ModportSymbol:
-        ...
+    def modport(self) -> ModportSymbol: ...
+
 class VirtualInterfaceTypeSyntax(DataTypeSyntax):
     interfaceKeyword: Token
     modport: DotMemberClauseSyntax
     name: Token
     parameters: ParameterValueAssignmentSyntax
     virtualKeyword: Token
-class Visibility:
-    """
-    Members:
 
-      Public
+class Visibility(metaclass=_metaclass):
+    Local: ClassVar[Visibility]
+    """ Value: 2"""
+    Protected: ClassVar[Visibility]
+    """ Value: 1"""
+    Public: ClassVar[Visibility]
+    """ Value: 0"""
 
-      Protected
+    __members__: dict[str, Self]
 
-      Local
-    """
-    Local: typing.ClassVar[Visibility]  # value = <Visibility.Local: 2>
-    Protected: typing.ClassVar[Visibility]  # value = <Visibility.Protected: 1>
-    Public: typing.ClassVar[Visibility]  # value = <Visibility.Public: 0>
-    __members__: typing.ClassVar[dict[str, Visibility]]  # value = {'Public': <Visibility.Public: 0>, 'Protected': <Visibility.Protected: 1>, 'Local': <Visibility.Local: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> Self: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
-class VisitAction:
-    """
-    Members:
+    def value(self) -> int: ...
 
-      Advance
+class VisitAction(metaclass=_metaclass):
+    Advance: ClassVar[VisitAction]
+    """Value: 0"""
+    Interrupt: ClassVar[VisitAction]
+    """Value: 2"""
+    Skip: ClassVar[VisitAction]
+    """Value: 1"""
 
-      Skip
+    __members__: dict[str, VisitAction]
 
-      Interrupt
-    """
-    Advance: typing.ClassVar[VisitAction]  # value = <VisitAction.Advance: 0>
-    Interrupt: typing.ClassVar[VisitAction]  # value = <VisitAction.Interrupt: 2>
-    Skip: typing.ClassVar[VisitAction]  # value = <VisitAction.Skip: 1>
-    __members__: typing.ClassVar[dict[str, VisitAction]]  # value = {'Advance': <VisitAction.Advance: 0>, 'Skip': <VisitAction.Skip: 1>, 'Interrupt': <VisitAction.Interrupt: 2>}
-    def __eq__(self, other: typing.Any) -> bool:
-        ...
-    def __getstate__(self) -> int:
-        ...
-    def __hash__(self) -> int:
-        ...
-    def __index__(self) -> int:
-        ...
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __ne__(self, other: typing.Any) -> bool:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __setstate__(self, state: int) -> None:
-        ...
-    def __str__(self) -> str:
-        ...
+    def __int__(self) -> int: ...
+    def __index__(self, index: int) -> VisitAction: ...
     @property
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
     @property
-    def value(self) -> int:
-        ...
+    def value(self) -> int: ...
+
 class VoidCastedCallStatementSyntax(StatementSyntax):
     apostrophe: Token
     closeParen: Token
@@ -14827,129 +10856,127 @@ class VoidCastedCallStatementSyntax(StatementSyntax):
     openParen: Token
     semi: Token
     voidKeyword: Token
+
 class VoidType(Type):
     pass
+
 class WaitForkStatement(Statement):
     pass
+
 class WaitForkStatementSyntax(StatementSyntax):
     fork: Token
     semi: Token
     wait: Token
+
 class WaitOrderStatement(Statement):
     @property
-    def events(self) -> List[Expression]:
-        ...
+    def events(self) -> list[Expression]: ...
     @property
-    def ifFalse(self) -> Statement:
-        ...
+    def ifFalse(self) -> Statement: ...
     @property
-    def ifTrue(self) -> Statement:
-        ...
+    def ifTrue(self) -> Statement: ...
+
 class WaitOrderStatementSyntax(StatementSyntax):
     action: ActionBlockSyntax
     closeParen: Token
     names: Any
     openParen: Token
     wait_order: Token
+
 class WaitStatement(Statement):
     @property
-    def cond(self) -> Expression:
-        ...
+    def cond(self) -> Expression: ...
     @property
-    def stmt(self) -> Statement:
-        ...
+    def stmt(self) -> Statement: ...
+
 class WaitStatementSyntax(StatementSyntax):
     closeParen: Token
     expr: ExpressionSyntax
     openParen: Token
     statement: StatementSyntax
     wait: Token
+
 class WhileLoopStatement(Statement):
     @property
-    def body(self) -> Statement:
-        ...
+    def body(self) -> Statement: ...
     @property
-    def cond(self) -> Expression:
-        ...
+    def cond(self) -> Expression: ...
+
 class WildcardDimensionSpecifierSyntax(DimensionSpecifierSyntax):
     star: Token
+
 class WildcardImportSymbol(Symbol):
     @property
-    def isFromExport(self) -> bool:
-        ...
+    def isFromExport(self) -> bool: ...
     @property
-    def package(self) -> PackageSymbol:
-        ...
+    def package(self) -> PackageSymbol: ...
     @property
-    def packageName(self) -> str:
-        ...
+    def packageName(self) -> str: ...
+
 class WildcardPattern(Pattern):
     pass
+
 class WildcardPatternSyntax(PatternSyntax):
     dot: Token
     star: Token
+
 class WildcardPortConnectionSyntax(PortConnectionSyntax):
     dot: Token
     star: Token
+
 class WildcardPortListSyntax(PortListSyntax):
     closeParen: Token
     dot: Token
     openParen: Token
     star: Token
+
 class WildcardUdpPortListSyntax(UdpPortListSyntax):
     closeParen: Token
     dot: Token
     openParen: Token
     semi: Token
     star: Token
+
 class WithClauseSyntax(SyntaxNode):
     closeParen: Token
     expr: ExpressionSyntax
     openParen: Token
     with_: Token
+
 class WithFunctionClauseSyntax(SyntaxNode):
     name: NameSyntax
     with_: Token
+
 class WithFunctionSampleSyntax(SyntaxNode):
     function: Token
     portList: FunctionPortListSyntax
     sample: Token
     with_: Token
-class logic_t:
+
+class logic_t(metaclass=_metaclass):
     x: typing.ClassVar[logic_t]  # value = x
     z: typing.ClassVar[logic_t]  # value = z
     value: int
-    def __and__(self, arg0: logic_t) -> logic_t:
-        ...
-    def __bool__(self) -> bool:
-        ...
+    def __and__(self, arg0: logic_t) -> logic_t: ...
+    def __bool__(self) -> bool: ...
     def __eq__(self, arg0: logic_t) -> logic_t:  # type: ignore[override]
         ...
     @typing.overload
-    def __init__(self) -> None:
-        ...
+    def __init__(self) -> None: ...
     @typing.overload
-    def __init__(self, value: int) -> None:
-        ...
-    def __int__(self) -> int:
-        ...
-    def __invert__(self) -> logic_t:
-        ...
+    def __init__(self, value: int) -> None: ...
+    def __int__(self) -> int: ...
+    def __invert__(self) -> logic_t: ...
     def __ne__(self, arg0: logic_t) -> logic_t:  # type: ignore[override]
         ...
-    def __or__(self, arg0: logic_t) -> logic_t:
-        ...
-    def __repr__(self) -> str:
-        ...
-    def __xor__(self, arg0: logic_t) -> logic_t:
-        ...
+    def __or__(self, arg0: logic_t) -> logic_t: ...
+    def __repr__(self) -> str: ...
+    def __xor__(self, arg0: logic_t) -> logic_t: ...
     @property
-    def isUnknown(self) -> bool:
-        ...
-def clog2(value) -> int:
-    ...
-def literalBaseFromChar(base: str, result: LiteralBase) -> bool:
-    ...
-def rewrite(tree: SyntaxTree, handler: typing.Callable) -> SyntaxTree:
-    ...
-__version__: str = '9.0.0'
+    def isUnknown(self) -> bool: ...
+
+def clog2(value) -> int: ...
+def literalBaseFromChar(base: str, result: LiteralBase) -> bool: ...
+def rewrite(tree: SyntaxTree, handler: typing.Callable) -> SyntaxTree: ...
+
+__version__: str = "9.0.0"

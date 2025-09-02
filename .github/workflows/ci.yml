@@ -39,6 +39,8 @@ jobs:
         run: uv run pytest -v
 
       - name: Run StubTest
+        env:
+          MYPYPATH: ./stubs
         run: uv run stubtest pyslang --allowlist allowlist.txt
 
       - name: Test Package Build
